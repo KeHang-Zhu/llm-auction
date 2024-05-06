@@ -91,7 +91,7 @@ class SealBid(Base, Rule):
         return winner, price
     
 class Clock(Base, Rule):
-    def __init__(self, agents, rule, change =1):
+    def __init__(self, agents, rule, change =5):
         self.current_bid = []
         self.bid_list = []
         self.agents = agents
@@ -99,19 +99,20 @@ class Clock(Base, Rule):
         self.rule = rule
         self.scenario = Scenario() 
         self.transcript = []
+        self.current_price = []
+        # all the agents in the game
+        self.agent_left = agents
         
-    def dynamic(self, price_next):
+    def dynamic(self):
         if self.rule.order == "ascending":
-            price_next +=self.change
+            self.current_price +=self.change
         else:
-            price_next -=self.change
-            
-        return price_next
+            self.current_price -=self.change
     
-    def run_one_round(self, current_price, agent_left):
+    def run_one_round(self):
         '''run for one round'''
         ## calculate the next clock price
-        clock_price =  self.dynamic(current_price)
+        self.dynamic()
         
         ## update the shared information
         self.transcript.append(self.share_information())
@@ -122,31 +123,26 @@ class Clock(Base, Rule):
             The transcript so far is: 
             { self.transcript }
             It is your turn to bid.
-            Do you want to stay or drop out at the current price {clock_price}      
+            Do you want to stay or drop out at the current price {self.current_price}      
             """), 
             question_name = "stay_or_exit")
 
-        for agent in self.agents:
+        for agent in self.agent_left:
             survey = Survey(questions = q_bid)
             result = survey.by(self.scenario).by(agent).run(progress_bar=True)
+            
             self.bid_list.append({"agent":agent.name,"decision": result})
+            if result is False:
+                self.agent_left.remove(agent)
             
 
-    def run(self, temperature):
-        
-        # Take out the bidders that have dropped out
-        
-        # Run the clock until the ending condition
-        
-
-        for agent in cycle(self.agents):
-            bid = agent.bid(current_bid, temperature)
-            if bid is not None and bid < current_bid:
-                self.bids.append(bid)
-                current_bid = bid
-            else:
-                break  # Assuming bidding stops if no new bid is lower
+    def run(self):
+        '''Run the clock until the ending condition'''
+        while self.check_ending() is False:
+            self.run_one_round()
             
+        self.declear_winner_and_price()
+             
     
     def share_information(self):
         if self.rule.info == "open":
@@ -162,8 +158,8 @@ class Clock(Base, Rule):
     
     def declear_winner_and_price(self):
         if len(self.bid_list) == 1:
-            winner = ...
-            price = self.bid_list[0]
+            winner = self.bid_list[0]['name']
+            price = self.bid_list[0]['price']
             return {'winner':winner, 'price':price}
         elif len(self.bid_list) == 0:
             return "No winner"
@@ -212,10 +208,10 @@ class Auction(Base, Rule):
     def run(self, temperature):
         # Simulate the auction process
         if self.rule.type == "clock":
-            auction = Clock(temperature)
+            auction = Clock(agents=self.agents, rule=self.rule)
             auction.run() 
         elif self.rule.type == "sealed":
-            auction = SealBid(temperature)
+            auction = SealBid(agents=self.agents, rule=self.rule)
             auction.run()
 
     def results(self):
