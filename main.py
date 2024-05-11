@@ -1,20 +1,16 @@
-from textwrap import dedent
-from itertools import cycle
-
 from edsl.data import Cache
-from edsl import Agent, Scenario, Survey
-from edsl.questions import QuestionFreeText, QuestionYesNo
+
 from util import Rule, Auction
 
 
 if __name__ == "__main__":
     c = Cache()
     
-    #Rule Option Menu
+    #Rule Option Menu for Anand
     # seal_clock= 'seal' or 'clock' 
     # ascend_descend='ascend' or 'descend' if seal_clock= 'clock' 
-    # price_order='first' or 'second' or 'third' seal_clock= 'seal'
-    # private_value='private' or 'commond'
+    # price_order='first' or 'second' or 'third' if seal_clock= 'seal'
+    # private_value='private' or 'common'
     # open_blind='open' or 'blind' if seal_clock= 'clock' 
             #i.e. bidder don't see the drop out in the clock
 
