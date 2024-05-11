@@ -21,11 +21,12 @@ class Rule:
     '''
     This class defines different auction rules and their behaviors.
     '''
-    def __init__(self, seal_open, ascend_descend, private, price_order):
-        self.seal_open = seal_open
+    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind):
+        self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
-        self.private = private
-        self.order = price_order
+        self.private_value = private_value
+        self.open_blind = open_blind
+        self.price_order = price_order
         
         ## Rule prompt
         prompt_mixin = PromptMixin()
@@ -35,17 +36,7 @@ class Rule:
 
     def describe(self):
         # Provides a description of the auction rule
-        print(f"Auction Type: {self.seal_open}, Bidding Order: {self.ascend_descend}, Value Type: {self.private}")
-
-
-class Bidder(Agent):
-    '''
-    This class defines bidder from the base class Agent.
-    '''
-    def __init__(self, name, rule):
-        self.system_prompt = rule.rule_explanation
-        self.agent = Agent(name=name, instruction=self.system_prompt)
-    
+        print(f"Auction Type: {self.seal_clock}, \nBidding Order: {self.ascend_descend}, \nValue Type: {self.private_value}, \n Information Type: {self.open_blind}, \n price order: {self.price_order}")
 
 
 class SealBid():
@@ -58,8 +49,9 @@ class SealBid():
                   'agent_2_name': agents[1].name}) 
         self.winner = None
         
+        
     def __repr__(self):
-        return f'OpenBid(bid_list={self.bid_list})'
+        return f'Sealed Bid Auction: (bid_list={self.bid_list})'
     
     def run(self):
         '''run for one round'''
@@ -74,29 +66,34 @@ class SealBid():
             response = result.select("q_bid").to_list()[0]
             self.bid_list.append({"agent":agent.name,"bid": response})
             
+        self.declare_winner_and_price()
+        print(self.winner)
+            
             
     def declare_winner_and_price(self):
         '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
         sorted_bids = sorted(self.bid_list, key=lambda x: x['bid'], reverse=True)
 
-        if self.rule.price == "first":
+        if self.rule.price_order == "first":
             if len(sorted_bids) > 0:
                 winner = sorted_bids[0]["agent"]
                 price = sorted_bids[0]["bid"]
-        elif self.rule.price == "second":
+        elif self.rule.price_order == "second":
             if len(sorted_bids) > 1:
                 winner = sorted_bids[1]["agent"]
                 price = sorted_bids[1]["bid"]
-        elif self.rule.price == "third":
+        elif self.rule.price_order == "third":
             if len(sorted_bids) > 2:
                 winner = sorted_bids[2]["agent"]
                 price = sorted_bids[2]["bid"]
-
-        return winner, price
+        else: 
+            raise ValueError(f"Rule {self.rule.price_order} not allowed")
+        
+        self.winner = {'winner':winner, 'price':price}
     
 
 class Clock():
-    def __init__(self, agents, rule, change =5):
+    def __init__(self, agents, rule, change =5, starting_price=0):
         self.current_bid = []
         self.bid_list = []
         self.agents = agents
@@ -104,18 +101,20 @@ class Clock():
         self.change = change
         self.rule = rule
         self.transcript = []
-        self.current_price = 0
+        self.current_price = starting_price
         # all the agents in the game
         self.winner = None
     
     def __repr__(self):
-        return f'SealBid(bid_list={self.bid_list})'
+        return f'Clock Auction: (bid_list={self.bid_list})'
         
     def dynamic(self):
-        if self.rule.order == "ascending":
+        if self.rule.ascend_descend == "ascend":
             self.current_price +=self.change
-        else:
+        elif self.rule.ascend_descend == "descend":
             self.current_price -=self.change
+        else:
+            raise ValueError(f"Rule {self.rule.ascend_descend} not allowed")
     
     def run_one_round(self):
         '''run for one round'''
@@ -154,14 +153,16 @@ class Clock():
         while self.declear_winner_and_price() is False:
             self.run_one_round()
             print(self.__repr__())
+            
+        print(self.winner)
     
     def share_information(self):
-        if self.rule.seal_open == "open":
+        if self.rule.open_blind == "open":
             return f'all the biddings are {self.bid_list}'
-        elif self.rule.seal_open == "blind":
+        elif self.rule.open_blind == "blind":
             return None
 
-    
+
     def declear_winner_and_price(self):
         if len(self.agent_left) == 1:
             winner = self.bid_list[0]['agent']
@@ -188,12 +189,20 @@ class Auction():
         self.history = []
         self.values_list = []
         
-    def draw_value(self, common_range=(10, 100), private_range=20):
+    def draw_value(self, common_range=(10, 100), private_range=20, seed=1234):
         '''
         Determine the values for each bidder using a common value and a private part.
         '''
+        # make it reproducible
+        random.seed(seed)
+        
         # Generate a common value from a range
-        common_value = random.randint(*common_range)
+        if self.rule.private_value == 'private': 
+            common_value = 0
+        elif self.rule.private_value == 'common': 
+            common_value = random.randint(*common_range)
+        else: 
+            raise ValueError(f"Rule {self.rule.private_value} not allowed")
 
         # Generate a private value for each agent and sum it with the common value
         for _ in range(self.number_agents):  # Now self.number_agents should be an integer
@@ -215,25 +224,18 @@ class Auction():
             agent = Agent(name=f"Bidder {i+1}", traits = agent_traits, instruction=rule_prompt)
             self.agents.append(agent)
  
-    def run(self, temperature):
+    def run(self, temperature=0):
         # Simulate the auction process
-        if self.rule.type == "clock":
+        if self.rule.seal_clock == "clock":
             auction = Clock(agents=self.agents, rule=self.rule)
             auction.run() 
-        elif self.rule.type == "sealed":
+        elif self.rule.seal_clock == "seal":
             auction = SealBid(agents=self.agents, rule=self.rule)
             auction.run()
-
-    def results(self):
-        # Analyze and print auction results
-        if self.bids:
-            highest_bid = max(self.bids)
-            winner = [agent for agent in self.agents if agent.last_bid == highest_bid][0]
-            return f"The winner is {winner.name} with a bid of {highest_bid}"
         else:
-            return "No bids were placed."
-
-    
+            raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
+            
+            
 
 
 if __name__ == "__main__":
@@ -244,7 +246,7 @@ if __name__ == "__main__":
     #     Agent(name = "Ben", instruction = "You are bidder 3"),
     # ]
     
-    rule = Rule(seal_open='open',  ascend_descend='private',price_order='ascending', private='common value')
+    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='first', private_value='common',open_blind='open')
     rule.describe()
     
     # model = "gpt-4-turbo"
@@ -281,13 +283,14 @@ if __name__ == "__main__":
     
     # Test Auction class
     ## Test draw value
-    # a = Auction(number_agents=3, rule=rule)
-    # a.draw_value()
+    a = Auction(number_agents=3, rule=rule)
+    a.draw_value()
     ## Test Agent build
-    # a.build_bidders()
-    # print(a.agents)
+    a.build_bidders()
+    print(a.agents)
     
     ## Test on public info
+    a.run()
     
     ## Test on public info
     
