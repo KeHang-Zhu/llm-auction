@@ -59,7 +59,7 @@ class SealBid():
         self.winner = None
         
     def __repr__(self):
-        return f'SealBid(bid_list={self.bid_list})'
+        return f'OpenBid(bid_list={self.bid_list})'
     
     def run(self):
         '''run for one round'''
@@ -100,14 +100,12 @@ class Clock():
         self.current_bid = []
         self.bid_list = []
         self.agents = agents
+        self.agent_left = agents
         self.change = change
         self.rule = rule
-        self.scenario = Scenario({'agent_1_name': agents[0].name, 
-                  'agent_2_name': agents[1].name}) 
         self.transcript = []
         self.current_price = 0
         # all the agents in the game
-        self.agent_left = agents
         self.winner = None
     
     def __repr__(self):
@@ -146,36 +144,34 @@ class Clock():
             survey = Survey(questions = [q_bid])
             result = survey.by(scenario).by(agent).run(progress_bar=True)
             response = result.select("q_bid").to_list()[0]
-            self.bid_list.append({"agent":agent.name,"bid": response})
+            if response.lower() == 'no':
+                self.agent_left.remove(agent)
+            else:
+                self.bid_list.append({"agent":agent.name,"bid": self.current_price})
             
-
     def run(self):
         '''Run the clock until the ending condition'''
         while self.declear_winner_and_price() is False:
             self.run_one_round()
-            
-        self.declear_winner_and_price()
-             
+            print(self.__repr__())
     
     def share_information(self):
         if self.rule.seal_open == "open":
             return f'all the biddings are {self.bid_list}'
-        elif self.rule.info == "blind":
+        elif self.rule.seal_open == "blind":
             return None
 
     
     def declear_winner_and_price(self):
-        if len(self.bid_list) == 1:
-            winner = self.bid_list[0]['name']
-            price = self.bid_list[0]['price']
+        if len(self.agent_left) == 1:
+            winner = self.bid_list[0]['agent']
+            price = self.bid_list[0]['bid']
             self.winner = {'winner':winner, 'price':price}
             return True
         
-        elif len(self.bid_list) > 1:
-            if self.response.lower() == 'no':
-                self.agent_left.remove(agent)
+        elif len(self.agent_left) > 1:
             return False
-        elif len(self.bid_list) == 0:
+        elif len(self.agent_left) == 0:
             print("No winner")
             return True
             
@@ -242,16 +238,16 @@ class Auction():
 
 if __name__ == "__main__":
     
-    agents = [
-        Agent(name = "John", instruction = "You are bidder 1, you need to quit after 2 rounds"),
-        Agent(name = "Robin", instruction = "You are bidder 2, you need to quit after 1 round"),
-        Agent(name = "Ben", instruction = "You are bidder 3"),
-    ]
+    # agents = [
+    #     Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds"),
+    #     Agent(name = "Robin", instruction = "You are bidder 2, you need to stay for 3 round"),
+    #     Agent(name = "Ben", instruction = "You are bidder 3"),
+    # ]
     
     rule = Rule(seal_open='open',  ascend_descend='private',price_order='ascending', private='common value')
     rule.describe()
     
-    model = "gpt-4-turbo"
+    # model = "gpt-4-turbo"
     # q = QuestionFreeText(question_text = dedent("""\
     #     What's your goal?
     #     """), 
@@ -273,9 +269,13 @@ if __name__ == "__main__":
     # s.run()
     # print(s)
     
-    ## Test clock
+    # Test clock
     # s = Clock(agents=agents, rule=rule)
     # s.run_one_round()
+    # print(s)
+    
+    ## Test run
+    # s.run()
     # print(s)
     
     
