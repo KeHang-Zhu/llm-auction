@@ -30,9 +30,19 @@ class Rule:
         
         ## Rule prompt
         prompt_mixin = PromptMixin()
-        # self.rule_explanation = prompt_mixin.generate_prompt(f"{self.seal_open}_{self.ascend_descend}_{self.private}.txt", template_dir = templates_dir)
+        intro = prompt_mixin.generate_prompt("intro.txt", template_dir = templates_dir)
+        value_explain = prompt_mixin.generate_prompt(f"value_{self.private_value}.txt", template_dir = templates_dir)
+        game_type = prompt_mixin.generate_prompt(f"{self.seal_clock}_{self.ascend_descend}.txt", template_dir = templates_dir)
+        self.rule_explanation = intro + value_explain + game_type
+        
         ## Bid asking prompt
-        # self.asking_prompt = f"Do you want to "
+        if self.seal_clock == "seal":
+            self.asking_prompt = "how much do you like to bid?(in $USD)"
+        elif self.seal_clock == "open":
+            if self.ascend_descend == "ascend":
+                self.asking_prompt = "Do you want to stay in the bidding?"
+            elif self.asking_prompt == "descend":
+                self.asking_prompt = "Do you want to accept the current price?"           
 
     def describe(self):
         # Provides a description of the auction rule
@@ -40,13 +50,22 @@ class Rule:
 
 
 class SealBid():
-    def __init__(self, agents, rule):
-        self.bid_list = []
+    def __init__(self, agents, rule, history=None):
+        
+        ## for setting up stage
         self.rule = rule
         self.agents = agents
-        self.context = ...#rule.context
-        self.scenario = Scenario({'agent_1_name': agents[0].name, 
-                  'agent_2_name': agents[1].name}) 
+        ## For repeated game:
+        self.history = history
+        
+        self.scenario = Scenario({
+            'agent_1_name': agents[0].name, 
+            'agent_2_name': agents[1].name, 
+            'the history of this game': self.history
+            }) 
+        
+        ## for bidding 
+        self.bid_list = []
         self.winner = None
         
         
@@ -57,7 +76,7 @@ class SealBid():
         '''run for one round'''
         q_bid = QuestionNumerical(
             question_name = "q_bid",
-            question_text = "how much do you like to bid?(in $USD)"#self.context + "."
+            question_text = self.rule.asking_prompt
         )
 
         for agent in self.agents:
@@ -93,16 +112,25 @@ class SealBid():
     
 
 class Clock():
-    def __init__(self, agents, rule, change =5, starting_price=0):
-        self.current_bid = []
-        self.bid_list = []
-        self.agents = agents
-        self.agent_left = agents
-        self.change = change
+    def __init__(self, agents, rule, change =5, starting_price=0, history=None):
+        
+        ## for setting up stage
         self.rule = rule
-        self.transcript = []
+        self.agents = agents
+        self.change = change
         self.current_price = starting_price
-        # all the agents in the game
+        ## For repeated game:
+        self.history = history
+        
+        if self.rule.ascend_descend == "ascend":
+            self.agent_left = agents
+        elif self.rule.ascend_descend == "descend":
+            self.agent_left = []
+        
+        # For bidding storage
+        self.current_bid = []
+        self.bid_list = []    
+        self.transcript = []
         self.winner = None
     
     def __repr__(self):
@@ -138,15 +166,29 @@ class Clock():
             Do you want to stay or drop out at the current price {{current_price}}
             """), 
             )
-            scenario = Scenario({"agent_name": agent.name, "other_agent_names": other_agent_names, "transcript": self.transcript, "current_price": self.current_price})
+            scenario = Scenario({
+                "agent_name": agent.name, 
+                "other_agent_names": other_agent_names, 
+                "transcript": self.transcript, 
+                "current_price": self.current_price},
+                                )
             
             survey = Survey(questions = [q_bid])
-            result = survey.by(scenario).by(agent).run(progress_bar=True)
+            result = survey.by(scenario).by(agent).run()
             response = result.select("q_bid").to_list()[0]
-            if response.lower() == 'no':
-                self.agent_left.remove(agent)
-            else:
-                self.bid_list.append({"agent":agent.name,"bid": self.current_price})
+            if self.rule.ascend_descend == 'ascend':
+                if response.lower() == 'no':
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+                    self.agent_left.remove(agent)
+                else:
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+            elif self.rule.ascend_descend == 'descend':
+                if response.lower() == 'yes':
+                    self.agent_left.append(agent)
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+                else:
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+                
             
     def run(self):
         '''Run the clock until the ending condition'''
@@ -164,17 +206,32 @@ class Clock():
 
 
     def declear_winner_and_price(self):
-        if len(self.agent_left) == 1:
-            winner = self.bid_list[0]['agent']
-            price = self.bid_list[0]['bid']
-            self.winner = {'winner':winner, 'price':price}
-            return True
-        
-        elif len(self.agent_left) > 1:
-            return False
-        elif len(self.agent_left) == 0:
-            print("No winner")
-            return True
+        ## The rules for deciding winners
+        if self.rule.ascend_descend == "ascend":
+            if len(self.agent_left) == 1:
+                winner = self.bid_list[0]['agent']
+                price = self.bid_list[0]['bid']
+                self.winner = {'winner':winner, 'price':price}
+                return True
+            elif len(self.agent_left) > 1:
+                return False
+            elif len(self.agent_left) == 0:
+                print("No winner")
+                return True
+        elif self.rule.ascend_descend == "descend":
+            if len(self.agent_left) == 1:
+                winner = self.bid_list[0]['agent']
+                price = self.bid_list[0]['bid']
+                self.winner = {'winner':winner, 'price':price}
+                return True
+            elif len(self.agent_left) > 1:
+                ## Equal probablity to pick up one gamer
+                bidder_i = random.randint(0, len(self.agent_left))
+                winner = self.bid_list[bidder_i]['agent']
+                winner = self.bid_list[bidder_i]['agent']
+                return True
+            elif len(self.agent_left) == 0:
+                return False
             
 
 class Auction():
@@ -182,9 +239,10 @@ class Auction():
     This class manages the auction process using specified agents and rules.
     '''
     def __init__(self, number_agents, rule):
+        self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
-        self.rule = rule        # Instance of Rule
+        
         self.bids = []          # To store bid values
         self.history = []
         self.values_list = []
@@ -197,9 +255,9 @@ class Auction():
         random.seed(seed)
         
         # Generate a common value from a range
-        if self.rule.private_value == 'private': 
+        if self.rule.private_value == 'private':
             common_value = 0
-        elif self.rule.private_value == 'common': 
+        elif self.rule.private_value == 'common':
             common_value = random.randint(*common_range)
         else: 
             raise ValueError(f"Rule {self.rule.private_value} not allowed")
@@ -227,17 +285,25 @@ class Auction():
     def run(self, temperature=0):
         # Simulate the auction process
         if self.rule.seal_clock == "clock":
-            auction = Clock(agents=self.agents, rule=self.rule)
+            auction = Clock(agents=self.agents, rule=self.rule, history=self.history)
             auction.run() 
         elif self.rule.seal_clock == "seal":
-            auction = SealBid(agents=self.agents, rule=self.rule)
+            auction = SealBid(agents=self.agents, rule=self.rule, history=self.history)
             auction.run()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
+        
+        # store the history
+        self.history.append(auction)
+        
+    def run_repeated(self, times=1):
+        i = 0
+        while i < times:
+            self.run()
+            i+=1
+        
             
-            
-
-
+        
 if __name__ == "__main__":
     
     # agents = [
@@ -289,9 +355,19 @@ if __name__ == "__main__":
     a.build_bidders()
     print(a.agents)
     
-    ## Test on public info
+    ## Test on running
     a.run()
     
-    ## Test on public info
+    ## Test on the descend clock
+    #the asking prompt
+    
+    ## Test for repeated game
+    
+    ## Test for Scenario
+    # what kind of infor to put into the scenatrio
+    # what's the difference between putting infor into the question and the scenatio?
+    
+    ## Test prompt structure
+    ## how to input the prompts
     
     # auction = Auction(agents, rule=rule)
