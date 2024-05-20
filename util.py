@@ -32,7 +32,7 @@ class Rule:
         intro = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
         value_explain = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
         game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.seal_clock}_{self.ascend_descend}.txt"))
-        self.rule_explanation = intro  + game_type
+        self.rule_explanation = intro  + value_explain + game_type
         # print(self.rule_explanation)
         
         ## Bid asking prompt
@@ -129,6 +129,7 @@ class Clock():
             self.agent_left = []
         
         # For bidding storage
+        self.round = 0
         self.current_bid = []
         self.bid_list = []    
         self.transcript = []
@@ -150,22 +151,26 @@ class Clock():
         ## calculate the next clock price
         self.dynamic()
         print("===========",self.current_price)
-        ## update the shared information
-        self.transcript.append(self.share_information())
+        agent_in_play = self.agent_left[:]
+        
+        for agent in agent_in_play:
+            other_agent_names = ', '.join([a.name for a in agent_in_play if a is not agent])
 
-        for agent in self.agent_left:
-            other_agent_names = ', '.join([a.name for a in self.agent_left if a is not agent])
-
+            # if self.round == 0:
             instruction = f"""{self.rule.rule_explanation}\n
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
             """
+            # else:  
+            #     instruction = f"""You are {agent.name}. 
+            # You are bidding with { other_agent_names}."""
+                 
             
             q_bid = QuestionYesNo(
                 question_name = "q_bid",
                 question_text = instruction+ f"""
             The transcript so far is: {self.transcript}.\n
-            The current price is {self.current_price}
+            The current price is {self.current_price}. \n
             {self.rule.asking_prompt}""",
             )
             # print(instruction)
@@ -177,7 +182,8 @@ class Clock():
             result = survey.by(agent).run()
             response = result.select("q_bid").to_list()[0]
             
-            print("=========",response)
+            print("=========",agent.name, response)
+
             if self.rule.ascend_descend == 'ascend':
                 if response.lower() == 'no':
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
@@ -190,19 +196,26 @@ class Clock():
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
                 else:
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
-                
+            
+        ## update the shared information
+        self.transcript.append(self.share_information())
             
     def run(self):
         '''Run the clock until the ending condition'''
-        while self.declear_winner_and_price() is False:
+        stop_condition = False
+        while stop_condition is False:
+            self.bid_list = []
             self.run_one_round()
+            print(self.round+1, '+++++done')
+            self.round +=1
+            stop_condition = self.declear_winner_and_price()
             print(self.__repr__())
             
         print(self.winner)
     
     def share_information(self):
         if self.rule.open_blind == "open":
-            return f'all the biddings are {self.bid_list}'
+            return f'In round {self.round+1}, the decisions of the bidders are: {self.bid_list}'
         elif self.rule.open_blind == "blind":
             return None
 
@@ -211,8 +224,8 @@ class Clock():
         ## The rules for deciding winners
         if self.rule.ascend_descend == "ascend":
             if len(self.agent_left) == 1:
-                winner = self.bid_list[0]['agent']
-                price = self.bid_list[0]['bid']
+                winner = self.agent_left[0].name
+                price = self.current_price
                 self.winner = {'winner':winner, 'price':price}
                 return True
             elif len(self.agent_left) > 1:
@@ -222,14 +235,13 @@ class Clock():
                 return True
         elif self.rule.ascend_descend == "descend":
             if len(self.agent_left) == 1:
-                winner = self.bid_list[0]['agent']
-                price = self.bid_list[0]['bid']
+                winner = self.agent_left.name
+                price = self.current_price
                 self.winner = {'winner':winner, 'price':price}
                 return True
             elif len(self.agent_left) > 1:
                 ## Equal probablity to pick up one gamer
                 bidder_i = random.randint(0, len(self.agent_left))
-                winner = self.bid_list[bidder_i]['agent']
                 winner = self.bid_list[bidder_i]['agent']
                 return True
             elif len(self.agent_left) == 0:
@@ -276,10 +288,12 @@ class Auction():
         '''Instantiate bidders with the value and rule'''
         for i in range(self.number_agents): 
             # rule_prompt = self.rule.rule_explanation
-            value_prompt = f"Your value towards to item is {self.values_list[i]}"
+            value_prompt = f"Your value towards to the money prize is {self.values_list[i]}"
+            goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
             
             agent_traits = {
                 "value": value_prompt,
+                "goal": goal_prompt
             }
             agent = Agent(name=f"Bidder {i+1}", traits = agent_traits )
                         #   , instruction=rule_prompt)
@@ -353,7 +367,7 @@ if __name__ == "__main__":
     # Test Auction class
     ## Test draw value
     a = Auction(number_agents=3, rule=rule)
-    a.draw_value()
+    a.draw_value(common_range=(10, 40), private_range=40)
     ## Test Agent build
     a.build_bidders()
     # print(a.agents)
