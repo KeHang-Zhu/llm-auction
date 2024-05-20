@@ -3,7 +3,7 @@ from textwrap import dedent
 from itertools import cycle
 import random
 import os
-
+from edsl import shared_globals
 from edsl import Agent, Scenario, Survey
 from edsl.data import Cache
 from edsl.Base import Base
@@ -32,7 +32,7 @@ class Rule:
         intro = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
         value_explain = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
         game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.seal_clock}_{self.ascend_descend}.txt"))
-        self.rule_explanation = intro + value_explain + game_type
+        self.rule_explanation = intro  + game_type
         # print(self.rule_explanation)
         
         ## Bid asking prompt
@@ -155,26 +155,29 @@ class Clock():
 
         for agent in self.agent_left:
             other_agent_names = ', '.join([a.name for a in self.agent_left if a is not agent])
-             
-            instruction = f"""
+
+            instruction = f"""{self.rule.rule_explanation}\n
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
-            The current price is {self.current_price}"""
+            """
             
             q_bid = QuestionYesNo(
                 question_name = "q_bid",
                 question_text = instruction+ f"""
             The transcript so far is: {self.transcript}.\n
+            The current price is {self.current_price}
             {self.rule.asking_prompt}""",
             )
-            print(instruction)
-            print(q_bid)
-            scenario = Scenario()
-            
+            # print(instruction)
+            # print(q_bid)
+            # print(agent)
+            # scenario = Scenario()
+            # agent = Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds")
             survey = Survey(questions = [q_bid])
-            result = survey.by(scenario).by(agent).run(debug=True)
-            print("=========",result)
+            result = survey.by(agent).run()
             response = result.select("q_bid").to_list()[0]
+            
+            print("=========",response)
             if self.rule.ascend_descend == 'ascend':
                 if response.lower() == 'no':
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
@@ -272,13 +275,14 @@ class Auction():
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
         for i in range(self.number_agents): 
-            rule_prompt = self.rule.rule_explanation
+            # rule_prompt = self.rule.rule_explanation
             value_prompt = f"Your value towards to item is {self.values_list[i]}"
             
             agent_traits = {
                 "value": value_prompt,
             }
-            agent = Agent(name=f"Bidder {i+1}", traits = agent_traits, instruction=rule_prompt)
+            agent = Agent(name=f"Bidder {i+1}", traits = agent_traits )
+                        #   , instruction=rule_prompt)
             self.agents.append(agent)
  
     def run(self, temperature=0):
