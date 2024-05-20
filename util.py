@@ -1,3 +1,4 @@
+import textwrap
 from textwrap import dedent
 from itertools import cycle
 import random
@@ -10,10 +11,9 @@ from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical
 
-from Prompting import PromptMixin
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './prompt_templates')
+templates_dir = os.path.join(current_script_path, './rule_template')
 
 c = Cache()  
 
@@ -29,20 +29,21 @@ class Rule:
         self.price_order = price_order
         
         ## Rule prompt
-        prompt_mixin = PromptMixin()
-        intro = prompt_mixin.generate_prompt("intro.txt", template_dir = templates_dir)
-        value_explain = prompt_mixin.generate_prompt(f"value_{self.private_value}.txt", template_dir = templates_dir)
-        game_type = prompt_mixin.generate_prompt(f"{self.seal_clock}_{self.ascend_descend}.txt", template_dir = templates_dir)
+        intro = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
+        value_explain = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
+        game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.seal_clock}_{self.ascend_descend}.txt"))
         self.rule_explanation = intro + value_explain + game_type
+        # print(self.rule_explanation)
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
             self.asking_prompt = "how much do you like to bid?(in $USD)"
-        elif self.seal_clock == "open":
+        elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
                 self.asking_prompt = "Do you want to stay in the bidding?"
             elif self.asking_prompt == "descend":
-                self.asking_prompt = "Do you want to accept the current price?"           
+                self.asking_prompt = "Do you want to accept the current price?"
+                
 
     def describe(self):
         # Provides a description of the auction rule
@@ -148,33 +149,31 @@ class Clock():
         '''run for one round'''
         ## calculate the next clock price
         self.dynamic()
-        
+        print("===========",self.current_price)
         ## update the shared information
         self.transcript.append(self.share_information())
 
         for agent in self.agent_left:
             other_agent_names = ', '.join([a.name for a in self.agent_left if a is not agent])
+             
+            instruction = f"""
+            You are {agent.name}. 
+            You are bidding with { other_agent_names}.
+            The current price is {self.current_price}"""
             
             q_bid = QuestionYesNo(
                 question_name = "q_bid",
-                question_text = dedent("""\
-            You are {{ agent_name }}. 
-            You are bidding with {{ other_agent_names}}.
-            The transcript so far is: 
-            {{ transcript }}
-            It is your turn to bid.
-            Do you want to stay or drop out at the current price {{current_price}}
-            """), 
+                question_text = instruction+ f"""
+            The transcript so far is: {self.transcript}.\n
+            {self.rule.asking_prompt}""",
             )
-            scenario = Scenario({
-                "agent_name": agent.name, 
-                "other_agent_names": other_agent_names, 
-                "transcript": self.transcript, 
-                "current_price": self.current_price},
-                                )
+            print(instruction)
+            print(q_bid)
+            scenario = Scenario()
             
             survey = Survey(questions = [q_bid])
-            result = survey.by(scenario).by(agent).run()
+            result = survey.by(scenario).by(agent).run(debug=True)
+            print("=========",result)
             response = result.select("q_bid").to_list()[0]
             if self.rule.ascend_descend == 'ascend':
                 if response.lower() == 'no':
@@ -273,7 +272,7 @@ class Auction():
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
         for i in range(self.number_agents): 
-            rule_prompt = None#self.rule.rule_explanation
+            rule_prompt = self.rule.rule_explanation
             value_prompt = f"Your value towards to item is {self.values_list[i]}"
             
             agent_traits = {
@@ -312,7 +311,7 @@ if __name__ == "__main__":
     #     Agent(name = "Ben", instruction = "You are bidder 3"),
     # ]
     
-    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='first', private_value='common',open_blind='open')
+    rule = Rule(seal_clock='clock', ascend_descend='ascend',price_order='first', private_value='common',open_blind='open')
     rule.describe()
     
     # model = "gpt-4-turbo"
@@ -353,7 +352,7 @@ if __name__ == "__main__":
     a.draw_value()
     ## Test Agent build
     a.build_bidders()
-    print(a.agents)
+    # print(a.agents)
     
     ## Test on running
     a.run()
