@@ -126,7 +126,23 @@ class SealBid():
         self.declare_winner_and_price()
         print(self.winner)
         return {'bidding history':self.bid_list, 'winner':self.winner}
-            
+    
+    def PAC(self):
+        ## Implement 2PAC
+        ## Info: current price, decision, bidder
+        rounds = 0
+        clock = ""
+        x = f'In round {rounds}, the price is, the decisions of the bidders are: {self.bid_list}'
+        clock+=x
+        
+    
+    def PAC_B(self):
+        ## Info: current price, bid
+        rounds = 0
+        clock = ""
+        x = f'In round {rounds}, the price is, the auction continues'
+        clock+=x
+     
             
     def declare_winner_and_price(self):
         '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
@@ -293,18 +309,22 @@ class Auction():
     '''
     This class manages the auction process using specified agents and rules.
     '''
-    def __init__(self, number_agents, rule, cache=c, model='gpt-4o',temperature = 0):
+    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=c, model='gpt-4o',temperature = 0):
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
         self.model= Model(model, temperature=temperature)
         self.cache = cache
+        self.output_dir = output_dir
+        self.timestring =timestring
+        self.round_number = 0
         
         self.bids = []          # To store bid values
+        self.round_result =[]
         self.history = []
         self.values_list = []
         
-    def draw_value(self, common_range=(10, 100), private_range=20, seed=1234):
+    def draw_value(self, seed=1234):
         '''
         Determine the values for each bidder using a common value and a private part.
         '''
@@ -315,13 +335,13 @@ class Auction():
         if self.rule.private_value == 'private':
             common_value = 0
         elif self.rule.private_value == 'common':
-            common_value = random.randint(*common_range)
+            common_value = random.randint(*self.rule.common_range)
         else: 
             raise ValueError(f"Rule {self.rule.private_value} not allowed")
 
         # Generate a private value for each agent and sum it with the common value
         for _ in range(self.number_agents):  # Now self.number_agents should be an integer
-            private_part = random.randint(0, private_range)
+            private_part = random.randint(0, self.rule.private_range)
             total_value = common_value + private_part
             self.values_list.append(total_value)
         print("The values for each bidder are:", self.values_list)
@@ -329,7 +349,7 @@ class Auction():
         
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
-        for i in range(self.number_agents): 
+        for i in range(self.number_agents):
             # rule_prompt = self.rule.rule_explanation
             value_prompt = f"Your value towards to the money prize is {self.values_list[i]}"
             goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
@@ -346,25 +366,41 @@ class Auction():
         # Simulate the auction process
         if self.rule.seal_clock == "clock":
             auction = Clock(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
-            history = auction.run() 
+            history = auction.run()
         elif self.rule.seal_clock == "seal":
             auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
             history = auction.run()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
-        # store the history
-        self.history=history
+        self.round_result = history
+        self.data_to_json()
         
-    def data_to_json(self, output_dir:str, timestring:str):
-        data_to_save = {"value": self.values_list, "history": self.history}
-        save_json(data_to_save, f"result__{timestring}.json", output_dir)
+    def data_to_json(self):
+        data_to_save = {"value": self.values_list, "result": self.round_result}
+        save_json(data_to_save, f"result_{self.round_number}_{self.timestring}.json", self.output_dir)
         
-    def run_repeated(self, times=1):
-        i = 0
-        while i < times:
+    def run_repeated(self):
+        while self.round_number < self.rule.round:
             self.run()
-            i+=1
+            self.round_number+=1
+            
+    def calculate_payoff(self, winner):
+        #Following each auction, each subject observes a results summary, containing all submitted bids or exit prices, respectively, her own profit, and the winner’s profit
+        submitted_bids = ...
+        exit_prices = ...
+        if not winner:
+            profit = 0
+        else:
+            profit = winner.value - winner.bid
+        ## combine into history
+        self.history = ...
+        
+    def update_agents(self):
+        self.draw_value()
+        
+        pass
+        
         
 if __name__ == "__main__":
     
@@ -415,7 +451,7 @@ if __name__ == "__main__":
     # Test Auction class
     ## Test draw value
     a = Auction(number_agents=3, rule=rule)
-    a.draw_value(common_range=(10, 40), private_range=40,seed=1456)
+    a.draw_value(seed=1456)
     ## Test Agent build
     a.build_bidders()
     # print(a.agents)

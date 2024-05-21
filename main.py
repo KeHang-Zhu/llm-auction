@@ -31,17 +31,17 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
     
     ## Set the rule
-    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind)
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind,rounds=2, common_range=[10, 100], private_range=20, increment=5)
     rule.describe()
 
     ## Instantiate the auction
-    a = Auction(number_agents=3, rule=rule, cache=c, model ='gpt-4o', temperature=0)
-    a.draw_value(common_range=(10, 40), private_range=40, seed=1456)
+    a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring,cache=c, model ='gpt-4o', temperature=0)
+    a.draw_value(seed=1456)
     ## Agent build
     a.build_bidders()
     a.run()
     
-    ## store the analysis data
-    a.data_to_json(output_dir=output_dir, timestring=timestring)
+    # ## store the analysis data
+    # a.data_to_json(output_dir=output_dir, timestring=timestring)
     ## store the raw data
     c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
