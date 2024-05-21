@@ -46,19 +46,16 @@ class Rule:
         
         ## Rule prompt
         intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
-        intro = Template(intro_string)
-        intro = intro.render(n=self.round)
-        
+        intro = intro_string.render({"n":self.round})
+
         value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
-        value_explain = Template(value_explain_string)
-        value_explain = value_explain.render(increment=self.increment,common_low=self.common_range[0], common_high=self.common_range[1],private=self.private_range)
+        value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range})
         
         if self.seal_clock == 'clock':
-            game_type_srting = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}.txt"))
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}.txt"))
         elif self.seal_clock == 'seal':
-            game_type_srting = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price.txt"))
-        game_type = Template(game_type_srting)
-        game_type = game_type.render(increment=self.increment,min_price=self.common_range[0],max_price=self.common_range[1]+self.private_range)
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price.txt"))
+        game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range})
         
         ## Combine the rule prompt
         self.rule_explanation = intro  + value_explain + game_type
@@ -118,7 +115,7 @@ class SealBid():
         )
 
             survey = Survey(questions = [q_bid])
-            result = survey.by(agent).by(self.model).run(cache = self.cache)
+            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
             self.bid_list.append({"agent":agent.name,"bid": response})
             
@@ -237,7 +234,7 @@ class Clock():
             # scenario = Scenario()
             # agent = Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds")
             survey = Survey(questions = [q_bid])
-            result = survey.by(agent).by(self.model).run(cache = self.cache)
+            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
             
             print("=========",agent.name, response)
@@ -310,11 +307,10 @@ class Bidder():
     '''
     This class specifies the agents
     '''
-    def __init__(self):
-        
+    def __init__(self, value_list):
         self.agent = None
         
-        self.value = []
+        self.value = value_list
         self.submitted_bids = []
         self.exit_price = []
         self.profit = []
@@ -322,18 +318,23 @@ class Bidder():
         self.history = []
         
     def __repr__(self):
-        return self.agent
+        return repr(self.agent)
 
     def build_bidder(self, name, current_round):
         value_prompt = f"Your value towards to the money prize is {self.value[current_round]}"
         goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
+        history_prompt = ''.join(self.history[:current_round])
         
         agent_traits = {
             "value": value_prompt,
             "goal": goal_prompt,
-            "bidding history": self.history[:current_round]
+            "history": history_prompt
         }
         self.agent = Agent(name=f"Bidder {name}", traits = agent_traits )
+    
+    @property
+    def name(self):
+        return self.agent.name
 
     
 class Auction():
@@ -361,27 +362,31 @@ class Auction():
         '''
         # make it reproducible
         random.seed(seed)
+        # Initialize the values_list as a 2D list
+        self.values_list = [[0 for _ in range(self.number_agents)] for _ in range(self.rule.round)]
         
-        # Generate a common value from a range
-        if self.rule.private_value == 'private':
-            common_value = 0
-        elif self.rule.private_value == 'common':
-            common_value = random.randint(*self.rule.common_range)
-        else: 
-            raise ValueError(f"Rule {self.rule.private_value} not allowed")
+        for i in range(self.rule.round):
+            # Generate a common value from a range
+            if self.rule.private_value == 'private':
+                common_value = 0
+            elif self.rule.private_value == 'common':
+                common_value = random.randint(*self.rule.common_range)
+            else: 
+                raise ValueError(f"Rule {self.rule.private_value} not allowed")
 
-        # Generate a private value for each agent and sum it with the common value
-        for _ in range(self.number_agents):  # Now self.number_agents should be an integer
-            private_part = random.randint(0, self.rule.private_range)
-            total_value = common_value + private_part
-            self.values_list.append(total_value)
+            # Generate a private value for each agent and sum it with the common value
+            for j in range(self.number_agents):  # Now self.number_agents should be an integer
+                private_part = random.randint(0, self.rule.private_range)
+                total_value = common_value + private_part
+                self.values_list[i][j] = total_value
         print("The values for each bidder are:", self.values_list)
 
         
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
         for i in range(self.number_agents):
-            agent = Bidder()
+            bidder_values = [self.values_list[round_num][i] for round_num in range(self.rule.round)]
+            agent = Bidder(bidder_values)
             agent.build_bidder(name=i,current_round=self.round_number)
             self.agents.append(agent)
  
@@ -481,8 +486,9 @@ if __name__ == "__main__":
     
     # Test Auction class
     ## Test draw value
-    a = Auction(number_agents=3, rule=rule)
+    a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring,cache=c, model ='gpt-4o', temperature=0)
     a.draw_value(seed=1456)
+    
     ## Test Agent build
     a.build_bidders()
     # print(a.agents)

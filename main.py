@@ -2,6 +2,7 @@ from edsl.data import Cache
 import logging
 import os
 import pandas as pd
+import sys
 
 from util import Rule, Auction
 
