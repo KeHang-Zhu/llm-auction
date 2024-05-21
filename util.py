@@ -4,6 +4,7 @@ from itertools import cycle
 import random
 import os
 from edsl import shared_globals
+from edsl import Model
 from edsl import Agent, Scenario, Survey
 from edsl.data import Cache
 from edsl.Base import Base
@@ -31,7 +32,10 @@ class Rule:
         ## Rule prompt
         intro = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
         value_explain = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
-        game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.seal_clock}_{self.ascend_descend}.txt"))
+        if self.seal_clock == 'clock':
+            game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}.txt"))
+        elif self.seal_clock == 'seal':
+            game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price.txt"))
         self.rule_explanation = intro  + value_explain + game_type
         # print(self.rule_explanation)
         
@@ -51,13 +55,14 @@ class Rule:
 
 
 class SealBid():
-    def __init__(self, agents, rule, history=None):
+    def __init__(self, agents, rule, model, history=None):
         
         ## for setting up stage
         self.rule = rule
         self.agents = agents
         ## For repeated game:
         self.history = history
+        self.model = model
         
         self.scenario = Scenario({
             'agent_1_name': agents[0].name, 
@@ -75,17 +80,24 @@ class SealBid():
     
     def run(self):
         '''run for one round'''
-        q_bid = QuestionNumerical(
-            question_name = "q_bid",
-            question_text = self.rule.asking_prompt
-        )
 
         for agent in self.agents:
+            other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+            instruction = f"""{self.rule.rule_explanation}\n
+            You are {agent.name}. 
+            You are bidding with { other_agent_names}.
+            """
+            q_bid = QuestionNumerical(
+            question_name = "q_bid",
+            question_text = instruction+ self.rule.asking_prompt
+        )
+
             survey = Survey(questions = [q_bid])
-            result = survey.by(self.scenario).by(agent).run(progress_bar=True)
+            result = survey.by(agent).by(self.model).run(cache = c)
             response = result.select("q_bid").to_list()[0]
             self.bid_list.append({"agent":agent.name,"bid": response})
             
+        print(self.bid_list)    
         self.declare_winner_and_price()
         print(self.winner)
             
@@ -100,11 +112,11 @@ class SealBid():
                 price = sorted_bids[0]["bid"]
         elif self.rule.price_order == "second":
             if len(sorted_bids) > 1:
-                winner = sorted_bids[1]["agent"]
+                winner = sorted_bids[0]["agent"]
                 price = sorted_bids[1]["bid"]
         elif self.rule.price_order == "third":
             if len(sorted_bids) > 2:
-                winner = sorted_bids[2]["agent"]
+                winner = sorted_bids[0]["agent"]
                 price = sorted_bids[2]["bid"]
         else: 
             raise ValueError(f"Rule {self.rule.price_order} not allowed")
@@ -113,13 +125,14 @@ class SealBid():
     
 
 class Clock():
-    def __init__(self, agents, rule, change =5, starting_price=0, history=None):
+    def __init__(self, agents, rule, model,change =5, starting_price=0, history=None):
         
         ## for setting up stage
         self.rule = rule
         self.agents = agents
         self.change = change
         self.current_price = starting_price
+        self.model = model
         ## For repeated game:
         self.history = history
         
@@ -179,7 +192,7 @@ class Clock():
             # scenario = Scenario()
             # agent = Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds")
             survey = Survey(questions = [q_bid])
-            result = survey.by(agent).run()
+            result = survey.by(agent).by(self.model).run(cache = c)
             response = result.select("q_bid").to_list()[0]
             
             print("=========",agent.name, response)
@@ -252,10 +265,11 @@ class Auction():
     '''
     This class manages the auction process using specified agents and rules.
     '''
-    def __init__(self, number_agents, rule):
+    def __init__(self, number_agents, rule, model):
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
+        self.model= model
         
         self.bids = []          # To store bid values
         self.history = []
@@ -299,13 +313,13 @@ class Auction():
                         #   , instruction=rule_prompt)
             self.agents.append(agent)
  
-    def run(self, temperature=0):
+    def run(self):
         # Simulate the auction process
         if self.rule.seal_clock == "clock":
-            auction = Clock(agents=self.agents, rule=self.rule, history=self.history)
+            auction = Clock(agents=self.agents, rule=self.rule, history=self.history, model=self.model)
             auction.run() 
         elif self.rule.seal_clock == "seal":
-            auction = SealBid(agents=self.agents, rule=self.rule, history=self.history)
+            auction = SealBid(agents=self.agents, rule=self.rule, history=self.history, model=self.model)
             auction.run()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
@@ -329,10 +343,12 @@ if __name__ == "__main__":
     #     Agent(name = "Ben", instruction = "You are bidder 3"),
     # ]
     
-    rule = Rule(seal_clock='clock', ascend_descend='ascend',price_order='first', private_value='common',open_blind='open')
+    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='second', private_value='common',open_blind='open')
     rule.describe()
     
-    # model = "gpt-4-turbo"
+    model_list = ["gpt-4-1106-preview", "gpt-4-turbo", "gpt-3.5","gpt-4o"]
+    model = Model("gpt-4o", temperature=0)
+    
     # q = QuestionFreeText(question_text = dedent("""\
     #     What's your goal?
     #     """), 
@@ -366,14 +382,15 @@ if __name__ == "__main__":
     
     # Test Auction class
     ## Test draw value
-    a = Auction(number_agents=3, rule=rule)
-    a.draw_value(common_range=(10, 40), private_range=40)
+    a = Auction(number_agents=3, rule=rule, model=model)
+    a.draw_value(common_range=(10, 40), private_range=40,seed=1456)
     ## Test Agent build
     a.build_bidders()
     # print(a.agents)
     
     ## Test on running
     a.run()
+    c.write_jsonl("running.jsonl")
     
     ## Test on the descend clock
     #the asking prompt
