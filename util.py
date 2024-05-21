@@ -127,21 +127,23 @@ class SealBid():
         print(self.winner)
         return {'bidding history':self.bid_list, 'winner':self.winner}
     
-    def PAC(self):
-        ## Implement 2PAC
+    def PAC(self): #todo
+        ## Implement 2PAC 
         ## Info: current price, decision, bidder
         rounds = 0
         clock = ""
         x = f'In round {rounds}, the price is, the decisions of the bidders are: {self.bid_list}'
         clock+=x
+        pass
         
     
-    def PAC_B(self):
+    def PAC_B(self): #todo
         ## Info: current price, bid
         rounds = 0
         clock = ""
         x = f'In round {rounds}, the price is, the auction continues'
         clock+=x
+        pass
      
             
     def declare_winner_and_price(self):
@@ -304,7 +306,36 @@ class Clock():
             elif len(self.agent_left) == 0:
                 return False
             
+class Bidder():
+    '''
+    This class specifies the agents
+    '''
+    def __init__(self):
+        
+        self.agent = None
+        
+        self.value = []
+        self.submitted_bids = []
+        self.exit_price = []
+        self.profit = []
+        self.winning = []
+        self.history = []
+        
+    def __repr__(self):
+        return self.agent
 
+    def build_bidder(self, name, current_round):
+        value_prompt = f"Your value towards to the money prize is {self.value[current_round]}"
+        goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
+        
+        agent_traits = {
+            "value": value_prompt,
+            "goal": goal_prompt,
+            "bidding history": self.history[:current_round]
+        }
+        self.agent = Agent(name=f"Bidder {name}", traits = agent_traits )
+
+    
 class Auction():
     '''
     This class manages the auction process using specified agents and rules.
@@ -350,16 +381,8 @@ class Auction():
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
         for i in range(self.number_agents):
-            # rule_prompt = self.rule.rule_explanation
-            value_prompt = f"Your value towards to the money prize is {self.values_list[i]}"
-            goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
-            
-            agent_traits = {
-                "value": value_prompt,
-                "goal": goal_prompt
-            }
-            agent = Agent(name=f"Bidder {i+1}", traits = agent_traits )
-                        #   , instruction=rule_prompt)
+            agent = Bidder()
+            agent.build_bidder(name=i,current_round=self.round_number)
             self.agents.append(agent)
  
     def run(self):
@@ -387,19 +410,27 @@ class Auction():
             
     def calculate_payoff(self, winner):
         #Following each auction, each subject observes a results summary, containing all submitted bids or exit prices, respectively, her own profit, and the winner’s profit
-        submitted_bids = ...
-        exit_prices = ...
-        if not winner:
-            profit = 0
-        else:
-            profit = winner.value - winner.bid
-        ## combine into history
-        self.history = ...
+        if self.rule.seal_clock == "seal":
+            submitted_bids = ...
+        elif self.rule.seal_clock == "clock":
+            exit_prices = ...
+        winner_profit = winner.value - winner.bid
+        
+        for agent in self.agents:
+        
+            if not winner:
+                profit_describe = f"Your profit is 0 and winner's profit is {winner_profit}"
+            else:
+                profit_describe = f"Your profit is {winner_profit} and winner's profit is {winner_profit}"
+            ## combine into history
+            # value_describe = f"Your value at round {self.round_number} is {value}"
+            description = ...
+            # history.append()
         
     def update_agents(self):
         self.draw_value()
+        self.build_bidders()
         
-        pass
         
         
 if __name__ == "__main__":
