@@ -2,6 +2,7 @@ import textwrap
 from textwrap import dedent
 from itertools import cycle
 import random
+import json
 import os
 from edsl import shared_globals
 from edsl import Model
@@ -17,6 +18,14 @@ current_script_path = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(current_script_path, './rule_template')
 
 c = Cache()  
+
+def save_json(data, filename, directory):
+    """Save data to a JSON file in the specified directory."""
+    file_path = os.path.join(directory, filename)
+    with open(file_path, 'w') as file:
+        json.dump(data, file, indent=4)
+    
+    return file_path
 
 class Rule:
     '''
@@ -55,7 +64,7 @@ class Rule:
 
 
 class SealBid():
-    def __init__(self, agents, rule, model, history=None):
+    def __init__(self, agents, rule, model, cache= c, history=None):
         
         ## for setting up stage
         self.rule = rule
@@ -63,6 +72,7 @@ class SealBid():
         ## For repeated game:
         self.history = history
         self.model = model
+        self.cache = cache
         
         self.scenario = Scenario({
             'agent_1_name': agents[0].name, 
@@ -93,13 +103,14 @@ class SealBid():
         )
 
             survey = Survey(questions = [q_bid])
-            result = survey.by(agent).by(self.model).run(cache = c)
+            result = survey.by(agent).by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
             self.bid_list.append({"agent":agent.name,"bid": response})
             
         print(self.bid_list)    
         self.declare_winner_and_price()
         print(self.winner)
+        return {'bidding history':self.bid_list, 'winner':self.winner}
             
             
     def declare_winner_and_price(self):
@@ -125,7 +136,7 @@ class SealBid():
     
 
 class Clock():
-    def __init__(self, agents, rule, model,change =5, starting_price=0, history=None):
+    def __init__(self, agents, rule, model, cache=c,change =5, starting_price=0, history=None):
         
         ## for setting up stage
         self.rule = rule
@@ -133,6 +144,7 @@ class Clock():
         self.change = change
         self.current_price = starting_price
         self.model = model
+        self.cache = cache
         ## For repeated game:
         self.history = history
         
@@ -192,7 +204,7 @@ class Clock():
             # scenario = Scenario()
             # agent = Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds")
             survey = Survey(questions = [q_bid])
-            result = survey.by(agent).by(self.model).run(cache = c)
+            result = survey.by(agent).by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
             
             print("=========",agent.name, response)
@@ -225,6 +237,7 @@ class Clock():
             print(self.__repr__())
             
         print(self.winner)
+        return {'bidding history':self.bid_list, 'winner':self.winner}
     
     def share_information(self):
         if self.rule.open_blind == "open":
@@ -265,11 +278,12 @@ class Auction():
     '''
     This class manages the auction process using specified agents and rules.
     '''
-    def __init__(self, number_agents, rule, model):
+    def __init__(self, number_agents, rule, cache=c, model='gpt-4o',temperature = 0):
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
-        self.model= model
+        self.model= Model(model, temperature=temperature)
+        self.cache = cache
         
         self.bids = []          # To store bid values
         self.history = []
@@ -316,16 +330,19 @@ class Auction():
     def run(self):
         # Simulate the auction process
         if self.rule.seal_clock == "clock":
-            auction = Clock(agents=self.agents, rule=self.rule, history=self.history, model=self.model)
-            auction.run() 
+            auction = Clock(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
+            history = auction.run() 
         elif self.rule.seal_clock == "seal":
-            auction = SealBid(agents=self.agents, rule=self.rule, history=self.history, model=self.model)
-            auction.run()
+            auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
+            history = auction.run()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
         # store the history
-        self.history.append(auction)
+        self.history=history
+        
+    def data_to_json(self, output_dir:str, timestring:str):
+        save_json(self.history, f"result__{timestring}.json", output_dir)
         
     def run_repeated(self, times=1):
         i = 0
@@ -347,7 +364,7 @@ if __name__ == "__main__":
     rule.describe()
     
     model_list = ["gpt-4-1106-preview", "gpt-4-turbo", "gpt-3.5","gpt-4o"]
-    model = Model("gpt-4o", temperature=0)
+    # model = Model("gpt-4o", temperature=0)
     
     # q = QuestionFreeText(question_text = dedent("""\
     #     What's your goal?
@@ -382,7 +399,7 @@ if __name__ == "__main__":
     
     # Test Auction class
     ## Test draw value
-    a = Auction(number_agents=3, rule=rule, model=model)
+    a = Auction(number_agents=3, rule=rule)
     a.draw_value(common_range=(10, 40), private_range=40,seed=1456)
     ## Test Agent build
     a.build_bidders()

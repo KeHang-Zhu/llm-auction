@@ -1,8 +1,14 @@
 from edsl.data import Cache
+import logging
+import os
+import pandas as pd
 
 from util import Rule, Auction
 
+## output files
+timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
 
+    
 if __name__ == "__main__":
     c = Cache()
     
@@ -13,11 +19,25 @@ if __name__ == "__main__":
     # private_value='private' or 'common'
     # open_blind='open' or 'blind' if seal_clock= 'clock' 
             #i.e. bidder don't see the drop out in the clock
-
-    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='first', private_value='private',open_blind='open')
+    seal_clock='seal'
+    ascend_descend='ascend'
+    price_order='second'
+    private_value='common'
+    open_blind='open'
+    
+    output_dir = f"experiment_logs/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind)
     rule.describe()
 
-    auction = Auction(number_agents=3, rule=rule)
-    auction.run(temperature=0.4)
+    a = Auction(number_agents=3, rule=rule, cache=c, model ='gpt-4o', temperature=0)
+    a.draw_value(common_range=(10, 40), private_range=40, seed=1456)
+    ## Test Agent build
+    a.build_bidders()
+    a.run()
+    a.data_to_json(output_dir=output_dir, timestring=timestring)
 
-    c.write_jsonl("conversation_cache.jsonl")
+    ## store the raw data
+    c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
