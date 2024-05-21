@@ -25,19 +25,23 @@ if __name__ == "__main__":
     private_value='common'
     open_blind='open'
     
+    ## Set the output file
     output_dir = f"experiment_logs/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
+    ## Set the rule
     rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind)
     rule.describe()
 
+    ## Instantiate the auction
     a = Auction(number_agents=3, rule=rule, cache=c, model ='gpt-4o', temperature=0)
     a.draw_value(common_range=(10, 40), private_range=40, seed=1456)
-    ## Test Agent build
+    ## Agent build
     a.build_bidders()
     a.run()
+    
+    ## store the analysis data
     a.data_to_json(output_dir=output_dir, timestring=timestring)
-
     ## store the raw data
     c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))

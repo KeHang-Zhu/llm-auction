@@ -4,6 +4,7 @@ from itertools import cycle
 import random
 import json
 import os
+import sys
 from edsl import shared_globals
 from edsl import Model
 from edsl import Agent, Scenario, Survey
@@ -12,6 +13,7 @@ from edsl.Base import Base
 from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical
+from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
@@ -31,22 +33,35 @@ class Rule:
     '''
     This class defines different auction rules and their behaviors.
     '''
-    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind):
+    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind, rounds, common_range=[10, 100], private_range=20, increment=5):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
         self.open_blind = open_blind
         self.price_order = price_order
+        self.round = rounds
+        self.common_range = common_range
+        self.private_range = private_range
+        self.increment = increment
         
         ## Rule prompt
-        intro = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
-        value_explain = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
+        intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
+        intro = Template(intro_string)
+        intro = intro.render(n=self.round)
+        
+        value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
+        value_explain = Template(value_explain_string)
+        value_explain = value_explain.render(increment=self.increment,common_low=self.common_range[0], common_high=self.common_range[1],private=self.private_range)
+        
         if self.seal_clock == 'clock':
-            game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}.txt"))
+            game_type_srting = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}.txt"))
         elif self.seal_clock == 'seal':
-            game_type = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price.txt"))
+            game_type_srting = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price.txt"))
+        game_type = Template(game_type_srting)
+        game_type = game_type.render(increment=self.increment,min_price=self.common_range[0],max_price=self.common_range[1]+self.private_range)
+        
+        ## Combine the rule prompt
         self.rule_explanation = intro  + value_explain + game_type
-        # print(self.rule_explanation)
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
@@ -342,15 +357,14 @@ class Auction():
         self.history=history
         
     def data_to_json(self, output_dir:str, timestring:str):
-        save_json(self.history, f"result__{timestring}.json", output_dir)
+        data_to_save = {"value": self.values_list, "history": self.history}
+        save_json(data_to_save, f"result__{timestring}.json", output_dir)
         
     def run_repeated(self, times=1):
         i = 0
         while i < times:
             self.run()
             i+=1
-        
-            
         
 if __name__ == "__main__":
     
@@ -360,10 +374,11 @@ if __name__ == "__main__":
     #     Agent(name = "Ben", instruction = "You are bidder 3"),
     # ]
     
-    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='second', private_value='common',open_blind='open')
+    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='second', private_value='common',open_blind='open',rounds=2, common_range=[10, 100], private_range=20, increment=5)
     rule.describe()
     
     model_list = ["gpt-4-1106-preview", "gpt-4-turbo", "gpt-3.5","gpt-4o"]
+    sys.exit()
     # model = Model("gpt-4o", temperature=0)
     
     # q = QuestionFreeText(question_text = dedent("""\
