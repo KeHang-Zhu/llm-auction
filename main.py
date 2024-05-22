@@ -20,7 +20,7 @@ if __name__ == "__main__":
     # private_value='private' or 'common'
     # open_blind='open' or 'blind' if seal_clock= 'clock' 
             #i.e. bidder don't see the drop out in the clock
-    seal_clock='seal'
+    seal_clock='clock'
     ascend_descend='ascend'
     price_order='second'
     private_value='common'
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
     
     ## Set the rule
-    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 40], private_range=20, increment=1)
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=2, common_range=[10, 10], private_range=10, increment=3)
     rule.describe()
 
     ## Instantiate the auction

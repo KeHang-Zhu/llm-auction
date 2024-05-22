@@ -174,13 +174,13 @@ class SealBid():
     
 
 class Clock():
-    def __init__(self, agents, rule, model, cache=c,change =5, starting_price=0, history=None):
+    def __init__(self, agents, rule, model, cache=c, history=None):
         
         ## for setting up stage
         self.rule = rule
         self.agents = agents
-        self.change = change
-        self.current_price = starting_price
+        self.change = self.rule.increment
+        self.current_price = rule.common_range[0]
         self.model = model
         self.cache = cache
         ## For repeated game:
@@ -192,10 +192,12 @@ class Clock():
             self.agent_left = []
         
         # For bidding storage
-        self.round = 0
+        self.clock = 0
+        self.exit_number = 0
         self.current_bid = []
         self.bid_list = []    
         self.transcript = []
+        self.exit_list = []
         self.winner = None
     
     def __repr__(self):
@@ -209,10 +211,9 @@ class Clock():
         else:
             raise ValueError(f"Rule {self.rule.ascend_descend} not allowed")
     
-    def run_one_round(self):
+    def run_one_clock(self):
         '''run for one round'''
-        ## calculate the next clock price
-        self.dynamic()
+        self.exit_number = 0
         print("===========",self.current_price)
         agent_in_play = self.agent_left[:]
         
@@ -224,7 +225,6 @@ class Clock():
             You are bidding with { other_agent_names}.
             """
                  
-            
             q_bid = QuestionYesNo(
                 question_name = "q_bid",
                 question_text = instruction+ f"""
@@ -247,37 +247,52 @@ class Clock():
                 if response.lower() == 'no':
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
                     self.agent_left.remove(agent)
-                    agent.exit_prices.append(self.current_price)
+                    agent.exit_price.append(str(self.current_price))
+                    self.exit_number += 1
+                    self.exit_list.append({"agent":agent.name,"bid": self.current_price})
                 else:
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
             elif self.rule.ascend_descend == 'descend':
                 if response.lower() == 'yes':
                     self.agent_left.append(agent)
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
-                    agent.exit_prices.append(self.current_price)
+                    agent.exit_price.append(str(self.current_price))
                 else:
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
             
         ## update the shared information
         self.transcript.append(self.share_information())
-            
+        
     def run(self):
         '''Run the clock until the ending condition'''
         stop_condition = False
         while stop_condition is False:
             self.bid_list = []
-            self.run_one_round()
-            print(self.round+1, '+++++done')
-            self.round +=1
+            self.run_one_clock()
+            print(self.clock+1, '+++++done')
+            self.clock +=1
             stop_condition = self.declear_winner_and_price()
+            ## calculate the next clock price
+            self.dynamic()
             print(self.__repr__())
             
         print(self.winner)
-        return {'bidding history':self.bid_list, 'winner':self.winner}
+        for agent in self.agents:
+            if agent.name == self.winner["winner"]:
+                agent.profit.append(agent.current_value - int(self.winner["price"]))
+                agent.exit_price.append(str(self.winner["price"]))
+                agent.winning.append(True)
+            else:
+                agent.profit.append(0)
+                agent.winning.append(False)
+        return {'bidding history':self.exit_list, 'winner':self.winner}
     
     def share_information(self):
         if self.rule.open_blind == "open":
-            return f'In round {self.round+1}, the decisions of the bidders are: {self.bid_list}'
+            if self.exit_number == 0:
+                return f'In clock round {self.clock+1}, the price was {self.current_price}, no players dropped out'
+            else:
+                return f'In clock round {self.clock+1}, the price was {self.current_price}, {self.exit_number} players dropped out'
         elif self.rule.open_blind == "blind":
             return None
 
@@ -289,10 +304,12 @@ class Clock():
                 winner = self.agent_left[0].name
                 price = self.current_price
                 self.winner = {'winner':winner, 'price':price}
+                self.exit_list.append({"agent":winner,"bid": price})
                 return True
             elif len(self.agent_left) > 1:
                 return False
             elif len(self.agent_left) == 0:
+                self.winner = {'winner':'NA', 'price':self.current_price}
                 print("No winner")
                 return True
         elif self.rule.ascend_descend == "descend":
@@ -309,13 +326,6 @@ class Clock():
             elif len(self.agent_left) == 0:
                 return False
             
-        for agent in self.agents:
-            if agent.name == winner:
-                agent.profit.append(agent.current_value - int(price))
-                agent.winning.append(True)
-            else:
-                agent.profit.append(0)
-                agent.winning.append(False)
             
 class Bidder():
     '''
@@ -418,7 +428,10 @@ class Auction():
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
+        
         self.winner_list.append(history["winner"]["winner"])
+        print([agent.profit[self.round_number] for agent in self.agents])
+        
         self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents]})
         
     def data_to_json(self):
@@ -428,6 +441,7 @@ class Auction():
     def run_repeated(self):
         self.build_bidders()
         while self.round_number < self.rule.round:
+            print(self.agents)
             self.run()
             self.update_bidders()
             self.round_number+=1
@@ -445,9 +459,10 @@ class Auction():
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
             bid_describe = "all the exit price are {}".format(','.join(bids))
         
-        winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
-        
-        
+        if self.winner_list[self.round_number] == "NA":
+            winner_profit = 0
+        else:
+            winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
         
         for agent in self.agents:
             value_describe = f"Your value at this round is {agent.current_value}. "
