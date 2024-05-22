@@ -178,7 +178,7 @@ class Clock():
         
         ## for setting up stage
         self.rule = rule
-        self.agents = agents
+        self.agents = agents[:]
         self.change = self.rule.increment
         self.current_price = rule.common_range[0]
         self.model = model
@@ -187,7 +187,7 @@ class Clock():
         self.history = history
         
         if self.rule.ascend_descend == "ascend":
-            self.agent_left = agents
+            self.agent_left = agents[:]
         elif self.rule.ascend_descend == "descend":
             self.agent_left = []
         
@@ -441,7 +441,6 @@ class Auction():
     def run_repeated(self):
         self.build_bidders()
         while self.round_number < self.rule.round:
-            print(self.agents)
             self.run()
             self.update_bidders()
             self.round_number+=1
