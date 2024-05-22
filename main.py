@@ -36,10 +36,10 @@ if __name__ == "__main__":
     rule.describe()
 
     ## Instantiate the auction
-    a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring,cache=c, model ='gpt-4o', temperature=0)
+    a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=0)
     a.draw_value(seed=1456)
     ## Agent build
-    a.build_bidders()
+    # a.build_bidders()
     # a.run()
     a.run_repeated()
     

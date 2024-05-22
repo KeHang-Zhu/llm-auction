@@ -435,22 +435,28 @@ class Auction():
             self.update_bidders()
             self.round_number+=1
             
+            
     def update_bidders(self):
         #Following each auction, each subject observes a results summary, containing all submitted bids or exit prices, respectively, her own profit, and the winner’s profit
-
+        print("current bid number", self.round_number)
         if self.rule.seal_clock == "seal":
             bids = [agent.submitted_bids[self.round_number] for agent in self.agents]
+            bid_describe = "the submitted bids are {}".format(','.join(bids))
+
         elif self.rule.seal_clock == "clock":
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
-        bid_describe = ''.join(bids)
+            bid_describe = "the exit price are {}".format(','.join(bids))
+        
+        winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
         
         for agent in self.agents:
-            profit_describe = f"Your profit is {agent.profit[self.round_number]} and winner's profit is {self.winner_list[self.round_number]}"
+            profit_describe = f"Your profit is {agent.profit[self.round_number]} and winner's profit is {winner_profit}"
             ## combine into history
-            description = bid_describe + profit_describe
+            description = f"In round {self.round_number}, "+bid_describe + ". "+profit_describe
             agent.history.append(description)
             print(agent.history)
-            agent.build_bidder(current_round=self.round_number)
+            if self.round_number+1 < self.rule.round:
+                agent.build_bidder(current_round=self.round_number+1)
 
 
         
