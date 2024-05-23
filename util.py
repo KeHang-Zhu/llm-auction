@@ -108,6 +108,7 @@ class SealBid():
             instruction = f"""
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
+            Your value towards to the money prize is {agent.current_value} now.
             """
             q_bid = QuestionNumerical(
             question_name = "q_bid",
@@ -223,6 +224,7 @@ class Clock():
             instruction = f"""
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
+            Your value towards to the money prize is {agent.current_value} now.
             """
                  
             q_bid = QuestionYesNo(
@@ -452,11 +454,11 @@ class Auction():
         print("current bid number", self.round_number)
         if self.rule.seal_clock == "seal":
             bids = [agent.submitted_bids[self.round_number] for agent in self.agents]
-            bid_describe = "all the submitted bids are {}".format(','.join(bids))
+            bid_describe = "all the submitted bids were {}".format(','.join(bids))
 
         elif self.rule.seal_clock == "clock":
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
-            bid_describe = "all the exit price are {}".format(','.join(bids))
+            bid_describe = "all the exit price were {}".format(','.join(bids))
         
         if self.winner_list[self.round_number] == "NA":
             winner_profit = 0
@@ -464,8 +466,8 @@ class Auction():
             winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
         
         for agent in self.agents:
-            value_describe = f"Your value at this round is {agent.current_value}. "
-            profit_describe = f"Your profit is {agent.profit[self.round_number]} and winner's profit is {winner_profit}"
+            value_describe = f"Your value was {agent.current_value}. "
+            profit_describe = f"Your profit was {agent.profit[self.round_number]} and winner's profit was {winner_profit}. \n"
             ## combine into history
             description = f"In round {self.round_number}, " +bid_describe + ". "+ value_describe+ profit_describe
             agent.history.append(description)

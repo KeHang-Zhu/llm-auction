@@ -1,30 +1,30 @@
-import json
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Load the JSON file
-file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-22_11-26-44.json"
-with open(file_path, 'r') as file:
-    data = json.load(file)
+# Calculating the average of each list
+mad_2p  =[2.        , 3.        , 2.66666667, 2.8       , 2.4       ,
+       2.53333333, 2.8       , 3.2       , 2.33333333, 3.26666667]
 
-rounds = []
-mad_values = []
+list1 = [0.0, 3.5, 5.0, 1.0, 1.0, 3.0, 0.5, 2.5, 2.5, 2.0]
+list2 = [2.0, 2.5, 2.0, 1.0, 2.0, 2.0, 1.0, 2.0, 2.0, 1.5]
+list3 = [2.0, 2.0, 1.5, 0.3333333333333333, 3.5, 0.5, 0.5, 3.0, 1.5, 2.0]
+list4 = [1.5, 1.0, 2.0, 1.0, 3.0, 2.0, 4.5, 2.3333333333333335, 0.5, 1.5]
+list5 = [0.5, 2.5, 2.0, 0.5, 1.3333333333333333, 1.0, 1.0, 2.0, 0.5, 0.0]
 
-# Iterate over each round to calculate MAD
-for i in range(10):
-    round_key = f"round_{i}"
-    round_data = data[round_key]
-    values = np.array(round_data['value'])
-    bids = np.array([int(bid['bid']) for bid in round_data['history']['bidding history']])
-    mad = np.mean(np.abs(bids - values))
-    
-    rounds.append(i)
-    mad_values.append(mad)
+# Calculating the mean of the combined lists
+mad_acb = np.mean([list1, list2, list3, list4, list5], axis=0)
 
-# Plot Mean Absolute Deviation of Bids from Values vs Round
-plt.plot(rounds, mad_values, marker='o', linestyle='-', color='blue')
+
+mad_ac = [1.0, 0.5, 0.0, 0.5, 0.0, 0.5, 1.0, 0.0, 0.0, 0.5]
+rounds = range(1,11)
+
+plt.plot(rounds, mad_2p, marker='o', linestyle='-', color='blue', label='2P')
+plt.plot(rounds, mad_ac, marker='.', linestyle='--', color='red', label='AC')
+plt.plot(rounds, mad_acb, marker='', linestyle='-.', color='green', label='AC-B')
 plt.xlabel('Round')
-plt.ylabel('Mean Absolute Deviation')
-plt.title('Mean Absolute Deviation of Bids from Values vs Round')
+plt.ylabel('Mean Absolute Deviation of Bids from Values')
+# plt.title('Mean Absolute Deviation of Bids from Values vs Round')
+plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
 plt.grid(True)
+
 plt.show()

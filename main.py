@@ -24,7 +24,7 @@ if __name__ == "__main__":
     ascend_descend='ascend'
     price_order='second'
     private_value='common'
-    open_blind='open'
+    open_blind='blind'
     
     ## Set the output file
     output_dir = f"experiment_logs/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
@@ -32,12 +32,12 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
     
     ## Set the rule
-    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=2, common_range=[10, 10], private_range=10, increment=3)
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 20], private_range=20, increment=1)
     rule.describe()
 
     ## Instantiate the auction
     a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=0)
-    a.draw_value(seed=1235)
+    a.draw_value(seed=1243)
     ## Agent build
     # a.build_bidders()
     # a.run()
