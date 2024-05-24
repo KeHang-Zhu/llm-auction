@@ -20,11 +20,11 @@ if __name__ == "__main__":
     # private_value='private' or 'common'
     # open_blind='open' or 'blind' if seal_clock= 'clock' 
             #i.e. bidder don't see the drop out in the clock
-    seal_clock='clock'
+    seal_clock='seal'
     ascend_descend='ascend'
     price_order='second'
     private_value='common'
-    open_blind='blind'
+    open_blind='open'
     
     ## Set the output file
     output_dir = f"experiment_logs/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
@@ -37,7 +37,7 @@ if __name__ == "__main__":
 
     ## Instantiate the auction
     a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=0)
-    a.draw_value(seed=1243)
+    a.draw_value(seed=1238)
     ## Agent build
     # a.build_bidders()
     # a.run()

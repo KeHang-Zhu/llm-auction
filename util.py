@@ -352,13 +352,13 @@ class Bidder():
 
     def build_bidder(self, current_round):
         value_prompt = f"Your value towards to the money prize is {self.value[current_round]}"
-        goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
+        # goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
         history_prompt = ''.join(self.history[:current_round])
         
         agent_traits = {
             "scenario": self.rule.rule_explanation,
             "value": value_prompt,
-            "goal": goal_prompt,
+            # "goal": goal_prompt,
             "history": history_prompt
         }
         self.agent = Agent(name=self.name, traits = agent_traits )
