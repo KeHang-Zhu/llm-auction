@@ -32,7 +32,7 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
     
     ## Set the rule
-    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 20], private_range=20, increment=1)
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=1, common_range=[10, 20], private_range=20, increment=1)
     rule.describe()
 
     ## Instantiate the auction
