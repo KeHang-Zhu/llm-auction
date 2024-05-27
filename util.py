@@ -151,15 +151,21 @@ class SealBid():
 
         if self.rule.price_order == "first":
             if len(sorted_bids) > 0:
-                winner = sorted_bids[0]["agent"]
+                same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
+                winner = random.choice(same_bids)["agent"]
+                # winner = sorted_bids[0]["agent"]
                 price = sorted_bids[0]["bid"]
         elif self.rule.price_order == "second":
             if len(sorted_bids) > 1:
-                winner = sorted_bids[0]["agent"]
+                same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
+                winner = random.choice(same_bids)["agent"]
+                # winner = sorted_bids[0]["agent"]
                 price = sorted_bids[1]["bid"]
         elif self.rule.price_order == "third":
             if len(sorted_bids) > 2:
-                winner = sorted_bids[0]["agent"]
+                same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
+                winner = random.choice(same_bids)["agent"]
+                # winner = sorted_bids[0]["agent"]
                 price = sorted_bids[2]["bid"]
         else: 
             raise ValueError(f"Rule {self.rule.price_order} not allowed")
@@ -311,8 +317,10 @@ class Clock():
             elif len(self.agent_left) > 1:
                 return False
             elif len(self.agent_left) == 0:
-                self.winner = {'winner':'NA', 'price':self.current_price}
-                print("No winner")
+                winners = [self.exit_list[i]["agent"] for i in range(len(self.exit_list)) if self.exit_list[i]["bid"] == self.current_price]
+                # randomly choose a winner
+                winner = random.choice(winners)
+                self.winner = {'winner':winner, 'price':self.current_price}
                 return True
         elif self.rule.ascend_descend == "descend":
             if len(self.agent_left) == 1:
@@ -462,10 +470,10 @@ class Auction():
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
             bid_describe = "all the exit price were {}".format(','.join(bids))
         
-        if self.winner_list[self.round_number] == "NA":
-            winner_profit = 0
-        else:
-            winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
+        # if self.winner_list[self.round_number] == "NA":
+        #     winner_profit = 0
+        # else:
+        winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
         
         for agent in self.agents:
             value_describe = f"Your value was {agent.current_value}. "
