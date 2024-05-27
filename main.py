@@ -19,19 +19,19 @@ if __name__ == "__main__":
     # private_value='private' or 'common'
     # open_blind='open' or 'blind' if seal_clock= 'clock' 
             #i.e. bidder don't see the drop out in the clock
-    seal_clock='clock'
+    seal_clock='seal'
     ascend_descend='ascend'
     price_order='second'
     private_value='common'
     open_blind='open'
     
     ## Set the output file
-    output_dir = f"experiment_logs/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
+    output_dir = f"experiment_logs/V1/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
     ## Set the rule
-    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 100], private_range=20, increment=5)
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=1, common_range=[10, 100], private_range=20, increment=1)
     rule.describe()
 
     N = 1 # repeat for n time
