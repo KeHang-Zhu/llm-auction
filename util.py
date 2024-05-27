@@ -86,11 +86,11 @@ class SealBid():
         self.model = model
         self.cache = cache
         
-        self.scenario = Scenario({
-            'agent_1_name': agents[0].name, 
-            'agent_2_name': agents[1].name, 
-            'the history of this game': self.history
-            }) 
+        # self.scenario = Scenario({
+        #     'agent_1_name': agents[0].name, 
+        #     'agent_2_name': agents[1].name, 
+        #     'the history of this game': self.history
+        #     }) 
         
         ## for bidding 
         self.bid_list = []
@@ -346,6 +346,7 @@ class Bidder():
         # self.winner_profit = []
         self.winning = []
         self.history = []
+        self.reasoning = []
         
     def __repr__(self):
         return repr(self.agent)
@@ -413,9 +414,10 @@ class Auction():
         
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
+        name_list = ["A", "B", "C", "D", "E"]
         for i in range(self.number_agents):
             bidder_values = [self.values_list[round_num][i] for round_num in range(self.rule.round)]
-            agent = Bidder(bidder_values, name = i, rule=self.rule)
+            agent = Bidder(bidder_values, name = name_list[i], rule=self.rule)
             agent.build_bidder(current_round=self.round_number)
             self.agents.append(agent)
  

@@ -6,8 +6,7 @@ import sys
 
 from util import Rule, Auction
 
-## output files
-timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+
 
     
 if __name__ == "__main__":
@@ -20,7 +19,7 @@ if __name__ == "__main__":
     # private_value='private' or 'common'
     # open_blind='open' or 'blind' if seal_clock= 'clock' 
             #i.e. bidder don't see the drop out in the clock
-    seal_clock='seal'
+    seal_clock='clock'
     ascend_descend='ascend'
     price_order='second'
     private_value='common'
@@ -32,16 +31,20 @@ if __name__ == "__main__":
         os.makedirs(output_dir)
     
     ## Set the rule
-    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=1, common_range=[10, 20], private_range=20, increment=1)
+    rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 100], private_range=20, increment=5)
     rule.describe()
 
+    N = 1 # repeat for n time
     ## Instantiate the auction
-    a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=0)
-    a.draw_value(seed=1238)
-    ## Agent build
-    # a.build_bidders()
-    # a.run()
-    a.run_repeated()
+    for i in range(N):
+        ## output files
+        timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
+        a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4', temperature=0)
+        a.draw_value(seed=1256 + i )
+        ## Agent build
+        # a.build_bidders()
+        # a.run()
+        a.run_repeated()
     
     # ## store the analysis data
     # a.data_to_json(output_dir=output_dir, timestring=timestring)
