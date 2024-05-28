@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V1/')
+templates_dir = os.path.join(current_script_path, './rule_template/V0/')
 
 c = Cache()  
 
@@ -33,7 +33,7 @@ class Rule:
     '''
     This class defines different auction rules and their behaviors.
     '''
-    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind, rounds, common_range=[10, 100], private_range=20, increment=5):
+    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind, rounds, common_range=[10, 100], private_range=20, increment=1):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -118,6 +118,7 @@ class SealBid():
             survey = Survey(questions = [q_bid])
             result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
+            agent.reasoning.append(result.select("comment.*")[0]['comment.q_bid_comment'][0])
             self.bid_list.append({"agent":agent.name,"bid": response})
             agent.submitted_bids.append(response)
             
@@ -477,9 +478,10 @@ class Auction():
         
         for agent in self.agents:
             value_describe = f"Your value was {agent.current_value}. "
+            reasoning_describe = f'Your reasoning for your decision was {agent.reasoning[self.round_number]}'
             profit_describe = f"Your profit was {agent.profit[self.round_number]} and winner's profit was {winner_profit}. \n"
             ## combine into history
-            description = f"In round {self.round_number}, " +bid_describe + ". "+ value_describe+ profit_describe
+            description = f"In round {self.round_number}, " +bid_describe + ". "+ value_describe+". "+ reasoning_describe + profit_describe
             agent.history.append(description)
             print(agent.history)
             if self.round_number+1 < self.rule.round:
