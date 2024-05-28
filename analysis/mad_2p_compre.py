@@ -92,13 +92,14 @@ def calculate_average_mad(file_paths):
 # file_paths = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-31-47.json","/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-33-21.json","/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-34-48.json",
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-36-14.json",
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-37-37.json"]
-# file_paths0 = [
-# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-33-21.json"
-# ]
+file_paths0 = [
+"/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-33-21.json"
+]
 # file_paths0 =
-# file_paths1 = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-29-50.json"]
-
-file_paths = [
+file_paths1 = [
+    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-29-50.json", 
+    ]
+file_paths2 = [
     # 
     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-37-01.json",
     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-07-42.json",
@@ -107,12 +108,18 @@ file_paths = [
     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-12-07.json"
     ]
 
-# file_paths4=["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-47-43.json"]
-rounds, ave_mad_values= calculate_average_mad(file_paths)
+file_paths4=["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-47-43.json"]
+rounds, ave_mad_values0 = calculate_average_mad(file_paths0)
+rounds, ave_mad_values1 = calculate_average_mad(file_paths1)
+
+rounds, ave_mad_values2 = calculate_average_mad(file_paths2)
+rounds, ave_mad_values4 = calculate_average_mad(file_paths4)
 
 # Plot Mean Absolute Deviation of Bids from Values vs Round
-plt.plot(rounds, ave_mad_values, marker='o', linestyle='--', color='blue', label='reasoning, T =0.5 ')
-
+plt.plot(rounds, ave_mad_values0, marker='o', linestyle='--', color='black', label='wo-reasoning, T =0 ')
+plt.plot(rounds, ave_mad_values4, marker='.', linestyle='--', color='green', label= 'wo-reasoning, T=0.5')
+plt.plot(rounds, ave_mad_values1, marker='o', linestyle='-', color='blue', label='reasoning, T=0')
+plt.plot(rounds, ave_mad_values2, marker='.', linestyle='-', color='red', label= 'reasoning, T=0.5')
 # Plot Mean Absolute Deviation of Bids from Values vs Round
 # plt.plot(rounds, mad_values, marker='o', linestyle='-', color='blue')
 plt.xlabel('Round')

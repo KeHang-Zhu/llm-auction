@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V0/')
+templates_dir = os.path.join(current_script_path, './rule_template/V1/')
 
 c = Cache()  
 
