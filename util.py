@@ -33,7 +33,7 @@ class Rule:
     '''
     This class defines different auction rules and their behaviors.
     '''
-    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind, rounds, common_range=[10, 100], private_range=20, increment=1):
+    def __init__(self, seal_clock, ascend_descend, private_value, price_order, open_blind, rounds, common_range=[10, 60], private_range=30, increment=1, number_agents=3):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -43,22 +43,29 @@ class Rule:
         self.common_range = common_range
         self.private_range = private_range
         self.increment = increment
+        self.number_agents = number_agents
         
         ## Rule prompt
-        intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
-        intro = intro_string.render({"n":self.round})
+        # intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
+        # intro = intro_string.render({"n":self.round})
 
-        value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"value_{self.private_value}.txt"))
-        value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range})
+        value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"intro_{self.private_value}.txt"))
+        value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range, "num_bidders": self.number_agents-1})
         
         if self.seal_clock == 'clock':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}.txt"))
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.open_blind}.txt"))
         elif self.seal_clock == 'seal':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price.txt"))
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.open_blind}.txt"))
         game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range})
         
+        if self.round > 1:
+            multi_string = Prompt.from_txt(os.path.join(templates_dir,"multi.txt"))
+            ending = multi_string.render({"n":self.round})
+        else:
+            ending = ''
+        
         ## Combine the rule prompt
-        self.rule_explanation = intro  + value_explain + game_type
+        self.rule_explanation =  value_explain + game_type + ending
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
@@ -148,7 +155,7 @@ class SealBid():
             
     def declare_winner_and_price(self):
         '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
-        sorted_bids = sorted(self.bid_list, key=lambda x: x['bid'], reverse=True)
+        sorted_bids = sorted(self.bid_list, key=lambda x: int(x['bid']), reverse=True)
 
         if self.rule.price_order == "first":
             if len(sorted_bids) > 0:
@@ -478,7 +485,10 @@ class Auction():
         
         for agent in self.agents:
             value_describe = f"Your value was {agent.current_value}. "
-            reasoning_describe = f'Your reasoning for your decision was {agent.reasoning[self.round_number]}'
+            if self.rule.seal_clock == "seal":
+                reasoning_describe = f'Your reasoning for your decision was {agent.reasoning[self.round_number]}'
+            else:
+                reasoning_describe = ""
             profit_describe = f"Your profit was {agent.profit[self.round_number]} and winner's profit was {winner_profit}. \n"
             ## combine into history
             description = f"In round {self.round_number}, " +bid_describe + ". "+ value_describe+". "+ reasoning_describe + profit_describe
