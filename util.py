@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V2/')
+templates_dir = os.path.join(current_script_path, './rule_template/V4/')
 
 c = Cache()  
 
@@ -36,7 +36,7 @@ class Rule:
     def __init__(self, seal_clock,  private_value, open_blind, rounds, 
                  ascend_descend="ascend",
                  price_order = "second",
-                 common_range=[10, 100], private_range=20, increment=1, number_agents=3):
+                 common_range=[10, 80], private_range=20, increment=1, number_agents=3):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -59,16 +59,16 @@ class Rule:
             game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
         elif self.seal_clock == 'seal':
             game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
-        game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1})
+        game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
-        if self.round > 1:
-            multi_string = Prompt.from_txt(os.path.join(templates_dir,"multi.txt"))
-            ending = multi_string.render({"n":self.round})
-        else:
-            ending = ''
+        # if self.round > 1:
+        #     multi_string = Prompt.from_txt(os.path.join(templates_dir,"multi.txt"))
+        #     ending = multi_string.render({"n":self.round})
+        # else:
+        #     ending = ''
         
         ## Combine the rule prompt
-        self.rule_explanation =  game_type + ending
+        self.rule_explanation =  game_type
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
@@ -418,12 +418,12 @@ class Auction():
         
         for i in range(self.rule.round):
             # Generate a common value from a range
-            # if self.rule.private_value == 'private':
-            #     common_value = 0
-            # elif self.rule.private_value == 'common':
-            common_value = random.randint(*self.rule.common_range)
-            # else:
-            #     raise ValueError(f"Rule {self.rule.private_value} not allowed")
+            if self.rule.private_value == 'private':
+                common_value = 0
+            elif self.rule.private_value == 'common':
+                common_value = random.randint(*self.rule.common_range)
+            else:
+                raise ValueError(f"Rule {self.rule.private_value} not allowed")
 
             # Generate a private value for each agent and sum it with the common value
             for j in range(self.number_agents):  # Now self.number_agents should be an integer
@@ -477,13 +477,18 @@ class Auction():
         print("current bid number", self.round_number)
         if self.rule.seal_clock == "seal":
             bids = [agent.submitted_bids[self.round_number] for agent in self.agents]
-            bid_describe = "all the submitted bids were {}".format(','.join(bids))
+            sorted_bids = sorted(bids, reverse=True)
+            bid_describe = "all the submitted bids, from high to low, were {}".format(', '.join(map(str, sorted_bids)))
+            if self.rule.price_order == "second":
+                bid_describe += f'. The highest bidder won with a bid of {sorted_bids[0]}, and paid {sorted_bids[1]}. '
+            elif self.rule.price_order == "first":
+                bid_describe += f'. The highest bidder won with a bid of {sorted_bids[0]}, and paid {sorted_bids[0]}. '
 
         elif self.rule.seal_clock == "clock":
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
-            bid_describe = "all the exit price were {}".format(','.join(bids))
+            sorted_bids = sorted(bids, reverse=True)
+            bid_describe = "all the exit price, from high to low, were {}".format(', '.join(map(str, sorted_bids)))
         
-        bid_describe += '. '
         # if self.winner_list[self.round_number] == "NA":
         #     winner_profit = 0
         # else:
@@ -495,7 +500,7 @@ class Auction():
             elif self.rule.seal_clock == "clock":
                 bid_last_round = agent.exit_price[self.round_number] 
                 
-            value_describe = f"Your value was {agent.current_value}. And you bid {bid_last_round}.  "
+            value_describe = f"Your value was {agent.current_value}. And you bid {bid_last_round}. "
             if self.rule.seal_clock == "seal":
                 reasoning_describe = f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' "
             else:
@@ -503,7 +508,7 @@ class Auction():
             total = sum(agent.profit[:])
             profit_describe = f"Your profit was {agent.profit[self.round_number]} and winner's profit was {winner_profit}. Your total profit is {total} \n"
             ## combine into history
-            description = f"In round {self.round_number}, " +bid_describe + value_describe + profit_describe + reasoning_describe
+            description = f"In round {self.round_number}, " + value_describe + profit_describe + reasoning_describe + bid_describe
             agent.history.append(description)
             print(agent.history)
             if self.round_number+1 < self.rule.round:
