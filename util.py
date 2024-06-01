@@ -72,7 +72,7 @@ class Rule:
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
-            self.asking_prompt = "You need to maximize your total profit. How much do you like to bid?"
+            self.asking_prompt = "Learn from the history of previous rounds. You want to maximize your total profit. How much would you like to bid?"
         elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
                 self.asking_prompt = "Do you want to stay in the bidding?"
@@ -184,14 +184,15 @@ class SealBid():
         self.winner = {'winner':winner, 'price':price}
         for agent in self.agents:
             if agent.name == winner:
-                # if self.rule.private_value == "common"
-                agent.profit.append(agent.current_value - int(price))
+                if self.rule.private_value == "private":
+                    agent.profit.append(agent.current_value - int(price))
+                elif self.rule.private_value == "common":
+                    agent.profit.append(agent.current_common - int(price))
                 agent.winning.append(True)
             else:
                 agent.profit.append(0)
                 agent.winning.append(False)
     
-
 class Clock():
     def __init__(self, agents, rule, model, cache=c, history=None):
         
@@ -240,7 +241,7 @@ class Clock():
             other_agent_names = ', '.join([a.name for a in agent_in_play if a is not agent])
 
             instruction = f"""
-            You are {agent.name}. 
+            You are {agent.name}.
             You are bidding with { other_agent_names}.
             Your value towards to the prize is {agent.current_value} in this round.
             """
@@ -353,13 +354,15 @@ class Bidder():
     '''
     This class specifies the agents
     '''
-    def __init__(self, value_list, name, rule):
+    def __init__(self, value_list, name, rule, common_value_list=[]):
         self.agent = None
         self.rule = rule
         
         self.name = f"Bidder {name}"
         self.value = value_list
         self.current_value = value_list[0]
+        self.common_value = common_value_list
+        self.current_common = common_value_list[0] if common_value_list is not None else 0
         self.submitted_bids = []
         self.exit_price = []
         self.profit = []
@@ -385,6 +388,7 @@ class Bidder():
         }
         self.agent = Agent(name=self.name, traits = agent_traits )
         self.current_value = self.value[current_round]
+        self.current_common = self.common_value[current_round]
      
    
 class Auction():
@@ -404,6 +408,7 @@ class Auction():
         self.bids = []          # To store bid values
         self.history = []
         self.values_list = []
+        self.common_value_list = []
         self.winner_list = []
         self.data_to_save = {}
         
@@ -424,6 +429,8 @@ class Auction():
                 common_value = random.randint(*self.rule.common_range)
             else:
                 raise ValueError(f"Rule {self.rule.private_value} not allowed")
+            
+            self.common_value_list.append(common_value)
 
             # Generate a private value for each agent and sum it with the common value
             for j in range(self.number_agents):  # Now self.number_agents should be an integer
@@ -438,7 +445,7 @@ class Auction():
         name_list = ["Andy", "Betty", "Charles", "D", "E"]
         for i in range(self.number_agents):
             bidder_values = [self.values_list[round_num][i] for round_num in range(self.rule.round)]
-            agent = Bidder(bidder_values, name = name_list[i], rule=self.rule)
+            agent = Bidder(value_list=bidder_values, common_value_list=self.common_value_list, name = name_list[i], rule=self.rule)
             agent.build_bidder(current_round=self.round_number)
             self.agents.append(agent)
  
@@ -457,7 +464,7 @@ class Auction():
         self.winner_list.append(history["winner"]["winner"])
         print([agent.profit[self.round_number] for agent in self.agents])
         
-        self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents]})
+        self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents], "common": self.common_value_list[self.round_number]})
         
     def data_to_json(self):
 
@@ -478,37 +485,71 @@ class Auction():
         if self.rule.seal_clock == "seal":
             bids = [agent.submitted_bids[self.round_number] for agent in self.agents]
             sorted_bids = sorted(bids, reverse=True)
-            bid_describe = "all the submitted bids, from high to low, were {}".format(', '.join(map(str, sorted_bids)))
+            bid_describe = "All the bids for this round were {}".format(', '.join(map(str, sorted_bids)))
             if self.rule.price_order == "second":
-                bid_describe += f'. The highest bidder won with a bid of {sorted_bids[0]}, and paid {sorted_bids[1]}. '
+                bid_describe += f". The highest bidder won with a bid of {sorted_bids[0]} and paid {sorted_bids[1]}."
             elif self.rule.price_order == "first":
-                bid_describe += f'. The highest bidder won with a bid of {sorted_bids[0]}, and paid {sorted_bids[0]}. '
-
+                bid_describe += f". The highest bidder won with a bid of {sorted_bids[0]} and would’ve preferred to bid {int(sorted_bids[1]) + 1}."
         elif self.rule.seal_clock == "clock":
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
             sorted_bids = sorted(bids, reverse=True)
-            bid_describe = "all the exit price, from high to low, were {}".format(', '.join(map(str, sorted_bids)))
-        
+            bid_describe = "All the exit prices for this round were {}".format(', '.join(map(str, sorted_bids)))
+
+
         # if self.winner_list[self.round_number] == "NA":
         #     winner_profit = 0
         # else:
         winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
         
-        for agent in self.agents:
-            if self.rule.seal_clock == "seal":
-                bid_last_round = agent.submitted_bids[self.round_number]
-            elif self.rule.seal_clock == "clock":
-                bid_last_round = agent.exit_price[self.round_number] 
+        # for agent in self.agents:
+        #     if self.rule.seal_clock == "seal":
+        #         bid_last_round = agent.submitted_bids[self.round_number]
+        #     elif self.rule.seal_clock == "clock":
+        #         bid_last_round = agent.exit_price[self.round_number] 
                 
-            value_describe = f"Your value was {agent.current_value}. And you bid {bid_last_round}. "
-            if self.rule.seal_clock == "seal":
-                reasoning_describe = f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' "
-            else:
-                reasoning_describe = ""
-            total = sum(agent.profit[:])
-            profit_describe = f"Your profit was {agent.profit[self.round_number]} and winner's profit was {winner_profit}. Your total profit is {total} \n"
-            ## combine into history
-            description = f"In round {self.round_number}, " + value_describe + profit_describe + reasoning_describe + bid_describe
+        #     value_describe = f"Your value was {agent.current_value}. And you bid {bid_last_round}. "
+        #     if self.rule.seal_clock == "seal":
+        #         reasoning_describe = f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' "
+        #     else:
+        #         reasoning_describe = ""
+        #     total = sum(agent.profit[:])
+        #     profit_describe = f"Your profit was {agent.profit[self.round_number]} and winner's profit was {winner_profit}. Your total profit is {total} \n"
+        #     ## combine into history
+        #     description = f"In round {self.round_number}, " + value_describe + profit_describe + reasoning_describe + bid_describe
+            
+        for agent in self.agents:
+            if self.rule.private_value == "private":
+                if self.rule.seal_clock == "seal":
+                    bid_last_round = agent.submitted_bids[self.round_number]
+                elif self.rule.seal_clock == "clock":
+                    bid_last_round = agent.exit_price[self.round_number]
+                value_describe = f"Your value was {agent.current_value}, you bid {bid_last_round}, and your profit was {agent.profit[self.round_number]}."
+                total = sum(agent.profit[:])
+                total_profit_describe = f"Your total profit is {total}. "
+                #Combine the personal results and group results
+                description = (
+                    f"In round {self.round_number}, "
+                    + value_describe + "\n"
+                    + total_profit_describe + "\n"
+                    + bid_describe + f" The winner's profit was {winner_profit}."  + "\n"
+                    + (f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' " if self.rule.seal_clock == "seal" else "")
+                )
+            elif self.rule.private_value == "common":
+                if self.rule.seal_clock == "seal":
+                    bid_last_round = agent.submitted_bids[self.round_number]
+                elif self.rule.seal_clock == "clock":
+                    bid_last_round = agent.exit_price[self.round_number]
+                value_describe = f"Your (perceived) total value was {agent.current_value}, you bid {bid_last_round}, the (true) common value of the prize was {agent.current_common}, and your profit (based on the true value of the prize) was {agent.profit[self.round_number]}."
+                total = sum(agent.profit[:])
+                total_profit_describe = f"Your total profit is {total}. "
+                #Combine the personal results and group results
+                description = (
+                    f"In round {self.round_number}, "
+                    + value_describe + "\n"
+                    + total_profit_describe + "\n"
+                    + bid_describe + f" The winner's profit was {winner_profit}."  + "\n"
+                    + (f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' " if self.rule.seal_clock == "seal" else "")
+                )
             agent.history.append(description)
             print(agent.history)
             if self.round_number+1 < self.rule.round:
