@@ -5,7 +5,7 @@ import pandas as pd
 import sys
 
 from util import Rule, Auction
-
+from util_human import Auction_human
 
 
     
@@ -22,18 +22,19 @@ if __name__ == "__main__":
     seal_clock='seal'
     ascend_descend=''
     price_order='second'
-    private_value='private'
+    private_value='common'
     open_blind='close'
     number_agents=3
+    human = True
     
     ## Set the output file
-    output_dir = f"experiment_logs/V2/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
+    output_dir = f"experiment_logs/V3/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
     ## Set the rule
     # rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 60], private_range=30, increment=1, number_agents=number_agents)
-    rule = Rule(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 20], private_range=20, increment=1, number_agents=number_agents)
+    rule = Rule(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=15, common_range=[0, 79], private_range=20, increment=1, number_agents=number_agents)
     rule.describe()
 
     # model = "gpt-4-1106-preview"
@@ -42,8 +43,11 @@ if __name__ == "__main__":
     for i in range(N):
         ## output files
         timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
-        a = Auction(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=0.5)
-        a.draw_value(seed=1264 + i )
+        if human:
+            a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=1)
+        else: 
+            a = Auction(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=1)
+        a.draw_value(seed=1266 + i )
         ## Agent build
         # a.build_bidders()
         # a.run()

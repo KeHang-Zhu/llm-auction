@@ -52,7 +52,7 @@ plt.plot(values, bids, marker='o', linestyle='', color='blue', label='LLM SPSB')
 
 print(values, bids)
 
-plt.plot(values, bids, marker='.', linestyle='', color='red', label='LLM SPSB')
+plt.plot(values2, bids2, marker='.', linestyle='', color='red', label='LLM FPSB')
 
 # Plot the theoretical prediction where values = bids
 max_value = max(max(values), max(bids))
