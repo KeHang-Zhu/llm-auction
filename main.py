@@ -51,9 +51,9 @@ if __name__ == "__main__":
         ## Agent build
         # a.build_bidders()
         # a.run()
-        a.run_repeated()
+        # a.run_repeated()
     
     # ## store the analysis data
     # a.data_to_json(output_dir=output_dir, timestring=timestring)
     ## store the raw data
-    c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
+    # c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
