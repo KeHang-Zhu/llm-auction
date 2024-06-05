@@ -125,11 +125,12 @@ class SealBid():
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
             rule_explain = self.game_type_string.render({"name": agent.name, "name_others":other_agent_names, "num_bidders": self.rule.number_agents-1,"min_price":self.rule.common_range[0],"max_price":self.rule.common_range[1]+self.rule.private_range,"value": agent.current_value, "private":self.rule.private_range })   
             # print(str(rule_explain))
+            history_prompt = ''.join(agent.history[:])
             q_bid = QuestionNumerical(
             question_name = "q_bid",
-            question_text = str(rule_explain) + self.rule.asking_prompt
+            question_text = str(rule_explain) + "\n" + "The previous round histories are: " +history_prompt + "\n" + self.rule.asking_prompt
                 )
-            # print(q_bid)
+            print(q_bid)
             result = self.model.simple_ask(q_bid)
             response = result['choices'][0]['message']['content']
             print(response)

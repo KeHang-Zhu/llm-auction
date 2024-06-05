@@ -34,11 +34,11 @@ if __name__ == "__main__":
     
     ## Set the rule
     # rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 60], private_range=30, increment=1, number_agents=number_agents)
-    rule = Rule(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=15, common_range=[0, 79], private_range=20, increment=1, number_agents=number_agents)
+    rule = Rule(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=15, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
     rule.describe()
 
     # model = "gpt-4-1106-preview"
-    N = 10 # repeat for n time
+    N = 5 # repeat for n time
     ## Instantiate the auction
     for i in range(N):
         ## output files
@@ -51,9 +51,9 @@ if __name__ == "__main__":
         ## Agent build
         # a.build_bidders()
         # a.run()
-        # a.run_repeated()
+        a.run_repeated()
     
     # ## store the analysis data
     # a.data_to_json(output_dir=output_dir, timestring=timestring)
     ## store the raw data
-    # c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
+    c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
