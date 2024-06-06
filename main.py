@@ -24,7 +24,7 @@ if __name__ == "__main__":
     price_order='second'
     private_value='common'
     open_blind='close'
-    number_agents=2
+    number_agents=6
     human = False
     
     ## Set the output file
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     rule.describe()
 
     # model = "gpt-4-1106-preview"
-    N = 10 # repeat for n time
+    N = 3 # repeat for n time
     ## Instantiate the auction
     for i in range(N):
         ## output files
@@ -47,7 +47,7 @@ if __name__ == "__main__":
             a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=1)
         else: 
             a = Auction(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4o', temperature=1)
-        a.draw_value(seed=1266 + i )
+        a.draw_value(seed=1276 + i )
         ## Agent build
         # a.build_bidders()
         # a.run()
