@@ -21,14 +21,14 @@ if __name__ == "__main__":
             #i.e. bidder don't see the drop out in the clock
     seal_clock='seal'
     ascend_descend=''
-    price_order='second'
-    private_value='common'
+    price_order='first'
+    private_value='private'
     open_blind='close'
     number_agents=3
-    human = True
+    human = False
     
     ## Set the output file
-    output_dir = f"experiment_logs/V3/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
+    output_dir = f"experiment_logs/V5/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
@@ -38,7 +38,7 @@ if __name__ == "__main__":
     rule.describe()
 
     # model = "gpt-4-1106-preview"
-    N = 5 # repeat for n time
+    N = 10 # repeat for n time
     ## Instantiate the auction
     for i in range(N):
         ## output files

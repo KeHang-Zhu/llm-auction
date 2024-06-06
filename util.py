@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V4/')
+templates_dir = os.path.join(current_script_path, './rule_template/V5/')
 
 c = Cache()  
 
@@ -572,7 +572,7 @@ if __name__ == "__main__":
     open_blind='close'
     number_agents=2
     
-    rule = Rule(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=20, common_range=[0, 79], private_range=20, increment=1, number_agents=number_agents)
+    rule = Rule(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=20, common_range=[0, 79], private_range=79, increment=1, number_agents=number_agents)
     rule.describe()
     
     model_list = ["gpt-4-1106-preview", "gpt-4-turbo", "gpt-3.5","gpt-4o"]
