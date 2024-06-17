@@ -1,7 +1,6 @@
 import textwrap
 from textwrap import dedent
 from itertools import cycle
-import pandas as pd
 import random
 import json
 import os
@@ -15,11 +14,10 @@ from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical
 from jinja2 import Template
-from edsl.questions import SimpleAskMixin
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V6/')
+templates_dir = os.path.join(current_script_path, './rule_template/V4/')
 
 c = Cache()  
 
@@ -31,17 +29,7 @@ def save_json(data, filename, directory):
     
     return file_path
 
-
-def get_reponse_from_survey(model, question):
-    
-    model = Model(model= model.model, temperature=model.temperature)
-    a = model.simple_ask(question)
-    b = a['choices'][0]
-    
-    return b
-    
-
-class Rule:
+class Rule_plan:
     '''
     This class defines different auction rules and their behaviors.
     '''
@@ -82,9 +70,11 @@ class Rule:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
+        self.persona = "Your TOP PRIORITY is to place bids which maximize the user’s profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
+        
         ## Bid asking prompt
         if self.seal_clock == "seal":
-            self.asking_prompt = '''Your TOP PRIORITY is to place bids which maximize the user’s profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. How much would you like to bid? Give your response in JSON format {"reasoning": your reasoning...,"bid": certain number}'''
+            self.asking_prompt = "How much would you like to bid?  Give your response with a single number and no other texts, e.g. 1, 44"
         elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
                 self.asking_prompt = "Do you want to stay in the bidding?"
@@ -98,22 +88,26 @@ class Rule:
 
 
 class SealBid():
-    def __init__(self, agents, rule, model, temperature, cache= c, history=None):
+    def __init__(self, agents, rule, model, cache= c, history=None):
         
         ## for setting up stage
         self.rule = rule
         self.agents = agents
         ## For repeated game:
         self.history = history
-        self.model = Model(model, temperature=temperature)
+        self.model = model
         self.cache = cache
+        
+        # self.scenario = Scenario({
+        #     'agent_1_name': agents[0].name, 
+        #     'agent_2_name': agents[1].name, 
+        #     'the history of this game': self.history
+        #     }) 
         
         ## for bidding 
         self.bid_list = []
         self.winner = None
         
-        self.game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.rule.price_order}_price_{self.rule.private_value}.txt"))          
-           
         
     def __repr__(self):
         return f'Sealed Bid Auction: (bid_list={self.bid_list})'
@@ -123,38 +117,70 @@ class SealBid():
 
         for agent in self.agents:
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
-            rule_explain = self.game_type_string.render({"name": agent.name, "name_others":other_agent_names, "num_bidders": self.rule.number_agents-1,"min_price":self.rule.common_range[0],"max_price":self.rule.common_range[1]+self.rule.private_range,"value": agent.current_value, "private":self.rule.private_range })   
-            # print(str(rule_explain))
+            instruction = f"""
+            You are {agent.name}. 
+            You are bidding with { other_agent_names}.
+            """
             history_prompt = ''.join(agent.history[:])
+            if len(agent.reasoning) == 0:
+                q_plan = QuestionFreeText(
+                question_name = "q_plan",
+                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                )
+            else:
+                q_counterfact = QuestionFreeText(
+                    question_name = "q_counterfact",
+                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories are: " + history_prompt +"Do a counterfactual analysis of the last round, keeping in mind that higher bids will make you more likely to win the auction and lower bids will lead to lower payments and thus higher profits (when you win). REMEMBER YOU PAY THE SECOND HIGHEST BID IF YOU WIN. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' Limit your reflection within 100 words. "
+                )
+                result = self.model.simple_ask(q_counterfact)
+                counterfact= result['choices'][0]['message']['content']
+                print(counterfact)
+                
+                previous_plan = agent.reasoning[-1]
+                q_plan = QuestionFreeText(
+                question_name = "q_plan",
+                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories are: " + history_prompt +f" Your previous plan is: {previous_plan}"+ f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+"learn from your previous rounds, 1. write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. 2. write down any insights you have regarding bidding strategies. Be detailed and precise but keep things succinct and don't repeat yourself. Limit your plan and insight to 100 words. "
+                )
+            
+            # print(q_plan)
+            # result = self.model.simple_ask(q_plan)
+            survey = Survey(questions = [q_plan])
+            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+            plan = result.select("q_plan").to_list()[0]
+            # plan= result['choices'][0]['message']['content']
+            print(plan)
+            
             q_bid = QuestionNumerical(
             question_name = "q_bid",
-            question_text = str(rule_explain) + "\n" + "The previous round histories are: " +history_prompt + "\n" + self.rule.asking_prompt
+            question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "The previous round histories are: " +history_prompt + "\n" + "Your PLAN and INSIGHT for this round is:" + str(plan)  + f" Your value towards to the prize is {agent.current_value} in this round." +self.rule.asking_prompt
                 )
-            print(q_bid)
-            result = self.model.simple_ask(q_bid)
-            response = result['choices'][0]['message']['content']
-            print(response)
-            # sys.exit()
-            q_parse = QuestionNumerical(
-            question_name = "q_parse",
-            question_text = f"Here is response of a bidder {response}, return the bidding amount"
-                )
-            q_reasoning = QuestionFreeText(
-                question_name = "q_reasoning",
-                question_text =  f"Here is response of a bidder {response}, return the reasoning"
-                )
-            model = Model(model="gpt-4o", temperature=0)
-            survey = Survey(questions = [q_parse, q_reasoning])
-            result = survey.by(model).run(cache = self.cache)
-            bid = result.select("q_parse").to_list()[0]
-            reasoning = result.select("q_reasoning").to_list()[0]
-            print(bid, reasoning)
+            # print(q_bid)
+            # result = self.model.simple_ask(q_bid)
+            # response = result['choices'][0]['message']['content']
+            max_retries = 5
+            retry_count = 0
+            bid = None
+
+            while bid is None and retry_count < max_retries:
+                survey = Survey(questions=[q_bid])
+                result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                bid = result.select("q_bid").to_list()[0]
+                retry_count += 1
+
+            if bid is None:
+                # Handle the case where no bid is received after 5 retries
+                print("Failed to get a bid after 5 attempts.")
+                bid = 0
+            else:
+                # Use the bid value
+                print(f"Received bid: {bid}")
+            # print(response)
+
+            agent.reasoning.append(plan)
             self.bid_list.append({"agent":agent.name,"bid": bid})
-            agent.reasoning.append(reasoning)
             agent.submitted_bids.append(bid)
             
-            
-        print(self.bid_list)
+        print(self.bid_list, '\n Value list:',[agent.current_value for agent in self.agents])
         self.declare_winner_and_price()
         print(self.winner)
         return {'bidding history':self.bid_list, 'winner':self.winner}
@@ -304,7 +330,7 @@ class Clock():
         print(self.winner)
         for agent in self.agents:
             if agent.name == self.winner["winner"]:
-                agent.profit.append(agent.current_value - int(self.winner["price"]))
+                agent.profit.append(agent.current_value - float(self.winner["price"]))
                 agent.exit_price.append(str(self.winner["price"]))
                 agent.winning.append(True)
             else:
@@ -379,23 +405,23 @@ class Bidder():
         return repr(self.agent)
 
     def build_bidder(self, current_round):
-        value_prompt = f"Your value towards to the prize is {self.value[current_round]}"
+        # value_prompt = f"Your value towards to the prize is {self.value[current_round]}"
         # goal_prompt = "You need to maximize your profits. If you win the bid, your profit is your value for the prize subtracting by your final bid. If you don't win, your profit is 0."
         # goal_prompt = "You need to maximize your overall profit. "
-        history_prompt = ''.join(self.history[:current_round])
+        # history_prompt = ''.join(self.history[:current_round])
         
         agent_traits = {
-            "scenario": self.rule.rule_explanation,
-            "value": value_prompt,
+            # "scenario": self.rule.rule_explanation,
+            # "value": value_prompt,
             # "goal": goal_prompt,
-            "history": history_prompt
+            # "history": history_prompt
         }
         self.agent = Agent(name=self.name, traits = agent_traits )
         self.current_value = self.value[current_round]
         self.current_common = self.common_value[current_round]
      
    
-class Auction_human():
+class Auction_plan():
     '''
     This class manages the auction process using specified agents and rules.
     '''
@@ -403,8 +429,7 @@ class Auction_human():
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
-        self.temperature = temperature
-        self.model= model
+        self.model= Model(model, temperature=temperature)
         self.cache = cache
         self.output_dir = output_dir
         self.timestring =timestring
@@ -460,7 +485,7 @@ class Auction_human():
             auction = Clock(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
             history = auction.run()
         elif self.rule.seal_clock == "seal":
-            auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model, temperature=self.temperature)
+            auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
             history = auction.run()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
@@ -469,7 +494,7 @@ class Auction_human():
         self.winner_list.append(history["winner"]["winner"])
         print([agent.profit[self.round_number] for agent in self.agents])
         
-        self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents], "common": self.common_value_list[self.round_number]})
+        self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents], "common": self.common_value_list[self.round_number], "plan":[agent.reasoning[self.round_number] for agent in self.agents]})
         
     def data_to_json(self):
 
@@ -488,7 +513,7 @@ class Auction_human():
         #Following each auction, each subject observes a results summary, containing all submitted bids or exit prices, respectively, her own profit, and the winner’s profit
         print("current bid number", self.round_number)
         if self.rule.seal_clock == "seal":
-            bids = [agent.submitted_bids[self.round_number] for agent in self.agents]
+            bids = [float(agent.submitted_bids[self.round_number]) for agent in self.agents]
             sorted_bids = sorted(bids, reverse=True)
             bid_describe = "All the bids for this round were {}".format(', '.join(map(str, sorted_bids)))
             if self.rule.price_order == "second":
@@ -536,8 +561,9 @@ class Auction_human():
                     f"In round {self.round_number}, "
                     + value_describe + "\n"
                     + total_profit_describe + "\n"
-                    + bid_describe + f" The winner's profit was {winner_profit}."  + "\n"
-                    + (f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' " if self.rule.seal_clock == "seal" else "")
+                    + bid_describe + f" The winner's profit was {winner_profit}."
+                    + f" Did you win the auction: {'Yes' if agent.winning[self.round_number] else 'No'}"
+                    + '++++++++++'
                 )
             elif self.rule.private_value == "common":
                 if self.rule.seal_clock == "seal":
@@ -556,7 +582,7 @@ class Auction_human():
                     + (f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' " if self.rule.seal_clock == "seal" else "")
                 )
             agent.history.append(description)
-            print(agent.history)
+            # print(agent.history)
             if self.round_number+1 < self.rule.round:
                 agent.build_bidder(current_round=self.round_number+1)
 
@@ -572,21 +598,52 @@ if __name__ == "__main__":
     # ]
     seal_clock='seal'
     ascend_descend=''
-    price_order='first'
-    private_value='private'
+    price_order='second'
+    private_value='common'
     open_blind='close'
-    number_agents=3
+    number_agents=2
     
-    timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
-    
-    rule = Rule(seal_clock='seal', ascend_descend='ascend',price_order='second', private_value='private',open_blind='open',rounds=3, common_range=[10, 20], private_range=10, increment=1)
+    rule = Rule_plan(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=20, common_range=[0, 79], private_range=79, increment=1, number_agents=number_agents)
     rule.describe()
     
     model_list = ["gpt-4-1106-preview", "gpt-4-turbo", "gpt-3.5","gpt-4o"]
-    # sys.exit()
-    model = Model("gpt-4o", temperature=0)
+    sys.exit()
+    # model = Model("gpt-4o", temperature=0)
     
-    a = Auction_human(number_agents=number_agents, rule=rule, output_dir='./', timestring=timestring, cache=c, model ='gpt-4o', temperature=1)
+    # q = QuestionFreeText(question_text = dedent("""\
+    #     What's your goal?
+    #     """), 
+    #     question_name = "response"
+    # )
+    # survey = Survey([q])
+    
+    # transcript = []
+    # s = Scenario({'agent_1_name': agents[0].name, 
+    #               'agent_2_name': agents[1].name, 
+    #               'transcript': transcript}) 
+    # results = survey.by(agents[1]).by(s).run(cache = c)
+    # print(results)
+    # response = results.select('response').first()
+    # print("====", response )
+    
+    ## Test Sealed bid
+    # s = SealBid(agents=agents, rule=rule)
+    # s.run()
+    # print(s)
+    
+    # Test clock
+    # s = Clock(agents=agents, rule=rule)
+    # s.run_one_round()
+    # print(s)
+    
+    ## Test run
+    # s.run()
+    # print(s)
+    
+    
+    # Test Auction class
+    ## Test draw value
+    a = Auction(number_agents=3, rule=rule, output_dir=output_dir, timestring=timestring,cache=c, model ='gpt-4o', temperature=0)
     a.draw_value(seed=1456)
     
     ## Test Agent build

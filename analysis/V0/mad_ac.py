@@ -6,13 +6,13 @@ import matplotlib.pyplot as plt
 # file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-22_11-26-44.json"
 # file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_open/result_10_2024-05-22_18-15-59.json"
 # file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_open/result_10_2024-05-22_19-19-57.json"
-# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_blind/result_10_2024-05-22_22-10-31.json"
+# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/clock_ascend_second_common_blind/result_10_2024-05-22_22-10-31.json"
 # file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_blind/result_10_2024-05-22_22-28-27.json"
-# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_blind/result_10_2024-05-22_22-51-42.json"
-# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_blind/result_10_2024-05-22_23-34-41.json"
+# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/clock_ascend_second_common_blind/result_10_2024-05-22_22-51-42.json"
+# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/clock_ascend_second_common_blind/result_10_2024-05-22_23-34-41.json"
 # file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_blind/result_10_2024-05-22_23-56-20.json"
 # file_path= "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_12-55-50.json"
-file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_open/result_10_2024-05-27_14-51-06.json"
+# file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/clock_ascend_second_common_open/result_10_2024-05-27_14-51-06.json"
 
 with open(file_path, 'r') as file:
     data = json.load(file)

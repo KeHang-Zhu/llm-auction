@@ -64,6 +64,7 @@ def calculate_average_mad(file_paths):
 
     for file_path in file_paths:
         file_rounds, mad_values = calculate_mad_for_file(file_path)
+        print(mad_values)
         all_mad_values.append(mad_values)
         
         if rounds is None:
@@ -89,23 +90,26 @@ def calculate_average_mad(file_paths):
 #               "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-14-09.json",
 #               "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-15-39.json"]
 
-# file_paths = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-31-47.json","/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-33-21.json","/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-34-48.json",
-# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-36-14.json",
-# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/seal_ascend_second_common_open/result_10_2024-05-27_13-37-37.json"]
+file_paths = [
+    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-31-47.json",
+    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-33-21.json",
+    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-34-48.json",
+    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-36-14.json",
+    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-37-37.json"]
 # file_paths0 = [
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V0/seal_ascend_second_common_open/result_10_2024-05-27_13-33-21.json"
 # ]
 # file_paths0 =
 # file_paths1 = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-29-50.json"]
 
-file_paths = [
-    # 
-    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-37-01.json",
-    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-07-42.json",
-    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-09-11.json",
-    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-10-40.json",
-    "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-12-07.json"
-    ]
+# file_paths = [
+#     # 
+#     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-37-01.json",
+#     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-07-42.json",
+#     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-09-11.json",
+#     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-10-40.json",
+#     "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_21-12-07.json"
+#     ]
 
 # file_paths4=["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V1/seal_ascend_second_common_open/result_10_2024-05-27_20-47-43.json"]
 rounds, ave_mad_values= calculate_average_mad(file_paths)

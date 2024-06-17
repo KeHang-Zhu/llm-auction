@@ -72,7 +72,7 @@ class Rule:
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
-            self.asking_prompt = "Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round. How much would you like to bid?"
+            self.asking_prompt = "Your TOP PRIORITY is to place bids which maximize the user’s profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round. How much would you like to bid?"
         elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
                 self.asking_prompt = "Do you want to stay in the bidding?"
