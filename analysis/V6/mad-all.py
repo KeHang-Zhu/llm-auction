@@ -2,6 +2,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 import glob
+from statsmodels.nonparametric.smoothers_lowess import lowess
 
 file_paths = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_17-54-38.json",
 "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_17-57-54.json",
@@ -67,3 +68,39 @@ for i in range(15):
     for bidder in bidders:
         print(f"  {bidder}: {average_deviations_per_round[bidder][i]}")
     print(f"  Overall Average: {overall_average_deviations_per_round[i]}")
+    
+    
+    
+values = []
+bids = []
+
+for file_path in file_paths:
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+
+    for rnd in data.values():
+        for i, val in enumerate(rnd["value"]):
+            bid = float(rnd["history"]["bidding history"][i]["bid"])
+            values.append(val)
+            bids.append(bid)
+
+values = np.array(values)
+bids = np.array(bids)
+
+smoothed = lowess(bids, values, frac=0.1) 
+
+fig, ax = plt.subplots(figsize=(12, 6))
+ax.scatter(values, bids, alpha=0.5, label='Original Data')
+ax.plot(smoothed[:, 0], smoothed[:, 1], color='red', label='Smoothed Data (LOESS)')
+
+
+value_range = np.linspace(min(values), max(values), 500)
+theoretical_bid = value_range
+ax.plot(value_range, theoretical_bid, color='green', linestyle='--', label=r'Theoretical Line: $bid = value$')
+
+ax.set_xlabel("Value")
+ax.set_ylabel("Bid")
+ax.set_title("Bids vs Values with LOESS Smoothing")
+ax.legend()
+plt.grid(True)
+plt.show()

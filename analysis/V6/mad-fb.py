@@ -2,7 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import json
 
-file_path ="/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__first_private_close/result_15_2024-06-16_22-40-45.json"
+file_path ="/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__first_private_close/result_15_2024-06-20_20-59-24-982049.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__first_private_close/result_15_2024-06-16_22-40-45.json"
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__first_private_close/result_15_2024-06-16_22-40-53.json"
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-16_21-39-01.json"
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__first_private_close/result_15_2024-06-16_17-44-14.json"

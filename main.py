@@ -3,59 +3,47 @@ import logging
 import os
 import pandas as pd
 import sys
-
 from util import Rule, Auction
 from util_human import Auction_human
 from util_plan import Auction_plan, Rule_plan
+import concurrent.futures
 
+def run_auction(i, human, number_agents, rule, output_dir, c):
+    timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
+    if human:
+        a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=1)
+    else:
+        a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=1)
+    a.draw_value(seed=1284 + i)
+    a.run_repeated()
+    c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
 
-    
 if __name__ == "__main__":
     c = Cache()
     
-    #Rule Option Menu for Anand
-    # seal_clock= 'seal' or 'clock' 
-    # ascend_descend='ascend' or 'descend' if seal_clock= 'clock' 
-    # price_order='first' or 'second' or 'third' if seal_clock= 'seal'
-    # private_value='private' or 'common'
-    # open_blind='open' or 'blind' if seal_clock= 'clock' 
-            #i.e. bidder don't see the drop out in the clock
-    seal_clock='seal'
-    ascend_descend=''
-    price_order='second'
-    private_value='private'
-    open_blind='close'
-    number_agents=3
+    # Rule Option Menu
+    seal_clock = 'seal'
+    ascend_descend = ''
+    price_order = 'first'
+    private_value = 'private'
+    open_blind = 'close'
+    number_agents = 3
     human = False
     
-    ## Set the output file
     output_dir = f"experiment_logs/V6/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    ## Set the rule
-    # rule = Rule(seal_clock=seal_clock, ascend_descend=ascend_descend, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=10, common_range=[10, 60], private_range=30, increment=1, number_agents=number_agents)
-    rule = Rule_plan(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=15, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
+    rule = Rule_plan(seal_clock=seal_clock, price_order=price_order, private_value=private_value, open_blind=open_blind, rounds=15, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
     rule.describe()
 
-    # model = "gpt-4-1106-preview"
-    N = 5 # repeat for n time
-    ## Instantiate the auction
-    for i in range(N):
-        ## output files
-        timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S")
-        if human:
-            a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4', temperature=1)
-        else: 
-            a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model ='gpt-4', temperature=1)
-        a.draw_value(seed=1284 + i )
-        
-        ## Agent build
-        # a.build_bidders()
-        # a.run()
-        a.run_repeated()
+    N = 6  # Repeat for N times
     
-    # ## store the analysis data
-    # a.data_to_json(output_dir=output_dir, timestring=timestring)
-    ## store the raw data
-    c.write_jsonl(os.path.join(output_dir,f"raw_output__{timestring}.jsonl"))
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]
+
+    for future in concurrent.futures.as_completed(futures):
+        try:
+            future.result()
+        except Exception as e:
+            print(f"An error occurred: {e}")
