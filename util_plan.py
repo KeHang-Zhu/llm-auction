@@ -121,59 +121,79 @@ class SealBid():
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
             """
-            history_prompt = ''.join(agent.history[:])
+
+           
             if len(agent.reasoning) == 0:
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
                 question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
                 )
-            else:
-                q_counterfact = QuestionFreeText(
-                    question_name = "q_counterfact",
-                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories are: " + history_prompt +"Do a counterfactual analysis of the last round, keeping in mind that higher bids will make you more likely to win the auction and lower bids will lead to lower payments and thus higher profits (when you win). REMEMBER YOU PAY THE SECOND HIGHEST BID IF YOU WIN. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' Limit your reflection within 100 words. "
-                )
-                result = self.model.simple_ask(q_counterfact)
-                counterfact= result['choices'][0]['message']['content']
-                print(counterfact)
+                survey = Survey(questions = [q_plan])
+                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                plan = result.select("q_plan").to_list()[0]
+                # plan= result['choices'][0]['message']['content']
+                print(plan)
                 
-                previous_plan = agent.reasoning[-1]
-                q_plan = QuestionFreeText(
-                question_name = "q_plan",
-                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories are: " + history_prompt +f" Your previous plan is: {previous_plan}"+ f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+"learn from your previous rounds, 1. write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. 2. write down any insights you have regarding bidding strategies. Be detailed and precise but keep things succinct and don't repeat yourself. Limit your plan and insight to 100 words. "
-                )
-            
-            # print(q_plan)
-            # result = self.model.simple_ask(q_plan)
-            survey = Survey(questions = [q_plan])
-            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
-            plan = result.select("q_plan").to_list()[0]
-            # plan= result['choices'][0]['message']['content']
-            print(plan)
-            
-            q_bid = QuestionNumerical(
-            question_name = "q_bid",
-            question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "The previous round histories are: " +history_prompt + "\n" + "Your PLAN and INSIGHT for this round is:" + str(plan)  + f" Your value towards to the prize is {agent.current_value} in this round." +self.rule.asking_prompt
-                )
-            # print(q_bid)
-            # result = self.model.simple_ask(q_bid)
-            # response = result['choices'][0]['message']['content']
-            max_retries = 5
-            retry_count = 0
-            bid = None
-
-            while bid is None and retry_count < max_retries:
+                q_bid = QuestionNumerical(
+                question_name = "q_bid",
+                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " "\n" + f" Your value towards to the prize is {agent.current_value} in this round." + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt
+                    )
                 survey = Survey(questions=[q_bid])
                 result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
                 bid = result.select("q_bid").to_list()[0]
-                retry_count += 1
-
-            if bid is None:
-                # Handle the case where no bid is received after 5 retries
-                print("Failed to get a bid after 5 attempts.")
-                bid = 0
+                
             else:
-                # Use the bid value
-                print(f"Received bid: {bid}")
+                last_round = agent.history[-1]
+                q_counterfact = QuestionFreeText(
+                    question_name = "q_counterfact",
+                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round history is: " + last_round +"Do a counterfactual analysis of the last round. REMMEBER that your goal is to win the bid and make higher profits. REMEMBER YOUR PAYMENT IS THE SECOND HIGHEST BID IF YOU WIN. Let's think step by step. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' LIMIT your OUTPUT within 100 words. "
+                )
+                result = self.model.simple_ask(q_counterfact)
+                counterfact= result['choices'][0]['message']['content']
+                print("=========================== \n", counterfact)
+                
+                history = agent.history
+                reasoning = agent.reasoning
+                max_length = max(len(history), len(reasoning))
+                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
+                # previous_plan = agent.reasoning[-1]
+                q_plan = QuestionFreeText(
+                question_name = "q_plan",
+                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. "
+                )
+            
+                # print(q_plan)
+                # result = self.model.simple_ask(q_plan)
+                survey = Survey(questions = [q_plan])
+                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                plan = result.select("q_plan").to_list()[0]
+                # plan= result['choices'][0]['message']['content']
+                print(plan, "====================\n")
+                
+                q_bid = QuestionNumerical(
+                question_name = "q_bid",
+                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "\n" + f"Your analysis for last round is: {counterfact}" "\n" + f" Your value towards to the prize is {agent.current_value} in this round."+ f"Your PLAN for this round is: {plan}" + "FOLLOW YOUR PLAN" + self.rule.asking_prompt
+                    )
+                # print(q_bid)
+                # result = self.model.simple_ask(q_bid)
+                # response = result['choices'][0]['message']['content']
+                max_retries = 5
+                retry_count = 0
+                bid = None
+
+                while bid is None and retry_count < max_retries:
+                    survey = Survey(questions=[q_bid])
+                    result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                    bid = result.select("q_bid").to_list()[0]
+                    retry_count += 1
+
+                if bid is None:
+                    # Handle the case where no bid is received after 5 retries
+                    print("Failed to get a bid after 5 attempts.")
+                    bid = 0
+                else:
+                    # Use the bid value
+                    print(f"Received bid: {bid}")
             # print(response)
 
             agent.reasoning.append(plan)

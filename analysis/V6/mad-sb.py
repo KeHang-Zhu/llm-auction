@@ -3,7 +3,18 @@ import matplotlib.pyplot as plt
 import json
 import numpy as np
 
-file_path ="/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_11-01-32.json"
+file_path = "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_17-29-04.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_17-17-00.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_17-04-17.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_16-51-17.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_16-38-01.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_16-19-29.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_23-35-47.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_23-18-08.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_23-09-21.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_22-57-04.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_21-31-30.json"
+# "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_11-01-32.json"
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_10-28-51.json"
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-17_10-24-14.json"
 # "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-16_21-58-35.json"
@@ -24,7 +35,7 @@ with open(file_path, 'r') as file:
     data = json.load(file)
 
 
-rounds = range(10)
+rounds = range(15)
 bidders = ["Bidder Andy", "Bidder Betty", "Bidder Charles"]
 values = {bidder: [] for bidder in bidders}
 bids = {bidder: [] for bidder in bidders}
@@ -37,8 +48,8 @@ for rnd in data.values():
         bids[bid["agent"]].append(float(bid["bid"]))
     for i, val in enumerate(rnd["value"]):
         values[bidders[i]].append(val)
-        deviations[bidders[i]].append(float(rnd["history"]["bidding history"][i]["bid"])- val)
-        deviation = abs(float(rnd["history"]["bidding history"][i]["bid"]) - val)
+        deviations[bidders[i]].append((float(rnd["history"]["bidding history"][i]["bid"])- val))
+        deviation = abs((float(rnd["history"]["bidding history"][i]["bid"]) - val))
         round_devs.append(abs(deviation))
     round_averages.append(np.mean(round_devs))
 
@@ -49,7 +60,7 @@ for bidder in bidders:
 ax.plot(rounds, round_averages, marker='.', label="Average")
 
 ax.set_xlabel("Rounds")
-ax.set_ylabel("Deviation (Value - Bid)")
+ax.set_ylabel("Deviation Ratio(Bid-Value)/Value")
 ax.set_title("Deviation of Each Bidder's Value and Bid Over Rounds")
 ax.legend()
 plt.grid(True)
