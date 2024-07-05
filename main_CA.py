@@ -27,7 +27,7 @@ if __name__ == "__main__":
     price_order = 'first'
     private_value = 'private'
     open_blind = 'close'
-    CA_type = 'simultaneous'
+    CA_type = 'menu'
     number_agents = 3
     human = False
     
