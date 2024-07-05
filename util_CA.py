@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V4/')
+templates_dir = os.path.join(current_script_path, './rule_template/V7/')
 
 c = Cache()  
 
@@ -29,13 +29,14 @@ def save_json(data, filename, directory):
     
     return file_path
 
-class Rule_plan:
+class Rule_CA:
     '''
     This class defines different auction rules and their behaviors.
     '''
     def __init__(self, seal_clock,  private_value, open_blind, rounds, 
                  ascend_descend="ascend",
                  price_order = "second",
+                 CA_type = "simultaneous",
                  common_range=[10, 80], private_range=20, increment=1, number_agents=3):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
@@ -47,6 +48,7 @@ class Rule_plan:
         self.private_range = private_range
         self.increment = increment
         self.number_agents = number_agents
+        self.type = CA_type
         
         ## Rule prompt
         # intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
@@ -55,10 +57,8 @@ class Rule_plan:
         # value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"intro_{self.private_value}.txt"))
         # value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range, "num_bidders": self.number_agents-1})
         
-        if self.seal_clock == 'clock':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
-        elif self.seal_clock == 'seal':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
+
+        game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.type}_FP.txt"))
         game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:
@@ -70,16 +70,15 @@ class Rule_plan:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
-        self.persona = "Your TOP PRIORITY is to place bids which maximize the user’s profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
+        self.persona = "Your TOP PRIORITY is to place bids which maximize your profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
         
         ## Bid asking prompt
-        if self.seal_clock == "seal":
+        if self.type == "sequential":
             self.asking_prompt = "How much would you like to bid?  Give your response with a single number and no other texts, e.g. 1, 44"
-        elif self.seal_clock == "clock":
-            if self.ascend_descend == "ascend":
-                self.asking_prompt = "Do you want to stay in the bidding?"
-            elif self.asking_prompt == "descend":
-                self.asking_prompt = "Do you want to accept the current price?"
+        elif self.type == "simultaneous":
+            self.asking_prompt = """How much would you like to bid on each item?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For A, I bid... For B, I bid...  """
+        elif self.type == "menu":
+            self.asking_prompt = """How much would you like to bid on each menu?  Give your response with a single number and no other texts, e.g. 1, 44. And return your answer in the json format {"A": your bid on A, "B": your bid on B, "AB": your bid on A and B}"""
                 
 
     def describe(self):
@@ -112,7 +111,196 @@ class SealBid():
     def __repr__(self):
         return f'Sealed Bid Auction: (bid_list={self.bid_list})'
     
-    def run(self):
+    def run_off_box(self):
+        '''run for one round with out-of-box LLM query'''
+
+        for agent in self.agents:
+            other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+            instruction = f"""
+            You are {agent.name}. 
+            You are bidding with { other_agent_names}.
+            Your value towards to the prize is {agent.current_value} in this round.
+            """
+            q_bid = QuestionNumerical(
+                question_name = "q_bid",
+                question_text = instruction + self.rule.asking_prompt
+            )
+
+            survey = Survey(questions = [q_bid])
+            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+            response = result.select("q_bid").to_list()[0]
+            agent.reasoning.append(result.select("comment.*")[0]['comment.q_bid_comment'][0])
+            self.bid_list.append({"agent":agent.name,"bid": response})
+            agent.submitted_bids.append(response)
+            
+        print(self.bid_list)
+        self.declare_winner_and_price()
+        print(self.winner)
+        return {'bidding history':self.bid_list, 'winner':self.winner}
+    
+    def is_valid_bid(self, bid):
+            # Check if the bid is a dictionary
+        if not isinstance(bid, dict):
+            return False
+        # Check if the bid contains exactly three keys: 'A', 'B', and 'AB'
+        if self.rule.type == "simultaneous":
+            required_keys = {'A', 'B'}
+        elif self.rule.type == "menu":
+            required_keys = {'A', 'B', 'AB'}
+        if set(bid.keys()) != required_keys:
+            return False
+        # Check if all values are integers
+        if not all(isinstance(bid[key], int) for key in required_keys):
+            return False
+        return True
+    
+    def sim_bid(self):
+        
+        for agent in self.agents:
+            other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+            combined_value =2 *(agent.current_value["A"]+ agent.current_value["B"]) 
+            instruction = f"""
+            You are {agent.name}. 
+            You are bidding with { other_agent_names}.
+            Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}.
+            """
+            q_plan = QuestionFreeText(
+                question_name = "q_plan",
+                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                )
+            survey = Survey(questions = [q_plan])
+            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+            plan = result.select("q_plan").to_list()[0]
+            print(plan)
+                
+            q_bid = QuestionFreeText(
+                question_name = "q_bid",
+                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt
+                    )
+            
+
+            survey = Survey(questions=[q_bid])
+            result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+            bid = result.select("q_bid").to_list()[0]
+            print(bid)
+
+            # while (bid is None or valid_bid is False) and retry_count < max_retries:
+            q_parse_A = QuestionNumerical(
+                    question_name = "q_parse_A",
+                    question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item A, only return a number, for example, 0 or 44"
+                    # str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " "\n" + f" Your value towards to the prize is {agent.current_value} in this round." + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt + f'Your previous answer is {bid}, you must follow the output JSON format. Now try again'
+                )
+            q_parse_B = QuestionNumerical(
+                    question_name = "q_parse_B",
+                    question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item B, only return a number, for example, 0 or 44"
+                    # str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " "\n" + f" Your value towards to the prize is {agent.current_value} in this round." + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt + f'Your previous answer is {bid}, you must follow the output JSON format. Now try again'
+                )
+            result_A =  self.model.simple_ask(q_parse_A)
+            result_B =  self.model.simple_ask(q_parse_B)
+            parsed_bid = {"A": float(result_A['choices'][0]['message']['content']), "B": float(result_B['choices'][0]['message']['content'])}
+            
+            print(parsed_bid)
+            self.bid_list.append({"agent":agent.name,"bid": parsed_bid})
+            agent.reasoning.append(plan)
+            agent.submitted_bids.append(parsed_bid)
+            
+        print(self.bid_list)
+        self.determine_payment()
+        print(self.winner)
+
+        return {'bidding history':self.bid_list, 'winner':self.winner}
+            
+        
+    def determine_payment(self):
+
+        if self.rule.type == "simultaneous":
+            # Initialize dictionaries to store highest bids and respective agents
+            highest_bids = {'A': [], 'B': []}
+            highest_amounts = {'A': float('-inf'), 'B': float('-inf')}
+
+            # Iterate through the bid list to determine the highest bids
+            for bid in self.bid_list:
+                agent = bid['agent']
+                bid_amounts = bid['bid']
+                for item in bid_amounts:
+                    if bid_amounts[item] > highest_amounts[item]:
+                        highest_amounts[item] = bid_amounts[item]
+                        highest_bids[item] = [agent]
+                    elif bid_amounts[item] == highest_amounts[item]:
+                        highest_bids[item].append(agent)
+
+            # Resolve ties randomly and set winners and prices
+            winners = {}
+            for item in highest_bids:
+                if highest_bids[item]:
+                    winners[item] = random.choice(highest_bids[item])
+            
+            self.winner = {
+                "A": {'winner': winners['A'], 'price': highest_amounts['A']},
+                "B": {'winner': winners['B'], 'price': highest_amounts['B']}
+            }
+            print(self.winner)
+            for agent in self.agents:
+                won_a = agent.name == winners['A']
+                won_b = agent.name == winners['B']
+                
+                if won_a and won_b:
+                    # The agent won both items
+                    agent.profit.append(2*agent.current_value['A'] + 2*agent.current_value['B'] - highest_amounts['A'] - highest_amounts['B'])
+                elif won_a:
+                    # The agent won item A only
+                    agent.profit.append(agent.current_value['A'] - highest_amounts['A'])
+                elif won_b:
+                    # The agent won item B only
+                    agent.profit.append(agent.current_value['B'] - highest_amounts['B'])
+                else:
+                    # The agent didn't win anything
+                    agent.profit.append(0)
+
+                agent.winning.append({"A": won_a, "B": won_b})
+                
+        elif self.rule.type == "menu":
+            highest_bids = {'A': [], 'B': [], 'AB': []}
+            highest_amounts = {'A': float('-inf'), 'B': float('-inf'), 'AB': float('-inf')}
+
+            # Iterate through the bid list to determine the highest bids
+            for bid in self.bid_list:
+                agent = bid['agent']
+                bid_amounts = bid['bid']
+                for item in bid_amounts:
+                    if bid_amounts[item] > highest_amounts[item]:
+                        highest_amounts[item] = bid_amounts[item]
+                        highest_bids[item] = [agent]
+                    elif bid_amounts[item] == highest_amounts[item]:
+                        highest_bids[item].append(agent)
+
+            # Resolve ties randomly
+            for item in highest_bids:
+                if len(highest_bids[item]) > 1:
+                    highest_bids[item] = [random.choice(highest_bids[item])]
+
+            # Determine the allocation and pricing
+            allocation = {}
+            pricing = {}
+
+            # Check if the highest bid for AB is greater than the sum of the highest bids for A and B
+            if highest_amounts['AB'] > (highest_amounts['A'] + highest_amounts['B']):
+                allocation['A'] = highest_bids['AB'][0]
+                allocation['B'] = highest_bids['AB'][0]
+                pricing['A'] = highest_amounts['AB']
+                pricing['B'] = highest_amounts['AB']
+            else:
+                allocation['A'] = highest_bids['A'][0]
+                allocation['B'] = highest_bids['B'][0]
+                pricing['A'] = highest_amounts['A']
+                pricing['B'] = highest_amounts['B']
+
+            return allocation, pricing
+        else: 
+            raise ValueError(f"Rule {self.rule.price_order} not allowed")
+    
+        
+    def run_with_plan(self):
         '''run for one round'''
 
         for agent in self.agents:
@@ -121,8 +309,7 @@ class SealBid():
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
             """
-
-           
+            
             if len(agent.reasoning) == 0:
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
@@ -205,24 +392,25 @@ class SealBid():
         print(self.winner)
         return {'bidding history':self.bid_list, 'winner':self.winner}
     
-            
+
+                 
     def declare_winner_and_price(self):
         '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
         sorted_bids = sorted(self.bid_list, key=lambda x: float(x['bid']), reverse=True)
 
-        if self.rule.price_order == "first":
+        if self.rule.type == "sequenital":
             if len(sorted_bids) > 0:
                 same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
                 winner = random.choice(same_bids)["agent"]
                 # winner = sorted_bids[0]["agent"]
                 price = sorted_bids[0]["bid"]
-        elif self.rule.price_order == "second":
+        elif self.rule.type == "simultaneous":
             if len(sorted_bids) > 1:
                 same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
                 winner = random.choice(same_bids)["agent"]
                 # winner = sorted_bids[0]["agent"]
                 price = sorted_bids[1]["bid"]
-        elif self.rule.price_order == "third":
+        elif self.rule.type == "menu":
             if len(sorted_bids) > 2:
                 same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
                 winner = random.choice(same_bids)["agent"]
@@ -234,10 +422,7 @@ class SealBid():
         self.winner = {'winner':winner, 'price':price}
         for agent in self.agents:
             if agent.name == winner:
-                if self.rule.private_value == "private":
-                    agent.profit.append(agent.current_value - float(price))
-                elif self.rule.private_value == "common":
-                    agent.profit.append(agent.current_common - float(price))
+                agent.profit.append(agent.current_value - float(price))
                 agent.winning.append(True)
             else:
                 agent.profit.append(0)
@@ -441,7 +626,7 @@ class Bidder():
         self.current_common = self.common_value[current_round]
      
    
-class Auction_plan():
+class Auction_CA():
     '''
     This class manages the auction process using specified agents and rules.
     '''
@@ -469,7 +654,7 @@ class Auction_plan():
         # make it reproducible
         random.seed(seed)
         # Initialize the values_list as a 2D list
-        self.values_list = [[0 for _ in range(self.number_agents)] for _ in range(self.rule.round)]
+        self.values_list = [[{"A": 0, "B": 0} for _ in range(self.number_agents)] for _ in range(self.rule.round)]
         
         for i in range(self.rule.round):
             # Generate a common value from a range
@@ -484,9 +669,12 @@ class Auction_plan():
 
             # Generate a private value for each agent and sum it with the common value
             for j in range(self.number_agents):  # Now self.number_agents should be an integer
-                private_part = random.randint(0, self.rule.private_range)
-                total_value = common_value + private_part
-                self.values_list[i][j] = total_value
+                private_part1 = random.randint(0, self.rule.private_range)
+                private_part2 = random.randint(0, self.rule.private_range)
+                total_value1 = common_value + private_part1
+                total_value2 = common_value + private_part2
+                self.values_list[i][j]["A"] = total_value1
+                self.values_list[i][j]["B"] = total_value2
         print("The values for each bidder are:", self.values_list)
 
         
@@ -498,6 +686,7 @@ class Auction_plan():
             agent = Bidder(value_list=bidder_values, common_value_list=self.common_value_list, name = name_list[i], rule=self.rule)
             agent.build_bidder(current_round=self.round_number)
             self.agents.append(agent)
+            print(f"build done for Bidder {name_list[i]}")
  
     def run(self):
         # Simulate the auction process
@@ -506,13 +695,14 @@ class Auction_plan():
             history = auction.run()
         elif self.rule.seal_clock == "seal":
             auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
-            history = auction.run()
+            history = auction.sim_bid()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
+        # self.data_to_save[f"round_{self.round_number}"] =({"round":self.round_number, "value":self.values_list[self.round_number],"history":history})
         
-        self.winner_list.append(history["winner"]["winner"])
-        print([agent.profit[self.round_number] for agent in self.agents])
+        # self.winner_list.append(history["winner"]["winner"])
+        # print([agent.profit[self.round_number] for agent in self.agents])
         
         self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents], "common": self.common_value_list[self.round_number], "plan":[agent.reasoning[self.round_number] for agent in self.agents]})
         
@@ -524,7 +714,7 @@ class Auction_plan():
         self.build_bidders()
         while self.round_number < self.rule.round:
             self.run()
-            self.update_bidders()
+            # self.update_bidders()
             self.round_number+=1
         self.data_to_json()
             
@@ -623,7 +813,7 @@ if __name__ == "__main__":
     open_blind='close'
     number_agents=2
     
-    rule = Rule_plan(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=20, common_range=[0, 79], private_range=79, increment=1, number_agents=number_agents)
+    rule = Rule_CA(seal_clock=seal_clock, price_order=price_order, private_value=private_value,open_blind=open_blind, rounds=20, common_range=[0, 79], private_range=79, increment=1, number_agents=number_agents)
     rule.describe()
     
     model_list = ["gpt-4-1106-preview", "gpt-4-turbo", "gpt-3.5","gpt-4o"]
