@@ -35,7 +35,7 @@ if __name__ == "__main__":
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    rule = Rule_CA(seal_clock=seal_clock, price_order=price_order, private_value=private_value, open_blind=open_blind, CA_type =CA_type, rounds=1, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
+    rule = Rule_CA(seal_clock=seal_clock, price_order=price_order, private_value=private_value, open_blind=open_blind, CA_type =CA_type, rounds=2, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
     rule.describe()
 
     N = 1  # Repeat for N times
