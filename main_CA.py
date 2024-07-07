@@ -11,9 +11,9 @@ import concurrent.futures
 def run_auction(i, human, number_agents, rule, output_dir, c):
     timestring = pd.Timestamp.now().strftime("%Y-%m-%d_%H-%M-%S-%f")
     if human:
-        a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=1)
+        a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=1)
     else:
-        a = Auction_CA(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=1)
+        a = Auction_CA(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=1)
     a.draw_value(seed=1284 + i)
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
@@ -27,7 +27,7 @@ if __name__ == "__main__":
     price_order = 'first'
     private_value = 'private'
     open_blind = 'close'
-    CA_type = 'menu'
+    CA_type = 'simultaneous'
     number_agents = 3
     human = False
     
@@ -35,10 +35,10 @@ if __name__ == "__main__":
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
-    rule = Rule_CA(seal_clock=seal_clock, price_order=price_order, private_value=private_value, open_blind=open_blind, CA_type =CA_type, rounds=2, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
+    rule = Rule_CA(seal_clock=seal_clock, price_order=price_order, private_value=private_value, open_blind=open_blind, CA_type =CA_type, rounds=15, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
     rule.describe()
 
-    N = 1  # Repeat for N times
+    N = 5  # Repeat for N times
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]

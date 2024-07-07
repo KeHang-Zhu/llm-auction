@@ -156,6 +156,7 @@ class SealBid():
     
     def parse_bid(self, bid):
         # while (bid is None or valid_bid is False) and retry_count < max_retries:
+        parse_model =  Model('gpt-4o', temperature=0)
         q_parse_A = QuestionNumerical(
                 question_name = "q_parse_A",
                 question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item A, only return a number, for example, 0 or 44"
@@ -164,8 +165,8 @@ class SealBid():
                 question_name = "q_parse_B",
                 question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item B, only return a number, for example, 0 or 44"
             )
-        result_A =  self.model.simple_ask(q_parse_A)
-        result_B =  self.model.simple_ask(q_parse_B)
+        result_A =  parse_model.simple_ask(q_parse_A)
+        result_B =  parse_model.simple_ask(q_parse_B)
         if self.rule.type == "simultaneous":
             parsed_bid = {"A": float(result_A['choices'][0]['message']['content']), "B": float(result_B['choices'][0]['message']['content'])}
         elif self.rule.type == "menu":
@@ -237,13 +238,29 @@ class SealBid():
                 # plan= result['choices'][0]['message']['content']
                 print(plan, "====================\n")
                 
-                q_bid = QuestionNumerical(
+                q_bid = QuestionFreeText(
                 question_name = "q_bid",
-                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "\n" + f"Your analysis for last round is: {counterfact}" "\n" + f" Your value towards to the prize is {agent.current_value} in this round."+ f"Your PLAN for this round is: {plan}" + "FOLLOW YOUR PLAN" + self.rule.asking_prompt
+                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "\n" + f"Your analysis for last round is: {counterfact}" "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + f"Your PLAN for this round is: {plan}" + "FOLLOW YOUR PLAN" + self.rule.asking_prompt
                 )
-                survey = Survey(questions=[q_bid])
-                result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                bid = result.select("q_bid").to_list()[0]
+                
+                max_retries = 5
+                retry_count = 0
+                bid = None
+
+                while bid is None and retry_count < max_retries:
+                    survey = Survey(questions=[q_bid])
+                    result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                    bid = result.select("q_bid").to_list()[0]
+                    retry_count += 1
+
+                if bid is None:
+                    # Handle the case where no bid is received after 5 retries
+                    print("Failed to get a bid after 5 attempts.")
+                    bid = 0
+                else:
+                    # Use the bid value
+                    print(f"Received bid: {bid}")
+                    
                 print(bid) 
                 
             parsed_bid = self.parse_bid(bid)
