@@ -74,7 +74,8 @@ class Rule_CA:
         
         ## Bid asking prompt
         if self.type == "sequential":
-            self.asking_prompt = "How much would you like to bid?  Give your response with a single number and no other texts, e.g. 1, 44"
+            self.asking_prompt1 = "How much would you like to bid on A?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For A, I bid... "
+            self.asking_prompt2 = "How much would you like to bid on B?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For B, I bid... "
         elif self.type == "simultaneous":
             self.asking_prompt = """How much would you like to bid on each item?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For A, I bid... For B, I bid...  """
         elif self.type == "menu":
@@ -134,42 +135,49 @@ class SealBid():
             agent.submitted_bids.append(response)
             
         print(self.bid_list)
-        self.declare_winner_and_price()
         print(self.winner)
         return {'bidding history':self.bid_list, 'winner':self.winner}
     
-    def is_valid_bid(self, bid):
-            # Check if the bid is a dictionary
-        if not isinstance(bid, dict):
-            return False
-        # Check if the bid contains exactly three keys: 'A', 'B', and 'AB'
-        if self.rule.type == "simultaneous":
-            required_keys = {'A', 'B'}
-        elif self.rule.type == "menu":
-            required_keys = {'A', 'B', 'AB'}
-        if set(bid.keys()) != required_keys:
-            return False
-        # Check if all values are integers
-        if not all(isinstance(bid[key], int) for key in required_keys):
-            return False
-        return True
-    
-    def parse_bid(self, bid):
+    def parse_bid(self, bid, mode="A"):
         # while (bid is None or valid_bid is False) and retry_count < max_retries:
         parse_model =  Model('gpt-4o', temperature=0)
-        q_parse_A = QuestionNumerical(
-                question_name = "q_parse_A",
-                question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item A, only return a number, for example, 0 or 44"
-            )
-        q_parse_B = QuestionNumerical(
+            
+        if self.rule.type == "sequential":
+            if mode == "A":
+                q_parse_A = QuestionNumerical(
+                    question_name = "q_parse_A",
+                    question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item A, only return a number, for example, 0 or 44 "
+                )
+                result_A =  parse_model.simple_ask(q_parse_A)
+                parsed_bid = {"A": float(result_A['choices'][0]['message']['content'])}
+            elif mode =="B":
+                q_parse_B = QuestionNumerical(
+                question_name = "q_parse_B",
+                question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item B, only return a number, for example, 0 or 44"
+                )
+                result_B =  parse_model.simple_ask(q_parse_B)
+                parsed_bid = {"B": float(result_B['choices'][0]['message']['content'])}
+        
+        elif self.rule.type == "simultaneous":
+            q_parse_A = QuestionNumerical(
+                    question_name = "q_parse_A",
+                    question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item A, only return a number, for example, 0 or 44 "
+                )
+            result_A =  parse_model.simple_ask(q_parse_A)
+            parsed_bid = {"A": float(result_A['choices'][0]['message']['content'])}
+            q_parse_B = QuestionNumerical(
                 question_name = "q_parse_B",
                 question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item B, only return a number, for example, 0 or 44"
             )
-        result_A =  parse_model.simple_ask(q_parse_A)
-        result_B =  parse_model.simple_ask(q_parse_B)
-        if self.rule.type == "simultaneous":
+            result_B =  parse_model.simple_ask(q_parse_B)
+            
             parsed_bid = {"A": float(result_A['choices'][0]['message']['content']), "B": float(result_B['choices'][0]['message']['content'])}
         elif self.rule.type == "menu":
+            q_parse_B = QuestionNumerical(
+                question_name = "q_parse_B",
+                question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on item B, only return a number, for example, 0 or 44"
+            )
+            result_B =  parse_model.simple_ask(q_parse_B)
             q_parse_AB = QuestionNumerical(
                 question_name = "q_parse_AB",
                 question_text = "You are a helpful assistant, you receive a bidding message from a participant." + str(bid) + "Return the bid amount on bundle of AB, only return a number, for example, 0 or 44"
@@ -180,7 +188,133 @@ class SealBid():
         print(parsed_bid)
         return parsed_bid
         
-    
+    def seq_bid(self, agent):
+        '''Bidding for the sequential CA'''
+        ## Bidding for A
+        
+        if len(agent.reasoning) == 0:
+            bid_list = []
+            for agent in self.agents:
+                other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+                combined_value = 2 *(agent.current_value["A"]+ agent.current_value["B"])
+                instruction = f"""
+                You are {agent.name}. 
+                You are bidding with { other_agent_names}.
+                Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}.
+                """
+            
+                q_plan = QuestionFreeText(
+                    question_name = "q_plan",
+                    question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                    )
+                survey = Survey(questions = [q_plan])
+                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                plan = result.select("q_plan").to_list()[0]
+                print(plan)
+                
+                q_bid_A = QuestionFreeText(
+                        question_name = "q_bid_A",
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt1
+                            )
+                survey = Survey(questions=[q_bid_A])
+                result_A = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                bid_A = result_A.select("q_bid").to_list()[0]
+                print(bid_A)
+                parsed_bid = self.parse_bid(bid_A, mode="A")
+                agent.reasoning.append(plan)
+                bid_list.append({"agent":agent.name,"bid": parsed_bid})
+                
+            #reflection
+            bidding_A = self.determine_winner_sequ(bid_list)
+        
+            ## Bidding for B
+            for agent in self.agents:
+                ## generate sentence of the results for A
+                if bidding_A["winner"] is not agent.name:
+                    status_A = "You won the item A. "
+                else:
+                    status_A = "You didn't win the item A. "
+                plan = agent.reasoning[-1]
+                q_bid_B = QuestionFreeText(
+                        question_name = "q_bid_B",
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """+ "And in the previous bidding of A" + str(status_A)  + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt2
+                            )
+                survey = Survey(questions=[q_bid_B])
+                result_B = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                bid_B = result_B.select("q_bid").to_list()[0]
+                print(bid_B)
+                parsed_bid = self.parse_bid(bid_B, mode="B")
+                
+        else:
+            for agent in self.agents:
+                last_round = agent.history[-1]
+                q_counterfact = QuestionFreeText(
+                    question_name = "q_counterfact",
+                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round history is: " + last_round + "\n" +" Do a counterfactual analysis of the last round. REMEMBER that your goal is to win the bid and make higher profits. REMEMBER YOUR PAYMENT IS YOUR BID IF YOU WIN. Let's think step by step. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' LIMIT your OUTPUT within 100 words. "
+                )
+                result = self.model.simple_ask(q_counterfact)
+                counterfact= result['choices'][0]['message']['content']
+                print("=========================== \n", counterfact)
+                
+                history = agent.history
+                reasoning = agent.reasoning
+                max_length = max(len(history), len(reasoning))
+                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
+                # previous_plan = agent.reasoning[-1]
+                q_plan = QuestionFreeText(
+                question_name = "q_plan",
+                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. "
+                )
+            
+                survey = Survey(questions = [q_plan])
+                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                plan = result.select("q_plan").to_list()[0]
+                # plan= result['choices'][0]['message']['content']
+                print(plan, "====================\n")
+                
+                q_bid_A = QuestionFreeText(
+                        question_name = "q_bid_A",
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt1
+                            )
+                survey = Survey(questions=[q_bid_A])
+                result_A = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                bid_A = result_A.select("q_bid").to_list()[0]
+                print(bid_A)
+                parsed_bid = self.parse_bid(bid_A, mode="A")
+                agent.reasoning.append(plan)
+                bid_list.append({"agent":agent.name,"bid": parsed_bid})
+                
+            #reflection
+            bidding_A = self.determine_winner_sequ(bid_list)
+        
+            ## Bidding for B
+            for agent in self.agents:
+                ## generate sentence of the results for A
+                if bidding_A["winner"] is not agent.name:
+                    status_A = "You won the item A. "
+                else:
+                    status_A = "You didn't win the item A. "
+                plan = agent.reasoning[-1]
+                q_bid_B = QuestionFreeText(
+                        question_name = "q_bid_B",
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """+ "And in the previous bidding of A" + str(status_A)  + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt2
+                            )
+                survey = Survey(questions=[q_bid_B])
+                result_B = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                bid_B = result_B.select("q_bid").to_list()[0]
+                print(bid_B)
+                parsed_bid = self.parse_bid(bid_B, mode="B")
+                
+
+        self.bid_list.append({"agent":agent.name,"bid": parsed_bid})
+        agent.submitted_bids.append(parsed_bid)
+            
+        print(self.bid_list)
+        self.determine_payment()
+        print(self.winner)
+
+        return {'bidding history':self.bid_list, 'winner':self.winner}
+            
     def sim_bid(self):
         
         for agent in self.agents:
@@ -277,7 +411,7 @@ class SealBid():
         
     def determine_payment(self):
 
-        if self.rule.type == "simultaneous":
+        if self.rule.type == "simultaneous" or self.rule.type =="sequential":
             # Initialize dictionaries to store highest bids and respective agents
             highest_bids = {'A': [], 'B': []}
             highest_amounts = {'A': float('-inf'), 'B': float('-inf')}
@@ -374,6 +508,21 @@ class SealBid():
                 agent.winning.append({"A": won_a, "B": won_b})
         else: 
             raise ValueError(f"Rule {self.rule.price_order} not allowed")
+        
+        
+    def determine_winner_sequ(self, bid_list):
+        '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
+        sorted_bids = sorted(bid_list, key=lambda x: float(x['bid']), reverse=True)
+
+        if len(sorted_bids) > 0:
+            same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
+            winner = random.choice(same_bids)["agent"]
+            # winner = sorted_bids[0]["agent"]
+            price = sorted_bids[0]["bid"]
+        
+        winner_A = {'winner':winner, 'price':price}
+        
+        return winner_A
     
         
     def run_with_plan(self):
