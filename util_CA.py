@@ -188,11 +188,11 @@ class SealBid():
         print(parsed_bid)
         return parsed_bid
         
-    def seq_bid(self, agent):
+    def seq_bid(self):
         '''Bidding for the sequential CA'''
         ## Bidding for A
         
-        if len(agent.reasoning) == 0:
+        if len(self.agents[0].reasoning) == 0:
             bid_list = []
             for agent in self.agents:
                 other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
@@ -218,7 +218,7 @@ class SealBid():
                             )
                 survey = Survey(questions=[q_bid_A])
                 result_A = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                bid_A = result_A.select("q_bid").to_list()[0]
+                bid_A = result_A.select("q_bid_A").to_list()[0]
                 print(bid_A)
                 parsed_bid = self.parse_bid(bid_A, mode="A")
                 agent.reasoning.append(plan)
@@ -226,6 +226,7 @@ class SealBid():
                 
             #reflection
             bidding_A = self.determine_winner_sequ(bid_list)
+            print(bidding_A)
         
             ## Bidding for B
             for agent in self.agents:
@@ -241,13 +242,22 @@ class SealBid():
                             )
                 survey = Survey(questions=[q_bid_B])
                 result_B = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                bid_B = result_B.select("q_bid").to_list()[0]
+                bid_B = result_B.select("q_bid_B").to_list()[0]
                 print(bid_B)
                 parsed_bid = self.parse_bid(bid_B, mode="B")
+                bid_list.append({"agent":agent.name,"bid": parsed_bid})
                 
         else:
+            bid_list = []
             for agent in self.agents:
                 last_round = agent.history[-1]
+                other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+                combined_value = 2 *(agent.current_value["A"]+ agent.current_value["B"])
+                instruction = f"""
+                You are {agent.name}. 
+                You are bidding with { other_agent_names}.
+                Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}.
+                """
                 q_counterfact = QuestionFreeText(
                     question_name = "q_counterfact",
                     question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round history is: " + last_round + "\n" +" Do a counterfactual analysis of the last round. REMEMBER that your goal is to win the bid and make higher profits. REMEMBER YOUR PAYMENT IS YOUR BID IF YOU WIN. Let's think step by step. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' LIMIT your OUTPUT within 100 words. "
@@ -278,7 +288,7 @@ class SealBid():
                             )
                 survey = Survey(questions=[q_bid_A])
                 result_A = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                bid_A = result_A.select("q_bid").to_list()[0]
+                bid_A = result_A.select("q_bid_A").to_list()[0]
                 print(bid_A)
                 parsed_bid = self.parse_bid(bid_A, mode="A")
                 agent.reasoning.append(plan)
@@ -301,13 +311,29 @@ class SealBid():
                             )
                 survey = Survey(questions=[q_bid_B])
                 result_B = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                bid_B = result_B.select("q_bid").to_list()[0]
+                bid_B = result_B.select("q_bid_B").to_list()[0]
                 print(bid_B)
                 parsed_bid = self.parse_bid(bid_B, mode="B")
+                bid_list.append({"agent":agent.name,"bid": parsed_bid})
                 
+        ## update bid list by adding bid of B
+        combined_bids = {}
 
-        self.bid_list.append({"agent":agent.name,"bid": parsed_bid})
-        agent.submitted_bids.append(parsed_bid)
+        # Iterate through the original list of bids
+        for item in bid_list:
+            agent_name = item["agent"]
+            bid = item["bid"]
+            # Check if the agent is already in the combined_bids dictionary
+            if agent_name in combined_bids:
+                # If there's already an entry for this agent, update the bid dictionary
+                combined_bids[agent_name]["bid"].update(bid)
+            else:
+                # If there's no entry for this agent, add one to the dictionary
+                combined_bids[agent_name] = {"agent": agent_name, "bid": bid}
+                
+        self.bid_list=list(combined_bids.values())
+        for agent in self.agents:
+            agent.submitted_bids.append(combined_bids[agent.name]["bid"])
             
         print(self.bid_list)
         self.determine_payment()
@@ -512,7 +538,7 @@ class SealBid():
         
     def determine_winner_sequ(self, bid_list):
         '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
-        sorted_bids = sorted(bid_list, key=lambda x: float(x['bid']), reverse=True)
+        sorted_bids = sorted(bid_list, key=lambda x: float(x['bid']["A"]), reverse=True)
 
         if len(sorted_bids) > 0:
             same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
@@ -886,7 +912,10 @@ class Auction_CA():
             history = auction.run()
         elif self.rule.seal_clock == "seal":
             auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
-            history = auction.sim_bid()
+            if self.rule.type == "sequential":
+                history = auction.seq_bid()
+            else:
+                history = auction.sim_bid()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
@@ -918,7 +947,7 @@ class Auction_CA():
         sorted_bids_a = sorted(bids_a, reverse=True)
         sorted_bids_b = sorted(bids_b, reverse=True)
             
-        if self.rule.type == "simultaneous":
+        if self.rule.type == "simultaneous" or self.rule.type == "sequential":
             bid_describe = (
                 "All the bids for A in this round were {}".format(', '.join(map(str, sorted_bids_a))) + "\n" +
                 "All the bids for B in this round were {}".format(', '.join(map(str, sorted_bids_b)))
