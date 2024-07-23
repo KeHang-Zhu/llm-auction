@@ -74,8 +74,8 @@ class Rule_CA:
         
         ## Bid asking prompt
         if self.type == "sequential":
-            self.asking_prompt1 = "How much would you like to bid on A?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For A, I bid... "
-            self.asking_prompt2 = "How much would you like to bid on B?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For B, I bid... "
+            self.asking_prompt1 = "Now you are at the first stage bidding for A. How much would you like to bid on A?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For A, I bid... "
+            self.asking_prompt2 = "Now you are at the second stage bidding for B. How much would you like to bid on B?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For B, I bid... "
         elif self.type == "simultaneous":
             self.asking_prompt = """How much would you like to bid on each item?  Give your response with a single number and no other texts, e.g. 1, 44. Start with For A, I bid... For B, I bid...  """
         elif self.type == "menu":
@@ -209,42 +209,52 @@ class SealBid():
                     )
                 survey = Survey(questions = [q_plan])
                 result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
-                plan = result.select("q_plan").to_list()[0]
-                print(plan)
+                plan_A = result.select("q_plan").to_list()[0]
+                print(plan_A)
                 
                 q_bid_A = QuestionFreeText(
                         question_name = "q_bid_A",
-                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt1
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan_A)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt1
                             )
                 survey = Survey(questions=[q_bid_A])
                 result_A = survey.by(agent.agent).by(self.model).run(cache=self.cache)
                 bid_A = result_A.select("q_bid_A").to_list()[0]
                 print(bid_A)
                 parsed_bid = self.parse_bid(bid_A, mode="A")
-                agent.reasoning.append(plan)
+                agent.reasoning.append({"A":plan_A})
                 bid_list.append({"agent":agent.name,"bid": parsed_bid})
                 
-            #reflection
+            #determine the winner
             bidding_A = self.determine_winner_sequ(bid_list)
             print(bidding_A)
         
             ## Bidding for B
             for agent in self.agents:
                 ## generate sentence of the results for A
-                if bidding_A["winner"] is not agent.name:
+                if bidding_A["winner"] is agent.name:
                     status_A = "You won the item A. "
                 else:
                     status_A = "You didn't win the item A. "
-                plan = agent.reasoning[-1]
+                plan = agent.reasoning[-1]["A"]
+                q_plan = QuestionFreeText(
+                    question_name = "q_plan",
+                    question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "Your PLAN at the start of this round is:" + str(plan)+ "And in the previous bidding of A: " + str(status_A)+ "update your plans for what bidding strategies for B. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                    )
+                survey = Survey(questions = [q_plan])
+                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                plan_B = result.select("q_plan").to_list()[0]
+                print(plan_B)
+                
                 q_bid_B = QuestionFreeText(
                         question_name = "q_bid_B",
-                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """+ "And in the previous bidding of A" + str(status_A)  + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt2
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """+  "And in the previous bidding of A: " + str(status_A)+ " Your PLAN of bidding B for this round is:" + str(plan_B)  + " FOLLOW YOUR PLAN "  + self.rule.asking_prompt2
                             )
                 survey = Survey(questions=[q_bid_B])
                 result_B = survey.by(agent.agent).by(self.model).run(cache=self.cache)
                 bid_B = result_B.select("q_bid_B").to_list()[0]
                 print(bid_B)
                 parsed_bid = self.parse_bid(bid_B, mode="B")
+                agent.reasoning[-1]["B"] = plan_B
                 bid_list.append({"agent":agent.name,"bid": parsed_bid})
                 
         else:
@@ -269,51 +279,60 @@ class SealBid():
                 history = agent.history
                 reasoning = agent.reasoning
                 max_length = max(len(history), len(reasoning))
-                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
+                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i]["A"]+reasoning[i]["B"] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i]["A"]+reasoning[i]["B"] for i in range(max_length)])
                 # previous_plan = agent.reasoning[-1]
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
-                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. "
+                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 100 words. "
                 )
             
                 survey = Survey(questions = [q_plan])
                 result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
-                plan = result.select("q_plan").to_list()[0]
+                plan_A = result.select("q_plan").to_list()[0]
                 # plan= result['choices'][0]['message']['content']
-                print(plan, "====================\n")
+                print(plan_A, "====================\n")
                 
                 q_bid_A = QuestionFreeText(
                         question_name = "q_bid_A",
-                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt1
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "Your PLAN for this round is:" + str(plan_A)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt1
                             )
                 survey = Survey(questions=[q_bid_A])
                 result_A = survey.by(agent.agent).by(self.model).run(cache=self.cache)
                 bid_A = result_A.select("q_bid_A").to_list()[0]
                 print(bid_A)
                 parsed_bid = self.parse_bid(bid_A, mode="A")
-                agent.reasoning.append(plan)
+                agent.reasoning.append({"A":plan_A})
                 bid_list.append({"agent":agent.name,"bid": parsed_bid})
                 
-            #reflection
+            #determine winner
             bidding_A = self.determine_winner_sequ(bid_list)
         
             ## Bidding for B
             for agent in self.agents:
                 ## generate sentence of the results for A
-                if bidding_A["winner"] is not agent.name:
+                if bidding_A["winner"] is agent.name:
                     status_A = "You won the item A. "
                 else:
                     status_A = "You didn't win the item A. "
-                plan = agent.reasoning[-1]
+                plan_A = agent.reasoning[-1]["A"]
+                q_plan = QuestionFreeText(
+                    question_name = "q_plan",
+                    question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "Your PLAN at the start of this round is:" + str(plan_A)+ "And in the previous bidding of A: " + str(status_A)+ "update your plans for what bidding strategies for B. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                    )
+                survey = Survey(questions = [q_plan])
+                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                plan_B = result.select("q_plan").to_list()[0]
+                print(plan_B)
                 q_bid_B = QuestionFreeText(
                         question_name = "q_bid_B",
-                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """+ "And in the previous bidding of A" + str(status_A)  + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt2
+                        question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona +  "This is the first round " + "\n" + f"""Your value towards to the A is {agent.current_value["A"]} and your value towards to the B is {agent.current_value["B"]} in this round. Your value towards A and B combined (AB) is {combined_value}. """ + "And in the previous bidding of A: " + str(status_A)+ " Your PLAN of bidding B for this round is:" + str(plan_B)  + " FOLLOW YOUR PLAN "  + self.rule.asking_prompt2
                             )
                 survey = Survey(questions=[q_bid_B])
                 result_B = survey.by(agent.agent).by(self.model).run(cache=self.cache)
                 bid_B = result_B.select("q_bid_B").to_list()[0]
                 print(bid_B)
                 parsed_bid = self.parse_bid(bid_B, mode="B")
+                agent.reasoning[-1]["B"] = plan_B
                 bid_list.append({"agent":agent.name,"bid": parsed_bid})
                 
         ## update bid list by adding bid of B
