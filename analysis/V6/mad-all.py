@@ -43,7 +43,6 @@ for file_path in file_paths:
 average_deviations_per_round = {bidder: [np.mean(deviations[bidder][i]) for i in range(15)] for bidder in bidders}
 overall_average_deviations_per_round = [np.mean(round_averages[i]) for i in range(15)]
 overall_std_error_per_round = [np.std(round_averages[i]) / np.sqrt(len(round_averages[i])) for i in range(15)]
-# 绘制图表
 fig, ax = plt.subplots(figsize=(12, 6))
 rounds = range(15)
 # for bidder in bidders:
