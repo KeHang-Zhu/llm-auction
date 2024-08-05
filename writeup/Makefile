@@ -3,7 +3,7 @@
 ##################
 
 # -- Project name 
-project_name  = auc
+project_name  = iclr2024_conference
 public_name = llm_auction
 
 # -- Timestamp
@@ -11,10 +11,10 @@ ts := $(shell /bin/date "+%Y-%m-%d---%H-%M-%S")
 
 
 # -- Get and install packages
-package_list.txt:
-	 find ../analysis/ -name *R -print0 | xargs -0 grep -h 'library*' | sed 's/library//g' | sed 's/#//g' | sed 's/ //g' | sort | uniq| sed 's/(//g' | sed 's/)//g' > package_list.txt
-install_packages: package_list.txt
-	cat package_list.txt | xargs -I {} Rscript -e 'install.packages("{}", repos = "http://cran.us.r-project.org")'
+# package_list.txt:
+# 	 find ../analysis/ -name *R -print0 | xargs -0 grep -h 'library*' | sed 's/library//g' | sed 's/#//g' | sed 's/ //g' | sort | uniq| sed 's/(//g' | sed 's/)//g' > package_list.txt
+# install_packages: package_list.txt
+# 	cat package_list.txt | xargs -I {} Rscript -e 'install.packages("{}", repos = "http://cran.us.r-project.org")'
 
 # add_data: /home/john/Downloads/data_coy.tar.gz 
 # 	cp /home/john/Downloads/data_coy.tar.gz ../etl/
@@ -101,8 +101,8 @@ $(project_name).pdf: $(project_name).bib $(project_name).tex $(plots) $(tables) 
 	pdflatex -interaction=batchmode $(project_name)
 
 
-website: $(project_name).pdf
-	scp $(project_name).pdf johnjhorton@johnjhorton.ssh.wpengine.net:/home/wpe-user/sites/johnjhorton/papers/$(public_name).pdf
+# website: $(project_name).pdf
+# 	scp $(project_name).pdf johnjhorton@johnjhorton.ssh.wpengine.net:/home/wpe-user/sites/johnjhorton/papers/$(public_name).pdf
 
 
 ## --- M.2 Makes paper from scratch
