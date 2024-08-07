@@ -16,9 +16,9 @@ def parse_string(text):
     bidder = bidder_match.group(1) if bidder_match else None
 
     # 4. Get the value of the money prize
-    value_match = re.search(r'Your value towards to the money prize is (\d+) now', text)
+    value_match = re.search(r'Your value towards to the money prize is (\d+)', text)
     value = int(value_match.group(1)) if value_match else None
-
+    print(value)
     # 5. Get the current price
     price_match = re.search(r'The current price is (\d+)', text)
     price = int(price_match.group(1)) if price_match else None
@@ -50,7 +50,6 @@ def process_file(input_file, output_file):
 
 # Example usage
 input_files = [
-    "/Users/wonderland/Desktop/auction/llm-auction/results/OSP/clock_ascend_second_private_open/raw_output__2024-05-22_18-15-59.txt",
 "/Users/wonderland/Desktop/auction/llm-auction/results/OSP/clock_ascend_second_private_open/raw_output__2024-05-22_19-19-57.txt"
 ]
 output_file = 'output_results.csv'
