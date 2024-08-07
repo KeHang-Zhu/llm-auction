@@ -3,7 +3,7 @@
 ##################
 
 # -- Project name 
-project_name  = iclr2024_conference
+project_name  = llm_auction
 public_name = llm_auction
 
 # -- Timestamp
