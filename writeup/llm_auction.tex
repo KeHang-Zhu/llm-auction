@@ -256,8 +256,11 @@ The exact details of the model we used are specified in Section \ref{results}. H
 
 \textbf{Common Value (CV) model:} In the CV model, the item being auctioned has a single, objective value that is common to all bidders, but this value is unknown at the time of the auction. Each bidder has their own estimate of this common value, modelled based on their private information. 
 
-\subsection{FPSB vs. SPSB with IPV}\label{section:classic}
-We first consider the FPSB and SPSB auctions in IPV settings. 
+\subsection{First-Price versus Second-Price sealed bid Auction }\label{section:classic}
+
+We begin by examining the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. In the context of independent private values (IPV) settings, the principle of revenue equivalence suggests that these different auction formats can generate the same expected revenue under certain conditions.
+
+
 \subsubsection{Setting}
 There are $3$ bidders in each auction, and each bidder $i$'s value is drawn from an independent, uniform distribution $v_i \sim U[0, 99]$. Bidders, upon observing their value, submit a sealed bid $\beta(v)$, with $\beta(\cdot)$ a vector mapping each component value to its corresponding bid, corresponding to a strategy for reporting based on its valuation. In the FPSB auction, the highest bidder pays her bid and receives the prize (and all other bidders pay $0$ and receive no prize). Formally, the payment for an agent is given by: $t_i(\beta(v)) = \mathbbm{1}_{i \; \text{won the auction}}\cdot \beta_i(v)$. In the SPSB auction, the highest bidder pays the second-highest bid and receives the prize (and all other bidders pay $0$ and receive no prize). Formally, the payment for an agent is given by: $t_i(\beta(v)) = \mathbbm{1}_{i \; \text{won the auction}} \cdot \beta^{(2)}(v)$, where $\beta^{(2)}$ represents the second-order statistic or the second-largest bid. Bids are submitted in $\$1$ increments and ties are resolved randomly. 
 
@@ -266,7 +269,7 @@ There are $3$ bidders in each auction, and each bidder $i$'s value is drawn from
 It is well-known that in the SPSB auction, bidding one's true value is a dominant strategy equilibrium \cite{krishna2009auction}. 
 
 \begin{equation}
-    \beta_{SPSB}(v) = v
+    \hat{\beta}_{SPSB}(v) = v
 \end{equation}
 
 The FPSB auction, of course, has no equilibrium in dominant strategies but has a Nash Equilibrium of bidding as follows when values are uniformly distributed with common support. $n$ is the number of bidders and in our setting, $n=3$.
@@ -282,17 +285,18 @@ The FPSB auction, of course, has no equilibrium in dominant strategies but has a
 Experimental evidence for the FPSB persistently has bids above the risk-neutral NE prediction, suggesting a failure of revenue equivalence due to risk-aversion. Experimental data for the SPSB auction has agents bidding higher than in the FPSB auction, and sometimes even higher than their value. In both the FPSB and SPSB auction (and indeed, almost all auctions) there is robust evidence of bids being strictly monotone in one's value. 
 
 \subsubsection{Simulation evidence}
-Simulations are run according to the setting above. Results are summarized in Figure 1.
-
+Simulations are run according to the setting above. Results are summarized in Figure \ref{fig:fpsb-plan}. X-axis is the assigned values for the good. Y-axis is the bid placed by the LLM-agent at the given value.
+The grey triangles are the actual LLM experiment data. The black dashed line is the Loess -smoothed curve for all the experimental data. The 45-degree line indicates
+the scenario where the LLM agents’ values equal their bids while the solid red line is the theoretically optimal bidding strategy. 
 
 \begin{figure}[h]
     \centering \includegraphics[width=\linewidth]{Figs/ipv.png}
     \caption{\textbf{ Comparison of FPSB and SPSB under IPV setting.} The theoretically predicted bid, given that bidders' values are independently drawn from a uniform distribution of [0, 99], is marked in red. The experimental data points are represented by grey triangles. The 45-degree line indicates the scenario where the LLM agents' values equal their bids. The dashed black line represents the LOESS-smoothed data. Left: In FPSB auction, the experimental bids are ramping up compared to the Bayes Nash prediction. Right: In SPSB auction, the experimental bids are shading down compared to the dominant strategy.}
-    \label{fig:fpsb}
+    \label{fig:fpsb-plan}
 
 \end{figure}
 
-Figure~\ref{fig:fpsb} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (cite). However, there's a fairly weak separation between the two bidding curves. There's also no bidding above one's value, which is a marked difference from the existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction. This may be an improvement of LLM play over human play. 
+Figure~\ref{fig:fpsb-plan} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (cite). However, there's a fairly weak separation between the two bidding curves. There's also no bidding above one's value, which is a marked difference from the existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction. This may be an improvement of LLM play over human play. 
 
 Experiment logs in which LLMs explain their bidding decisions suggest that one reason to explain the weak separation in our data between the FPSB and SPSB auctions is that 1) LLMs are quite risk-averse and 2) that they sometimes confuse the SPSB and FPSB auctions. In this way, despite playing more intelligently than humans (in that LLMs almost never bid above their value), they do so because they may be confusing the SPSB for the FPSB. Additionally, LLMs in these classic settings demonstrate one new quirk not yet documented in experimental literature -- bidding zero upon becoming frustrated. In 3\% of runs, LLMs bid $0$, often justifying their decision by arguing little chance of winning the good with a higher bid. 
 
@@ -652,7 +656,7 @@ to better understand the design tradeoffs in these kinds of complex and often hi
 We thanks EDSL and Robin Horton for techical support in building LLM agents.
 
 
-\bibliography{llm_auction}
+\bibliography{iclr2024_conference}
 \bibliographystyle{iclr2024_conference}
 
 \appendix
