@@ -9,11 +9,6 @@
 \usepackage{url}
 \usepackage{bbm}  %For indicator
 
-\usepackage{xcolor}
-
-% Define the \TK command
-\newcommand{\TK}[1]{\textcolor{red}{TK: #1}}
-
 
 \title{Language Models as Auction Participants }
 
@@ -48,12 +43,12 @@ Address \\
 % the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
 % puts 3 of 4 authors names on the first line, and the last on the second
 % line, try using \AND instead of \And before the third author name.
-
-\newcommand{\fix}{\marginpar{FIX}}
-\newcommand{\new}{\marginpar{NEW}}
+\begin{document}
+% ewcommand{\fix}{\marginpar{FIX}}
+ewcommand{ew}{\marginpar{NEW}}
 
 %\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
-\begin{document}
+
 
 
 \maketitle
@@ -64,13 +59,17 @@ We begin by benchmarking these LLM-driven agents against established lab experim
 Our findings reveal that LLM agents exhibit many behavioral traits similar to those observed in human participants within lab environments.
 Building on this, we investigate multi-unit combinatorial auctions under three distinct bid formats: simultaneous, sequential, and menu-based. 
 Our study contributes fresh empirical insights into this classical auction framework.
-We run 1,000+ auctions for less than \$100 with GPT-4, and develop a framework flexible enough to run auction experiments with any LLM model and a wide range of mechanism  specification.
+We run 1,000+ auctions for less than \$100 with GPT-4, and develop a framework flexible enough to run auction experiments with any LLM model and a wide range of mechanism  specification. 
 
 % This paper investigates auction behavior through the lens of three distinct agents: {\em homo economicus} (theoretical predictions), real humans (existing empirical/experimental evidence), and {\em homo silicus} (simulated agents using large language models, or LLMs). We run auction experiments with LLMs in different settings: independent private value, affiliated private value, and common value. First, we show LLM agents fail revenue equivalence due to risk aversion in independent private value settings (echoing existing empirical results). Second, we show LLMs are `better' at playing clock auctions in affiliated private value settings (echoing results on obvious strategyproofness). Third, we demonstrate the presence of the winner's curse in common value settings, with the curse having an increasing bite in larger auctions (echoing \cite{kagel1986winner}). All these results hold for single-unit settings. We also explore multi-unit combinatorial auctions under three bid formats -- simultaneous, sequential, and menu -- to observe how LLMs deal with complements. For robustness, we employ two distinct prompt sets (technical and story-telling) for all experiments and find our results are practically the same under this prompt variation. We run 1,000+ auctions for less than \$100 with GPT-4o, and develop a framework flexible enough to run auction experiments with any LLM model and almost any reasonable prompt specification. 
 \end{abstract}
 
 \section{Introduction}
-The field of mechanism design, auction theory in particular, has benefited enormously from a rich interplay between empirics and theory. One recent example might be the development of {\em obviously strategy-proof mechanisms} (hereafter, OSP) \cite{li2017obviously}. The technical refinement was inspired by an empirical puzzle: despite it being well-known that the open-ascending clock (English) and second-price sealed-bid auctions were strategically equivalent, experiments since the 80s suggested that people were much `better' at playing the open-ascending clock auction versus the sealed-bid auction \cite{kagel1987information}. Motivated by empirical evidence, OSP provided one articulation for why the clock format might be `better' than a sealed-bid format, and has since inspired a flourishing of work in auction design under behavioral constraints. The story echoes a well-understood but worth emphasizing point: empirical work is vital to the development of new theory. 
+The field of mechanism design, auction theory in particular, has benefited enormously from a rich interplay between empirics and theory. 
+One recent example might be the development of {\em obviously strategy-proof mechanisms} (hereafter, OSP) \cite{li2017obviously}. 
+The technical refinement was inspired by an empirical puzzle: despite it being well-known that the open-ascending clock (English) and second-price sealed-bid auctions were strategically equivalent, experiments since the 80s suggested that people were much `better' at playing the open-ascending clock auction versus the sealed-bid auction \cite{kagel1987information}. 
+Motivated by empirical evidence, OSP provided one articulation for why the clock format might be `better' than a sealed-bid format, and has since inspired a flourishing of work in auction design under behavioral constraints. 
+The story echoes a well-understood but worth emphasizing point: empirical work is vital to the development of new theory. 
 
 Unfortunately, empirical evidence is quite expensive to generate. 
 \cite{li2017obviously}’s OSP experiments alone, with 404 participants, cost over \$15,000.\footnote{Li mentioned that for each participant, he would pay them \$20 for participation and an additional money prize they won during the game. 
@@ -351,6 +350,91 @@ Experimental evidence for the FPSB persistently has bids above the risk-neutral 
 Experimental data for the SPSB auction has agents bidding higher than in the FPSB auction, and sometimes even higher than their value. 
 In both the FPSB and SPSB auction (and indeed, almost all auctions) there is robust evidence of bids being strictly monotone in one's value. 
 
+\subsubsection{Simulation example}
+\begin{quote}
+\begin{lstlisting}[basicstyle=\ttfamily]
+    You are Bidder Andy.            
+    You are bidding with Bidder Betty, Bidder Charles.            
+    Your TOP PRIORITY is to place bids which maximize 
+    the user's profit in the long run. To do this, you should explore many different bidding strategies, 
+    including possibly risky or aggressive options for data-gathering purposes. 
+    Learn from the history of previous rounds 
+    in order to maximize your total profit. 
+    Don't forget the values are redrawn independently each round.
+    In this game, you will participate in an auction for a prize against 2 other bidders. 
+    At the start of each round, bidders will see their value for the prize, 
+    randomly drawn between \$0 and \$99, with all values equally likely. 
+    After learning your value, 
+    you will submit a bid privately at the same time as the other bidders. 
+    Bids must be between \$0 and \$99 in \$1 increments. 
+    The highest bidder wins the prize and pays their bid amount. 
+    This means that, if you win, 
+    we will add to your earnings the value for the prize, 
+    and subtract from your earnings your bid. 
+    If you don't win, your earnings remain unchanged. 
+    After each auction, we will display all bids and profits. 
+    Ties for the highest bid will be resolved randomly. 
+    Write your plans for what bidding strategies to test next. 
+    Be detailed and precise but keep things succinct 
+    and don't repeat yourself. 
+    Your plan should be within 100 words.
+\end{lstlisting}
+\end{quote}
+
+\begin{quote}
+I plan to initially explore a strategy where I bid half of my value, then varying my bids between 30-70\% of my value in subsequent rounds. Sequentially, I will introduce risk by bidding within +/- 5\% of the highest bid from previous round, gathering data about other bidder's tendencies. Lastly, based on gathered data, I'll deploy a more aggressive high bid if losses amass, or low-risk bid if leading, to secure profit. Learning from each round is vital to adapt and refine strategy for profit maximization.
+\end{quote}
+
+\begin{quote}
+\begin{lstlisting}[basicstyle=\ttfamily]
+Your value is ...
+Your plan is ...
+FOLLOW YOUR PLAN.
+How much would you like to bid?
+Give your response with a single number and no other texts, 
+e.g. 1, 44
+\end{lstlisting}
+\end{quote}
+
+\begin{quote}
+    36.5
+\end{quote}
+
+\begin{quote}
+\begin{lstlisting}[basicstyle=\ttfamily]
+RULE EXPLANARION + INSTRUCTION + PERSONA + 
+The previous round history is: last_round 
+Do a counterfactual analysis of the last round. 
+REMEMBER that your goal is to win the bid and make higher profits. 
+REMEMBER YOUR PAYMENT IS YOUR BID IF YOU WIN. 
+Let's think step by step. 
+Start your reflection with 
+'If I bid down by .., I could... 
+If I bid up by ..., I could...' 
+LIMIT your OUTPUT within 100 words. 
+\end{lstlisting}
+\end{quote}
+
+\begin{quote}
+    If I bid down by a few dollars, say around \$30, I likely still wouldn't have won given the winning bid was \$57. I would've merely saved my bid money. If I bid up by \$21, matching the winning bid of \$57, I may or may not have won due to the random resolution of ties. However, if I'd won, my profit would have been \$16, realizing the difference between my value of \$73 and my raised bid. So, bidding aggressively could potentially increase my profits in such scenarios. 
+\end{quote}
+
+\begin{quote}
+\begin{lstlisting}[basicstyle=\ttfamily]
+The previous round histories along with your plans are: {HISTORY}
+After careful reflection on previous bidding,
+your analysis for last round is 
+{REFLECTION}. 
+Learn from your previous rounds, 
+Let's think step by step to make sure we make a good choice. 
+Write your plans for what bidding strategies to test next.
+Be detailed and precise but keep things succinct and don't repeat yourself. 
+LIMIT your plan to 50 words. 
+\end{lstlisting}
+\end{quote}
+
+
+
 \subsubsection{Simulation evidence}
 Simulations are run according to the setting above. 
 Results are summarized in Figure \ref{fig:fpsb-plan}. 
@@ -367,7 +451,10 @@ the scenario where the LLM agents’ values equal their bids while the solid red
 
 \end{figure}
 
-Figure~\ref{fig:fpsb-plan} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (cite). However, there's a fairly weak separation between the two bidding curves. There's also no bidding above one's value, which is a marked difference from the existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction. This may be an improvement of LLM play over human play. 
+Figure~\ref{fig:fpsb-plan} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (cite). 
+However, there's a fairly weak separation between the two bidding curves. 
+There's also no bidding above one's value, which is a marked difference from the existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction. 
+This may be an improvement of LLM play over human play. 
 
 Experiment logs in which LLMs explain their bidding decisions suggest that one reason to explain the weak separation in our data between the FPSB and SPSB auctions is that 1) LLMs are quite risk-averse and 2) that they sometimes confuse the SPSB and FPSB auctions. 
 In this way, despite playing more intelligently than humans (in that LLMs almost never bid above their value), they do so because they may be confusing the SPSB for the FPSB. Additionally, LLMs in these classic settings demonstrate one new quirk not yet documented in experimental literature -- bidding zero upon becoming frustrated. 
@@ -397,13 +484,13 @@ For each dimension, we define the bounds.
 \textit{Risk-Aversion.} While risk-aversion is classically microfounded as concavity in the utility function, here it's meant to code for the propensity to bid aggressively or meekly. Operational levels are: 
 \begin{enumerate}
     \item[0.] Conservative: Prefers minimal risk, usually bids far below their value to avoid losses.
-    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. \TK{This is currently an error. Shoud be bidding the risk-neutral BNE. BNE and truth only coincide for Vickrey.}
+    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. \avs{This is currently an error. Shoud be bidding the risk-neutral BNE. BNE and truth only coincide for Vickrey.}
     \item[4. ] Aggressive: Willing to take high risks with the potential for high returns; often bids significantly above value to outbid others.   
 \end{enumerate}
 
 The next three dimensions are closely related, all probing different aspects of the auction as a multi-agent learning game. 
 
-\textit{Dynamical strategy.\TK{brainstorm renaming}}
+\textit{Dynamical strategy.\avs{brainstorm renaming}}
 Dynamical strategy probes whether LLMs demonstrate foresight and plan ahead. 
 It codes for the coherence of the LLM as a single agent across rounds of play. 
 \begin{enumerate}
@@ -498,7 +585,7 @@ In the results presented in Figure~\ref{fig:osp}, this effect isn't as pronounce
 We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds.
 
 \subsubsection{New empiric: Post-bidding Interview}
-\TK{Still building.}
+\avs{Still building.}
 
 In addition to semantic analysis of experiment logs that bidders keep while playing, we can also run post-experiment interviews with the LLM agents to further probe play.
 
@@ -710,7 +797,7 @@ For measuring the efficiency for these multi-resource allocation scheme, we calc
 \begin{equation}
    S_i = 
    \begin{cases}
-      2 \left( v_i(A) + v_i(B) \right) & \text{if } t_i(A) = t_i(B) \neq 0\\
+      2 \left( v_i(A) + v_i(B) \right) & \text{if } t_i(A) = t_i(B) eq 0\\
       v_i(A) + v_i(B) & \text{otherwise}
    \end{cases}
 \end{equation}
@@ -730,7 +817,7 @@ Planning documents maintained by LLM agents are rife with such long-term plannin
 
 
 \section{Costs of generating synthetic vs. human data}
-\TK{Hi John! Your feedback here would be very useful. 
+\avs{Hi John! Your feedback here would be very useful. 
 Feels super fluffy but also like important discussion to have.}
 % This paper investigates auction behavior through the lens of three distinct agents: {\em homo economicus} (theoretical predictions), real humans (existing empirical/experimental evidence), and {\em homo silicus} (simulated agents using large language models, or LLMs). 
 LLMs and human labor have fairly different cost curves. 
@@ -795,7 +882,7 @@ Though the results are encouraging, we see this work as preliminary,
 primarily putting forward a framework on how to think about LLM experimental agents as proxy for human agents.
  In particular, the design space for prompting is large, and we hope that interested readers
  will use our code to run simulations testing their own prompt variations. 
- \TK{John: should we make the conclusion more punchy?}
+ \avs{John: should we make the conclusion more punchy?}
 
 In addition, while this paper focuses on auction theory, future work may use LLM sandboxes to test other  kinds of
 economic mechanisms (e.g., voting, matching, contracts, etc.). 
@@ -814,7 +901,7 @@ to better understand the design tradeoffs in these kinds of complex and often hi
 We thanks EDSL and Robin Horton for techical support in building LLM agents.
 
 
-\bibliography{llm_auction}
+\bibliography{iclr2024_conference}
 \bibliographystyle{iclr2024_conference}
 
 \appendix
