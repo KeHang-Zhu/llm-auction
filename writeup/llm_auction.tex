@@ -9,6 +9,11 @@
 \usepackage{url}
 \usepackage{bbm}  %For indicator
 
+\usepackage{xcolor}
+
+% Define the \TK command
+\newcommand{\TK}[1]{\textcolor{red}{TK: #1}}
+
 
 \title{Language Models as Auction Participants }
 
@@ -43,13 +48,12 @@ Address \\
 % the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
 % puts 3 of 4 authors names on the first line, and the last on the second
 % line, try using \AND instead of \And before the third author name.
-\begin{document}
-% ewcommand{\fix}{\marginpar{FIX}}
-ewcommand{ew}{\marginpar{NEW}}
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
 
 %\iclrfinalcopy % Uncomment for camera-ready version, but NOT for submission.
-
-
+\begin{document}
 
 \maketitle
 
@@ -460,7 +464,7 @@ the scenario where the LLM agents’ values equal their bids while the solid red
 
 \end{figure}
 
-Figure~\ref{fig:fpsb-plan} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (cite). 
+Figure~\ref{fig:fpsb-plan} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (\TK{CITE papers assigned to Anand}). 
 However, there's a fairly weak separation between the two bidding curves. 
 There's also no bidding above one's value, which is a marked difference from the existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction. 
 This may be an improvement of LLM play over human play. 
@@ -513,13 +517,13 @@ For each dimension, we define the bounds.
 \textit{Risk-Aversion.} While risk-aversion is classically microfounded as concavity in the utility function, here it's meant to code for the propensity to bid aggressively or meekly. Operational levels are: 
 \begin{enumerate}
     \item[0.] Conservative: Prefers minimal risk, usually bids far below their value to avoid losses.
-    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. \avs{This is currently an error. Shoud be bidding the risk-neutral BNE. BNE and truth only coincide for Vickrey.}
+    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. \TK{This is currently an error. Shoud be bidding the risk-neutral BNE. BNE and truth only coincide for Vickrey.}
     \item[4. ] Aggressive: Willing to take high risks with the potential for high returns; often bids significantly above value to outbid others.   
 \end{enumerate}
 
 The next three dimensions are closely related, all probing different aspects of the auction as a multi-agent learning game. 
 
-\textit{Dynamical strategy.\avs{brainstorm renaming}}
+\textit{Dynamical strategy.\TK{brainstorm renaming}}
 Dynamical strategy probes whether LLMs demonstrate foresight and plan ahead. 
 It codes for the coherence of the LLM as a single agent across rounds of play. 
 \begin{enumerate}
@@ -614,7 +618,7 @@ In the results presented in Figure~\ref{fig:osp}, this effect isn't as pronounce
 We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds.
 
 \subsubsection{New empiric: Post-bidding Interview}
-\avs{Still building.}
+\TK{Still building.}
 
 In addition to semantic analysis of experiment logs that bidders keep while playing, we can also run post-experiment interviews with the LLM agents to further probe play.
 
@@ -713,7 +717,7 @@ It remains to see whether future generations of language models (e.g., GPT5, wit
 
 
 
-% \subsection{Learning\avs{Comment for John: We're still not quite sure how to frame learning.}}
+% \subsection{Learning\TK{Comment for John: We're still not quite sure how to frame learning.}}
 % In the next session, we will show the differences between these two agent queries.
 
 % % This alternative prompt design provide a different data generation process.
@@ -846,7 +850,7 @@ Planning documents maintained by LLM agents are rife with such long-term plannin
 
 
 \section{Costs of generating synthetic vs. human data}
-\avs{Hi John! Your feedback here would be very useful. 
+\TK{Hi John! Your feedback here would be very useful. 
 Feels super fluffy but also like important discussion to have.}
 % This paper investigates auction behavior through the lens of three distinct agents: {\em homo economicus} (theoretical predictions), real humans (existing empirical/experimental evidence), and {\em homo silicus} (simulated agents using large language models, or LLMs). 
 LLMs and human labor have fairly different cost curves. 
@@ -911,7 +915,7 @@ Though the results are encouraging, we see this work as preliminary,
 primarily putting forward a framework on how to think about LLM experimental agents as proxy for human agents.
  In particular, the design space for prompting is large, and we hope that interested readers
  will use our code to run simulations testing their own prompt variations. 
- \avs{John: should we make the conclusion more punchy?}
+ \TK{John: should we make the conclusion more punchy?}
 
 In addition, while this paper focuses on auction theory, future work may use LLM sandboxes to test other  kinds of
 economic mechanisms (e.g., voting, matching, contracts, etc.). 
@@ -930,7 +934,8 @@ to better understand the design tradeoffs in these kinds of complex and often hi
 We thanks EDSL and Robin Horton for techical support in building LLM agents.
 
 
-\bibliography{iclr2024_conference}
+% \bibliography{iclr2024_conference}
+\bibliography{llm_auction}
 \bibliographystyle{iclr2024_conference}
 
 \appendix
