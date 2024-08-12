@@ -350,30 +350,16 @@ Experimental evidence for the FPSB persistently has bids above the risk-neutral 
 Experimental data for the SPSB auction has agents bidding higher than in the FPSB auction, and sometimes even higher than their value. 
 In both the FPSB and SPSB auction (and indeed, almost all auctions) there is robust evidence of bids being strictly monotone in one's value. 
 
-\subsubsection{Simulation example}
+\subsubsection{Simulation process}
+
+The LLM agents will be first informed about the scenario. After explaining to them the rules and incentives of the aucion, they will be asked to write down a plan for the bidding.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
     You are Bidder Andy.            
-    You are bidding with Bidder Betty, Bidder Charles.            
-    Your TOP PRIORITY is to place bids which maximize 
-    the user's profit in the long run. To do this, you should explore many different bidding strategies, 
-    including possibly risky or aggressive options for data-gathering purposes. 
-    Learn from the history of previous rounds 
-    in order to maximize your total profit. 
-    Don't forget the values are redrawn independently each round.
-    In this game, you will participate in an auction for a prize against 2 other bidders. 
-    At the start of each round, bidders will see their value for the prize, 
-    randomly drawn between \$0 and \$99, with all values equally likely. 
-    After learning your value, 
-    you will submit a bid privately at the same time as the other bidders. 
-    Bids must be between \$0 and \$99 in \$1 increments. 
-    The highest bidder wins the prize and pays their bid amount. 
-    This means that, if you win, 
-    we will add to your earnings the value for the prize, 
-    and subtract from your earnings your bid. 
-    If you don't win, your earnings remain unchanged. 
-    After each auction, we will display all bids and profits. 
-    Ties for the highest bid will be resolved randomly. 
+    You are bidding with Bidder Betty, Bidder Charles.     
+    
+    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+
     Write your plans for what bidding strategies to test next. 
     Be detailed and precise but keep things succinct 
     and don't repeat yourself. 
@@ -381,62 +367,81 @@ In both the FPSB and SPSB auction (and indeed, almost all auctions) there is rob
 \end{lstlisting}
 \end{quote}
 
+The following is the output from Bidder Andy:
 \begin{quote}
-I plan to initially explore a strategy where I bid half of my value, then varying my bids between 30-70\% of my value in subsequent rounds. Sequentially, I will introduce risk by bidding within +/- 5\% of the highest bid from previous round, gathering data about other bidder's tendencies. Lastly, based on gathered data, I'll deploy a more aggressive high bid if losses amass, or low-risk bid if leading, to secure profit. Learning from each round is vital to adapt and refine strategy for profit maximization.
+``I plan to initially explore a strategy where I bid half of my value, then varying my bids between 30-70\% of my value in subsequent rounds. Sequentially, I will introduce risk by bidding within +/- 5\% of the highest bid from previous round, gathering data about other bidder's tendencies. Lastly, based on gathered data, I'll deploy a more aggressive high bid if losses amass, or low-risk bid if leading, to secure profit. Learning from each round is vital to adapt and refine strategy for profit maximization.''
 \end{quote}
 
+Once they made the bidding plan, the system will inform the LLM agents their value towards the item in this round and ask them to make a bid according to their plan.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
-Your value is ...
-Your plan is ...
-FOLLOW YOUR PLAN.
-How much would you like to bid?
-Give your response with a single number and no other texts, 
-e.g. 1, 44
+    You are Bidder Andy.            
+    You are bidding with Bidder Betty, Bidder Charles.     
+    
+    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+
+    Your value is 73. Your plan is {PLAN}
+    FOLLOW YOUR PLAN.
+    How much would you like to bid?
+    Give your response with a single number and no other texts, 
+    e.g. 1, 44
 \end{lstlisting}
 \end{quote}
 
-\begin{quote}
-    36.5
-\end{quote}
+In this example, Bidder Andy valued the item at \$ 73. And according to his plan, he only wanted to bid 30-70\% of his value. So, he bid ``36.5'' in this round.
 
+After receiving the bids from all the LLM biddes. The system would determine the winner and the profits for each bidders. All the bids and the winner's profit would be returned back to the bidders along with whether they win the auction in this round. The part of information is included in the HISTORY variable. Before entering the next round, the bidders would be asked to do a reflection upon their bidding strategy and the result.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
-RULE EXPLANARION + INSTRUCTION + PERSONA + 
-The previous round history is: last_round 
-Do a counterfactual analysis of the last round. 
-REMEMBER that your goal is to win the bid and make higher profits. 
-REMEMBER YOUR PAYMENT IS YOUR BID IF YOU WIN. 
-Let's think step by step. 
-Start your reflection with 
-'If I bid down by .., I could... 
-If I bid up by ..., I could...' 
-LIMIT your OUTPUT within 100 words. 
+    You are Bidder Andy.            
+    You are bidding with Bidder Betty, Bidder Charles.     
+    
+    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+
+    The previous round history is: {HISTORY}
+    
+    Do a counterfactual analysis of the last round. 
+    REMEMBER that your goal is to win the bid and make higher profits. 
+    REMEMBER YOUR PAYMENT IS YOUR BID IF YOU WIN. 
+    Let's think step by step. 
+    Start your reflection with 
+    'If I bid down by .., I could... 
+    If I bid up by ..., I could...' 
+    LIMIT your OUTPUT within 100 words. 
 \end{lstlisting}
 \end{quote}
 
+An example of Bidder Andy's reflection is provided below. Since he didn't win the auction and incurred a zero profit, his reflection was bidding up closer to his true value would help him win the game and secure a net profit.
 \begin{quote}
-    If I bid down by a few dollars, say around \$30, I likely still wouldn't have won given the winning bid was \$57. I would've merely saved my bid money. If I bid up by \$21, matching the winning bid of \$57, I may or may not have won due to the random resolution of ties. However, if I'd won, my profit would have been \$16, realizing the difference between my value of \$73 and my raised bid. So, bidding aggressively could potentially increase my profits in such scenarios. 
+    ``If I bid down by a few dollars, say around \$30, I likely still wouldn't have won given the winning bid was \$57. I would've merely saved my bid money. If I bid up by \$21, matching the winning bid of \$57, I may or may not have won due to the random resolution of ties. However, if I'd won, my profit would have been \$16, realizing the difference between my value of \$73 and my raised bid. So, bidding aggressively could potentially increase my profits in such scenarios. ''
 \end{quote}
 
+In the new round, all the bidders were asked to update their plans according to the history of the last round and their reflections.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
-The previous round histories along with your plans are: {HISTORY}
-After careful reflection on previous bidding,
-your analysis for last round is 
-{REFLECTION}. 
-Learn from your previous rounds, 
-Let's think step by step to make sure we make a good choice. 
-Write your plans for what bidding strategies to test next.
-Be detailed and precise but keep things succinct and don't repeat yourself. 
-LIMIT your plan to 50 words. 
+    You are Bidder Andy.            
+    You are bidding with Bidder Betty, Bidder Charles.     
+    
+    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+
+    The previous round history is: {HISTORY}
+    After careful reflection on previous bidding,
+    your analysis for last round is {REFLECTION}. 
+    
+    Learn from your previous rounds, 
+    Let's think step by step to make sure we make a good choice. 
+    Write your plans for what bidding strategies to test next.
+    Be detailed and precise but keep things succinct and don't repeat yourself. 
+    LIMIT your plan to 50 words. 
 \end{lstlisting}
 \end{quote}
 
+For the second round, after learning from the lessons of bidding only 50\% of the value and losing the game. This time the agent update his plan to the following:
 \begin{quote}
-    I plan to test higher bidding strategies, around two-thirds of the prize value to foster winning chances. Additionally, if my prize value is extremely high, I will bid aggressively for data-gathering.
+    ``I plan to test higher bidding strategies, around two-thirds of the prize value to foster winning chances. Additionally, if my prize value is extremely high, I will bid aggressively for data-gathering.''
 \end{quote}
 
+This plan-bid-reflection loop will iterate until the end of the auction. In our setting, there are overall 15 rounds for both the first-price and second-price auction.
 
 
 \subsubsection{Simulation evidence}
@@ -464,6 +469,7 @@ Experiment logs in which LLMs explain their bidding decisions suggest that one r
 In this way, despite playing more intelligently than humans (in that LLMs almost never bid above their value), they do so because they may be confusing the SPSB for the FPSB. Additionally, LLMs in these classic settings demonstrate one new quirk not yet documented in experimental literature -- bidding zero upon becoming frustrated. 
 In 3\% of runs, LLMs bid $0$, often justifying their decision by arguing little chance of winning the good with a higher bid. 
 
+
 These explanations give some insight into why the FPSB and SPSB bids are somewhat close together, but they give little insight into the separation between them. 
 Not only is there generically separation between the FPSB and SPSB bids, this separation is also changing over time. 
 Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction progress, LLMs overbid more and more in the FPSB auction relative to the SPSB auction.
@@ -474,6 +480,25 @@ Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction prog
     \caption{\textbf{ Differences in deviations for bidding rounds and First-Price or Second-Price Auctions.} Average deviations taken per auction type, grouped by overbidding and underbidding behaviors. The distance between the two markers for each round-group captures how further away one group was than the other. }
     \label{fig:FPSBvsSPSBbyTime}
 \end{figure}
+
+
+In Fig \ref{fig:cross}, we plotted the bidding behavior of LLM agents in two different auction formats: First-Price and Second-Price auctions. 
+X-axis represents the assigned value of the good to the LLM agent, ranging from low to high values.
+Y-axis shows the LLM agent's bid amount.
+The blue line represents First-Price auctions while the orange one represents Second-Price auctions.
+The error bars indicate the standard error of the mean bid at each value point, showing the variability in bidding behavior.
+\begin{figure}[h]
+    \centering \includegraphics[width=0.75\linewidth]{Figs/cross-format.png}
+    \caption{\textbf{Cross-format Comparison of FPSB and SPSB under IPV setting.} }
+    \label{fig:cross}
+\end{figure}
+
+To further quantify the difference between the two auction formats, we conducted an independent samples t-test to get T-statistic: \(-3.22\)and a P-value: \(0.0013\).
+The p-value is well below the conventional significance level of 0.05. 
+This indicates a statistically significant difference in bidding behavior between First-Price and Second-Price auctions. 
+More specifically, the bids in Second-Price auction is significantly higher than the ones in First-Price.
+
+
 
 
 To better understand why bidding behavior between the FPSB and SPSB diverges, we conduct further semantic analysis.
