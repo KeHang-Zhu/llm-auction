@@ -304,56 +304,114 @@ e.g. 1, 44. Start with I bid...
 \section{Benchmarks with previous Auction experiment}\label{results}
 
 
-\subsection{Overview of Environments}
-The exact details of the model we used are specified in Section \ref{results}. Here, we give the high-level definitions involving the auction models we used: 
+% \subsection{Overview of Environments}
+% The exact details of the model we used are specified in Section \ref{results}. Here, we give the high-level definitions involving the auction models we used: 
 
-\textbf{Independent Private Value (IPV) model:} In the IPV model, each bidder's valuation of the auctioned item is determined independently of the valuations of other bidders. 
-These valuations are also private, meaning each bidder knows only their own valuation and not those of the others.
-
-
-\textbf{Affiliated Private Value (APV) model:} The APV model extends the IPV model by allowing bidders' values to be statistically dependent or affiliated. 
-In this model, while each bidder still draws a private component independently, the values themselves are correlated due to a shared common component.
+% \textbf{Independent Private Value (IPV) model:} In the IPV model, each bidder's valuation of the auctioned item is determined independently of the valuations of other bidders. 
+% These valuations are also private, meaning each bidder knows only their own valuation and not those of the others.
 
 
-\textbf{Common Value (CV) model:} In the CV model, the item being auctioned has a single, objective value that is common to all bidders, but this value is unknown at the time of the auction. 
-Each bidder has their own estimate of this common value, modelled based on their private information. 
+% \textbf{Affiliated Private Value (APV) model:} The APV model extends the IPV model by allowing bidders' values to be statistically dependent or affiliated. 
+% In this model, while each bidder still draws a private component independently, the values themselves are correlated due to a shared common component.
+
+
+% \textbf{Common Value (CV) model:} In the CV model, the item being auctioned has a single, objective value that is common to all bidders, but this value is unknown at the time of the auction. 
+% Each bidder has their own estimate of this common value, modelled based on their private information. 
 
 \subsection{First-Price versus Second-Price sealed bid Auction }\label{section:classic}
 
-We begin by examining the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. 
-In the context of independent private values (IPV) settings, the principle of revenue equivalence suggests that these different auction formats can generate the same expected revenue under certain conditions.
+We began by examining two of the most fundamental and widely studied auction formats: the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. 
+Our analysis is situated within the context of independent private values (IPV) settings, where each bidder's valuation is known only to themselves and is independent of other bidders' valuations.
+As the first set of benchmark studies, these two formats are not only the most common in practice but have also been the subject of extensive theoretical and empirical research. 
+Their prevalence in real-world applications, coupled with their relatively straightforward structures, makes them ideal candidates for exploring key concepts in auction theory such as equilibrium strategies, incentive compatibility, and risk-adverseness.
+% We begin by examining the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. 
+% In the context of independent private values (IPV) settings.
+% These two formats of auctions are most common and researches have done lots of both theoretical and empirical works on it.
+% the principle of revenue equivalence suggests that these different auction formats can generate the same expected revenue under certain conditions.
 
 
 \subsubsection{Setting}
 There are $3$ bidders in each auction, and each bidder $i$'s value is drawn from an independent, uniform distribution $v_i \sim U[0, 99]$. 
+\begin{table}[h]
+    \centering
+    \begin{tabular}{|c|c|}
+        \hline
+        Object & Notation \\
+        \hline
+        Values & $v \sim U[0,99]$ \\
+        \hline
+        Bid & $\beta(v)$ \\
+        \hline
+        Allocation & $x(\beta)$ \\
+        \hline
+        Transfer & $t(\beta)$ \\
+        \hline
+    \end{tabular}
+    \label{tab:notation}
+\end{table}
+
+
 Bidders, upon observing their value, submit a sealed bid $\beta(v)$, with $\beta(\cdot)$ a vector mapping each component value to its corresponding bid, corresponding to a strategy for reporting based on its valuation. 
 In the FPSB auction, the highest bidder pays her bid and receives the prize (and all other bidders pay $0$ and receive no prize). Formally, the payment for an agent is given by: $t_i(\beta(v)) = \mathbbm{1}_{i \; \text{won the auction}}\cdot \beta_i(v)$. 
 In the SPSB auction, the highest bidder pays the second-highest bid and receives the prize (and all other bidders pay $0$ and receive no prize). 
 Formally, the payment for an agent is given by: $t_i(\beta(v)) = \mathbbm{1}_{i \; \text{won the auction}} \cdot \beta^{(2)}(v)$, where $\beta^{(2)}$ represents the second-order statistic or the second-largest bid. 
 Bids are submitted in $\$1$ increments and ties are resolved randomly. 
 
-\subsubsection{Theoretical }
+\subsubsection{Theoretical Studies}
 
 It is well-known that in the SPSB auction, bidding one's true value is a dominant strategy equilibrium \cite{krishna2009auction}. 
+This means that regardless of what other bidders do, it is always in a bidder's best interest to bid their true valuation for the item being auctioned. 
+The SPSB mechanism is therefore also known as being dominant strategy incentive compatible.
+
+Formally, we can express the bidding strategy in an SPSB auction as:
 
 \begin{equation}
-    \hat{\beta}_{SPSB}(v) = v
+    \hat{\beta}^*_{SPSB}(v) = v
 \end{equation}
 
-The FPSB auction, of course, has no equilibrium in dominant strategies but has a Nash Equilibrium of bidding as follows when values are uniformly distributed with common support. 
-$n$ is the number of bidders and in our setting, $n=3$.
+where $\hat{\beta}_{SPSB}(v)$ represents the optimal bidding strategy in the SPSB auction. And the asterisk refers to the dominant strategy incentive compatible solution.
 
+
+The First-Price Sealed-Bid (FPSB) auction, on the contrary, does not have an equilibrium in dominant strategies. 
+Instead, it has a Nash Equilibrium (NE) bidding strategy when values are uniformly distributed with common support. 
+A strategy profile is a Nash Equilibrium if no player can unilaterally deviate from their strategy to increase their expected utility, given the strategies of all other players.
+For $n$ bidders, this equilibrium strategy is:
 \begin{equation}
-    \beta_{FPSB}(v) =  \frac{n-1}{n} v = \frac{2}{3}v
+\hat{\beta}_{FPSB}(v) =  \frac{n-1}{n} v
+\end{equation}
+In our setting, where $n=3$, this becomes:
+\begin{equation}
+\hat{\beta}_{FPSB}(v) = \frac{2}{3}v
 \end{equation}
 
+Compared with the dominant strategy in SPSB, this equilibrium holds only under certain assumptions, such as the uniform distribution of valuations and risk-neutral bidders.
+And each bidder's strategy is the best response only given that all other bidders are using the same strategy.
 
 
 
 \subsubsection{Empirical benchmarks}
-Experimental evidence for the FPSB persistently has bids above the risk-neutral NE prediction, suggesting a failure of revenue equivalence due to risk-aversion. 
-Experimental data for the SPSB auction has agents bidding higher than in the FPSB auction, and sometimes even higher than their value. 
-In both the FPSB and SPSB auction (and indeed, almost all auctions) there is robust evidence of bids being strictly monotone in one's value. \TK{Add citations and summary of the experiments}
+While theoretical models provide valuable insights into auction behavior, laboratory experiments offer crucial empirical evidence that can support, challenge, or refine these theories.  
+In both the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions (and indeed, almost all auctions), there is robust evidence of bids being strictly monotone in one's value. 
+This means that higher valuations consistently lead to higher bids, aligning with theoretical predictions. 
+However, the specific bidding patterns observed in experiments often deviate from theoretical equilibria in interesting ways.
+
+\textbf{Empirical findings for FPSB:}
+In the case of FPSB auctions, experimental evidence consistently shows bids above the risk-neutral Nash Equilibrium prediction. \cite{cox1986controlled} found that participants in FPSB auctions tend to bid more aggressively than the theory predicts for risk-neutral bidders.
+In an FPSB auction, bidding higher increases the probability of winning but decreases the potential profit if one does win. 
+Risk-averse bidders may be willing to accept lower potential profits in exchange for a higher chance of winning, leading to bids above the risk-neutral Nash Equilibrium.
+
+\textbf{Empirical findings for SPSB:}
+Interestingly, experimental data for SPSB auctions reveals a different pattern of deviation from theoretical predictions. Participants often bid higher than they do in FPSB auctions participants often bid higher than than their true valuations despite the dominant strategy of truthful bidding in SPSB auctions.
+Kagel and Levin's seminal study \cite{kagel1993independent} provides detailed insights into this behavior:
+\begin{enumerate}
+    \item Overbidding (\cite{kagel1987information}): A significant proportion of participants (typically around 60-70\%) in SPSB auctions submitted bids above their true values. This contrasts sharply with the theoretical prediction of truthful bidding.
+    \item Learning Effects: While overbidding persisted throughout the experiments, its frequency and magnitude tended to decrease over time as participants gained experience with the auction format.
+\end{enumerate}
+
+These findings challenge the straightforward theoretical predictions for SPSB auctions and highlight the complexity of human behavior in auction settings. Several explanations have been proposed for this overbidding phenomenon, including: misconceptions about the second-price rule (\cite{kagel1987information}), strategic uncertainty and beliefs about others' irrationality (\cite{crawford2007level}).
+
+
+
 
 \subsubsection{Simulation process}
 
@@ -524,9 +582,10 @@ To better understand why bidding behavior between the FPSB and SPSB diverges and
 
 We developed a scale and applied to ... The sample size is... Give a clarification of the scales, attaching an example for all the scales.
 
-Reduce to 2 scale:
+Reduce to 3 scale:
 1. Risk-averse 
-2. familiarity of the auction format.
+2. familiarity of the auction format (misconceptions about the second-price rule)
+3. strategic uncertainty and beliefs about others' irrationality
 
 
 To better understand the reasoning behind bidding decisions, we tag the text in the experiment logs along 4 dimensions. 
