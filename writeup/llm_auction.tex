@@ -8,6 +8,7 @@
 \usepackage{hyperref}
 \usepackage{url}
 \usepackage{bbm}  %For indicator
+\usepackage{subcaption}
 
 \usepackage{xcolor}
 
@@ -352,7 +353,7 @@ $n$ is the number of bidders and in our setting, $n=3$.
 \subsubsection{Empirical benchmarks}
 Experimental evidence for the FPSB persistently has bids above the risk-neutral NE prediction, suggesting a failure of revenue equivalence due to risk-aversion. 
 Experimental data for the SPSB auction has agents bidding higher than in the FPSB auction, and sometimes even higher than their value. 
-In both the FPSB and SPSB auction (and indeed, almost all auctions) there is robust evidence of bids being strictly monotone in one's value. 
+In both the FPSB and SPSB auction (and indeed, almost all auctions) there is robust evidence of bids being strictly monotone in one's value. \TK{Add citations and summary of the experiments}
 
 \subsubsection{Simulation process}
 
@@ -449,13 +450,14 @@ This plan-bid-reflection loop will iterate until the end of the auction. In our 
 
 
 \subsubsection{Simulation evidence}
-Simulations are run according to the setting above. 
-Results are summarized in Figure \ref{fig:fpsb-plan}. 
-X-axis is the assigned values for the good. 
+Overall, we performed 5 parallel simulations with 15-rounds for both First-Price and Second-Price Sealed Bid auctions with 3 bidders.
+All the LLM bidding data for FPSB are summarized in the left panel Figure \ref{fig:fpsb-plan} and the right panel concludes the results for SPSB.
+X-axis represents LLM agent's assigned values for the good. 
 Y-axis is the bid placed by the LLM-agent at the given value.
-The grey triangles are the actual LLM experiment data. The black dashed line is the Loess -smoothed curve for all the experimental data. 
+The grey triangles are the actual LLM experiment data. 
+The black dashed line is the Loess-smoothed curve for all the experimental data. 
 The 45-degree line indicates
-the scenario where the LLM agents’ values equal their bids while the solid red line is the theoretically optimal bidding strategy. 
+the scenario where the LLM agents’ values equal their bids while the solid red line is the theoretically optimal bidding strategy.
 
 \begin{figure}[h]
     \centering \includegraphics[width=\linewidth]{Figs/ipv.png}
@@ -464,51 +466,68 @@ the scenario where the LLM agents’ values equal their bids while the solid red
 
 \end{figure}
 
-Figure~\ref{fig:fpsb-plan} demonstrates evidence of monotone bidding and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (\TK{CITE papers assigned to Anand}). 
-However, there's a fairly weak separation between the two bidding curves. 
-There's also no bidding above one's value, which is a marked difference from the existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction. 
-This may be an improvement of LLM play over human play. 
+Both data of FPSB and SPSB demonstrate evidence of monotone bidding.
+For FPSB, the Loess-smoothed data curve is significantly higher than the Bayes Nash Equilibrium. However, there are variations below the theoretically optimal line and a few data points above the given values.
+This agrees with empirical evidence (\TK{CITE papers assigned to Anand}). 
 
-Experiment logs in which LLMs explain their bidding decisions suggest that one reason to explain the weak separation in our data between the FPSB and SPSB auctions is that 1) LLMs are quite risk-averse and 2) that they sometimes confuse the SPSB and FPSB auctions. 
-In this way, despite playing more intelligently than humans (in that LLMs almost never bid above their value), they do so because they may be confusing the SPSB for the FPSB. Additionally, LLMs in these classic settings demonstrate one new quirk not yet documented in experimental literature -- bidding zero upon becoming frustrated. 
-In 3\% of runs, LLMs bid $0$, often justifying their decision by arguing little chance of winning the good with a higher bid. 
+For SPSB, the Loess-smoothed data curve approximately aligns with the theoretical-optimal line which means bid equals value. While the majority of the bids are close to the values, 
+noticeably, for SPSB, there are many high biddings for small assigned values. Low bids are also prevalent for all the value range.
+% and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (\TK{CITE papers assigned to Anand}). 
+% However, there's a fairly weak separation between the two bidding curves. 
+ Bidding above one's value, which is a marked feature in existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction (\TK{CITE papers assigned to Anand}).
+% This may be an improvement of LLM play over human play. 
 
-
-These explanations give some insight into why the FPSB and SPSB bids are somewhat close together, but they give little insight into the separation between them. 
-Not only is there generically separation between the FPSB and SPSB bids, this separation is also changing over time. 
-Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction progress, LLMs overbid more and more in the FPSB auction relative to the SPSB auction.
-
-\begin{figure}[h!]
-    \centering 
-    \hspace{2cm}\includegraphics[width=0.85\linewidth]{Figs/FP_SP_round.png}
-    \caption{\textbf{ Differences in deviations for bidding rounds and First-Price or Second-Price Auctions.} Average deviations taken per auction type, grouped by overbidding and underbidding behaviors. The distance between the two markers for each round-group captures how further away one group was than the other. }
-    \label{fig:FPSBvsSPSBbyTime}
-\end{figure}
-
-
-In Fig \ref{fig:cross}, we plotted the bidding behavior of LLM agents in two different auction formats: First-Price and Second-Price auctions. 
+For cross-format comparison, we plotted the bidding behavior of LLM agents in two different auction formats: First-Price and Second-Price auctions in Fig \ref{fig:cross}
 X-axis represents the assigned value of the good to the LLM agent, ranging from low to high values.
 Y-axis shows the LLM agent's bid amount.
 The blue line represents First-Price auctions while the orange one represents Second-Price auctions.
 The error bars indicate the standard error of the mean bid at each value point, showing the variability in bidding behavior.
 \begin{figure}[h]
-    \centering \includegraphics[width=0.75\linewidth]{Figs/cross-format.png}
+    \centering \includegraphics[width=0.7\linewidth]{Figs/cross-format.png}
     \caption{\textbf{Cross-format Comparison of FPSB and SPSB under IPV setting.} }
     \label{fig:cross}
 \end{figure}
 
-To further quantify the difference between the two auction formats, we conducted an independent samples t-test to get T-statistic: \(-3.22\)and a P-value: \(0.0013\).
+
+To further quantify the difference between the two auction formats, we conducted an independent samples t-test to get T-statistic: \(-3.22\) and a P-value: \(0.0013\).
 The p-value is well below the conventional significance level of 0.05. 
 This indicates a statistically significant difference in bidding behavior between First-Price and Second-Price auctions. 
 More specifically, the bids in Second-Price auction is significantly higher than the ones in First-Price.
 
+Not only is there generically separation between the FPSB and SPSB bids, this separation is also changing over time. 
+Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction progress, LLMs overbid more and more in the FPSB auction relative to the SPSB auction.
+
+\begin{figure}[h!]
+    \centering 
+    \hspace{2cm}\includegraphics[width=0.75\linewidth]{Figs/FP_SP_round.png}
+    \caption{\textbf{ Differences in deviations for bidding rounds and First-Price or Second-Price Auctions.} Average deviations taken per auction type, grouped by overbidding and underbidding behaviors. The distance between the two markers for each round-group captures how further away one group was than the other. }
+    \label{fig:FPSBvsSPSBbyTime}
+\end{figure}
 
 
 
-To better understand why bidding behavior between the FPSB and SPSB diverges, we conduct further semantic analysis.
 
-\subsubsection{Semantic Analysis source of variance}
-Having endowed bidders with a personal log to reason in, each auction simulation generates rich text data to parse for additional insight into the logical progression and microfoundations of the bidding process.
+
+
+
+
+
+\subsubsection{Semantic Analysis}
+
+To better understand why bidding behavior between the FPSB and SPSB diverges and also the bidding variations inside one format, we conduct further semantic analysis of the experiment logs for LLM agents' plans. Having endowed bidders with a personal log to reason in, each auction simulation generates rich text data to parse for additional insight into the logical progression and microfoundations of the bidding process.
+
+% Experiment logs in which LLMs explain their bidding decisions suggest that one reason to explain the weak separation in our data between the FPSB and SPSB auctions is that 1) LLMs are quite risk-averse and 2) that they sometimes confuse the SPSB and FPSB auctions. 
+% In this way, despite playing more intelligently than humans (in that LLMs almost never bid above their value), they do so because they may be confusing the SPSB for the FPSB. Additionally, LLMs in these classic settings demonstrate one new quirk not yet documented in experimental literature -- bidding zero upon becoming frustrated. 
+% In 3\% of runs, LLMs bid $0$, often justifying their decision by arguing little chance of winning the good with a higher bid. 
+
+% These explanations give some insight into why the FPSB and SPSB bids are somewhat close together, but they give little insight into the separation between them. 
+
+We developed a scale and applied to ... The sample size is... Give a clarification of the scales, attaching an example for all the scales.
+
+Reduce to 2 scale:
+1. Risk-averse 
+2. familiarity of the auction format.
+
 
 To better understand the reasoning behind bidding decisions, we tag the text in the experiment logs along 4 dimensions. 
 Each dimension is partitioned from 0 - 4. 
