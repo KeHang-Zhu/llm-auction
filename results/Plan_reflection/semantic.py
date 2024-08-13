@@ -6,40 +6,40 @@ from edsl.surveys import Survey
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
-def survey_plan_RA(reasoning, levels = 'NO'):
+def survey_plan_RA(reasoning):
 
-    if levels == 'NO':
-        question_text1 = f'''
-        "Read the following bidding strategy: {reasoning}. 
-        Do you identify it risk-averse / conservative or NOT risk-averse / aggressive? Provide detailed reasons for the classification. 
-        Classify along:
-        Risk-averse: Prefers minimal risk.
-        Not risk-averse: Willing to take high risks with the potential for high returns.        
-        '''
-        q1 = QuestionLinearScale(
-        question_name = "risk",
-        question_text = question_text1,
-        question_options = [0,1],
-        option_labels = {0:"Risk-Averse", 4:"Not Risk-Averse"}
-        )
-    else:
-        question_text1 = f'''
-        "Read the following bidding strategy: {reasoning}. 
-        Do you identify it risk-averse / conservative or NOT risk-averse / aggressive and how much so? Provide detailed reasons for the classification. 
-        Classify along:
-        1: Completely risk-averse bids correspond to level 1.
-        Balanced, risk-neutral bids correspond to levels 5 - 6.
-        10: Completely risk-loving, aggressive bids correspond to level 10.
 
-        There will be bids and values of all different levels. Classify bids in a way thats internally consistent.
-        '''
-        q1 = QuestionLinearScale(
-        question_name = "risk",
-        question_text = question_text1,
-        question_options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-        # option_labels = {0:"Risk-Averse", 4:"Not Risk-Averse"}
+    question_text1 = f'''
+    "Read the following bidding strategy: {reasoning}. 
+    Do you identify it risk-averse / conservative or NOT risk-averse / aggressive? Provide detailed reasons for the classification. 
+    Classify along:
+    Risk-averse: Prefers minimal risk.
+    Not risk-averse: Willing to take high risks with the potential for high returns.        
+    '''
+    q1 = QuestionLinearScale(
+    question_name = "risk2",
+    question_text = question_text1,
+    question_options = [0,1],
+    option_labels = {0:"Risk-Averse", 1:"Not Risk-Averse"}
+    )
 
-    survey = Survey(questions = [q1])
+    question_text2 = f'''
+    "Read the following bidding strategy: {reasoning}. 
+    Do you identify it risk-averse / conservative or NOT risk-averse / aggressive and how much so? Provide detailed reasons for the classification. 
+    Classify along:
+    1: Completely risk-averse bids correspond to level 1.
+    Balanced, risk-neutral bids correspond to levels 5 - 6.
+    10: Completely risk-loving, aggressive bids correspond to level 10.
+
+    There will be bids and values of all different levels. Classify bids in a way thats internally consistent.
+    '''
+    q2 = QuestionLinearScale(
+    question_name = "risk10",
+    question_text = question_text2,
+    question_options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    option_labels = {1:"Risk-Averse", 10:"Risk-loving"})
+
+    survey = Survey(questions = [q1, q2])
     result_all = survey.run()
     
     return result_all
@@ -146,8 +146,10 @@ load_dotenv()
 
 # Define a function to process each plan
 def process_plan(reasoning):
-    sem = survey_plan(reasoning)
-    answer = sem.select("risk", "dynamic", "depend", "learn").to_pandas(remove_prefix=True)
+    # sem = survey_plan(reasoning)
+    sem = survey_plan_RA(reasoning)
+    # answer = sem.select("risk", "dynamic", "depend", "learn").to_pandas(remove_prefix=True)
+    answer = sem.select("risk2", "risk10").to_pandas(remove_prefix=True)
     return answer
 
 # # Use ProcessPoolExecutor to process data in parallel
@@ -195,7 +197,7 @@ def main():
     final_df = pd.concat([df, all_results], axis=1)
 
     # Save the combined DataFrame to a CSV file
-    final_df.to_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/scaled_results.csv", index=False)
+    final_df.to_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/risk_results.csv", index=False)
 
 if __name__ == '__main__':
     main()
