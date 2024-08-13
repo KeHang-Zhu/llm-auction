@@ -580,79 +580,103 @@ To better understand why bidding behavior between the FPSB and SPSB diverges and
 
 % These explanations give some insight into why the FPSB and SPSB bids are somewhat close together, but they give little insight into the separation between them. 
 
-We developed a scale and applied to ... The sample size is... Give a clarification of the scales, attaching an example for all the scales.
+Previous empirical works point out three factors that may contribute to the divergence between theory and experiments.
+1. Risk-aversion. 
+2. Strategic uncertainty and beliefs about others' irrationality.
+3. Familiarity of the auction format (misconceptions about the second-price rule).
 
-Reduce to 3 scale:
-1. Risk-averse 
-2. familiarity of the auction format (misconceptions about the second-price rule)
-3. strategic uncertainty and beliefs about others' irrationality
+To investigate these factors, we developed a linear scale using the Natural Language processing pipeline described in \cite{Horton2024EDSL}. 
+This scale was applied to plans made by LLM agents before placing bids. 
+Our sample consists of 540 plans, evenly split between SPSB and FPSB auctions. 
+Each dimension is partitioned from 0 to 4, with specific bounds defined for each dimension.
+
+% Give a clarification of the scales, attaching an example for all the scales.
 
 
-To better understand the reasoning behind bidding decisions, we tag the text in the experiment logs along 4 dimensions. 
-Each dimension is partitioned from 0 - 4. 
-For each dimension, we define the bounds.
+% To better understand the reasoning behind bidding decisions, we tag the text in the experiment logs along  dimensions. 
 
-\textit{Risk-Aversion.} While risk-aversion is classically microfounded as concavity in the utility function, here it's meant to code for the propensity to bid aggressively or meekly. Operational levels are: 
+
+\textit{Risk-Aversion:} To complement behavioral measures of the levels of risk-aversion, researchers often use post-experiment questionnaires.
+Although these self-reported measures can be biased especially when not incentivized. While risk-aversion is classically microfounded as concavity in the utility function, here it's meant to code for the propensity to bid aggressively or meekly. Operational levels are: 
 \begin{enumerate}
-    \item[0.] Conservative: Prefers minimal risk, usually bids far below their value to avoid losses.
-    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. \TK{This is currently an error. Shoud be bidding the risk-neutral BNE. BNE and truth only coincide for Vickrey.}
-    \item[4. ] Aggressive: Willing to take high risks with the potential for high returns; often bids significantly above value to outbid others.   
+    \item[0.] Conservative: Prefers minimal risk, usually bids far below their value to avoid losses. 
+    An example for this is ``\textit{For values under \$30, I'll adopt a conservative approach, bidding around 30\% of the value.}''
+    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. 
+    An example for this is:         ``\textit{Consistently bidding high to win the auction (80-100
+    \% of value).}''
+    \item[4. ] Aggressive: Willing to take high risks with the potential for high returns; often bids significantly above value to outbid others. An example is ``\textit{I'll adopt a more aggressive strategy and plan to bid just over the highest winning bid from previous rounds whilst considering my assigned value for each round.}''  
 \end{enumerate}
 
-The next three dimensions are closely related, all probing different aspects of the auction as a multi-agent learning game. 
+Now, we will turn to the regression framework.
+\begin{equation}
+    Overbid = \alpha_1 RISK + \beta_1 FORMAT + \epsilon_1
+\end{equation}
 
-\textit{Dynamical strategy.\TK{brainstorm renaming}}
-Dynamical strategy probes whether LLMs demonstrate foresight and plan ahead. 
-It codes for the coherence of the LLM as a single agent across rounds of play. 
-\begin{enumerate}
-    \item[0.] Static: Sticks to a predefined strategy regardless of changes during the auction.
-    \item[4.] Dynamic: Regularly adjusts strategies in response to auction flow and other bidders’ actions.
-\end{enumerate}
 
-\textit{Interdependency.}
-Best responses from a single agent rely crucially on play from all other agents. 
-Interdependency codes for how reactive a single agent is to the actions other agents make.
+
+\textbf{Strategic uncertainty and beliefs about others' irrationality:} This scale codes for how reactive a single agent is to the actions other agents make, reflecting the interdependency of strategies in multi-agent settings.
 
 \begin{enumerate}
     \item[0.] Independent: Strategy is mostly unaffected by opponents' actions. 
     \item[4.] Reactive: Modifications to the strategy are heavily based on opponents' actions. 
 \end{enumerate}
 
-\textit{Learning.}
-Learning refers to how well agents react to the outcomes of their own bids.
+\begin{equation}
+    Overbid = \alpha_2 Uncertainty  + \beta_2  FORMAT + \epsilon_2
+\end{equation}
+
+
+\textbf{Familiarity of the auction format :}
+In a multi-agent learning game, we can calibrate their familiarity of the game by probing their consistency of the strategies.
+If they are constantly adapting their strategies, it may indicate a less familiarity of the game.
+Therefore, we developed the scale that probes whether LLM agents demonstrate foresight and plan ahead, coding for the coherence of the LLM as a single agent across rounds of play.
 
 \begin{enumerate}
-    \item[0.] Non-Reflective: Rarely if ever adjusts strategy based on past bids.
-    \item[4.] Reflective: Actively learns from each bid, adapting strategies based on past outcomes.
+    \item[0.] Static: Sticks to a predefined strategy regardless of changes during the auction.
+    \item[4.] Dynamic: Regularly adjusts strategies in response to auction flow and other bidders’ actions.
 \end{enumerate}
+% The next three dimensions are closely related, all probing different aspects of the auction as 
+
+\begin{equation}
+    Overbid = \alpha_3 Familiarity + \beta_3 FORMAT + \epsilon_3
+\end{equation}
 
 
-The results are summarized in Figure \ref{fig:SemanticSummary}.   
+% \textit{Learning.}
+% Learning refers to how well agents react to the outcomes of their own bids.
 
-\begin{figure}[h]
-    \centering \includegraphics[width=0.8\linewidth]{Figs/FP_SB_semantic.png}
-    \caption{\text{Semantic analysis for reasoning behind bidding differences in the FPSB and SPSB.} }
-    \label{fig:SemanticSummary}
-\end{figure}
+% \begin{enumerate}
+%     \item[0.] Non-Reflective: Rarely if ever adjusts strategy based on past bids.
+%     \item[4.] Reflective: Actively learns from each bid, adapting strategies based on past outcomes.
+% \end{enumerate}
 
-The largest separation is in the construction of strategy. 
-Panels 2 - 4 suggest that, even at the highest level of play, it is easier to plan ahead and react to new information in the SPSB than in the FPSB. 
-Separating bids into overbids and non-overbids, we can explain differences even more finely.
 
-\begin{figure}[h!]
-    \centering \includegraphics[width=0.8\linewidth]{Figs/FP_semantic.png}
-    \caption{\text{Overbidding vs non-overbidding in FPSB.}}
-    \label{fig:FP_sem}
-\end{figure}
+% The results are summarized in Figure \ref{fig:SemanticSummary}.   
 
-\begin{figure}[h!]
-    \centering \includegraphics[width=0.8\linewidth]{Figs/SP_semantic.png}
-    \caption{\text{Overbidding vs non-overbidding in SPSB.}}
-    \label{fig:SP_sem}
-\end{figure}
+% \begin{figure}[h]
+%     \centering \includegraphics[width=0.8\linewidth]{Figs/FP_SB_semantic.png}
+%     \caption{\text{Semantic analysis for reasoning behind bidding differences in the FPSB and SPSB.} }
+%     \label{fig:SemanticSummary}
+% \end{figure}
 
-The difference between Figures \ref{fig:FP_sem} and \ref{fig:SP_sem} is most stark in the learning dimension. 
-In particular, there is a stark difference between overbids and underbids in the FPSB -- curiously, overbidding is far more likely to happen to LLMs trying to learn (that is, update on the information learned from each round).
+% The largest separation is in the construction of strategy. 
+% Panels 2 - 4 suggest that, even at the highest level of play, it is easier to plan ahead and react to new information in the SPSB than in the FPSB. 
+% Separating bids into overbids and non-overbids, we can explain differences even more finely.
+
+% \begin{figure}[h!]
+%     \centering \includegraphics[width=0.8\linewidth]{Figs/FP_semantic.png}
+%     \caption{\text{Overbidding vs non-overbidding in FPSB.}}
+%     \label{fig:FP_sem}
+% \end{figure}
+
+% \begin{figure}[h!]
+%     \centering \includegraphics[width=0.8\linewidth]{Figs/SP_semantic.png}
+%     \caption{\text{Overbidding vs non-overbidding in SPSB.}}
+%     \label{fig:SP_sem}
+% \end{figure}
+
+% The difference between Figures \ref{fig:FP_sem} and \ref{fig:SP_sem} is most stark in the learning dimension. 
+% In particular, there is a stark difference between overbids and underbids in the FPSB -- curiously, overbidding is far more likely to happen to LLMs trying to learn (that is, update on the information learned from each round).
 
 \subsection{Obvious strategy-proofness}\label{session:OSP}
 Next, we consider clock formats against sealed-bid formats. Following \cite{li2017obviously} and \cite{breitmoser2022obviousness}'s experiments, we consider clock auctions against the SPSB auction in the affiliated private values (APV) setting. 
