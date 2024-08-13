@@ -36,21 +36,21 @@ def survey_plan_binary(reasoning):
     question_name = "risk2",
     question_text = question_text1,
     question_options = [0,1],
-    option_labels = {0:"Risk-Averse", 4:"Not Risk-Averse"}
+    option_labels = {0:"Risk-Averse", 1:"Not Risk-Averse"}
     )
 
     q2 = QuestionLinearScale(
     question_name = "strategy2",
     question_text = question_text2,
     question_options = [0,1],
-    option_labels = {0:"Strategically uncertain",4: "Strategically certain"}
+    option_labels = {0:"Strategically uncertain",1: "Strategically certain"}
     )
 
     q3 = QuestionLinearScale(
     question_name = "understand2",
     question_text = question_text3,
     question_options = [0,1],
-    option_labels = { 0:"Weak understanding", 4:"Strong understanding",}
+    option_labels = { 0:"Weak understanding", 1:"Strong understanding",}
     )
     
     survey = Survey(questions = [q1, q2, q3])
