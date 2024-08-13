@@ -5,6 +5,45 @@ from edsl import Survey
 from edsl.surveys import Survey
 from concurrent.futures import ProcessPoolExecutor, as_completed
 
+
+def survey_plan_RA(reasoning, levels = 'NO'):
+
+    if levels == 'NO':
+        question_text1 = f'''
+        "Read the following bidding strategy: {reasoning}. 
+        Do you identify it risk-averse / conservative or NOT risk-averse / aggressive? Provide detailed reasons for the classification. 
+        Classify along:
+        Risk-averse: Prefers minimal risk.
+        Not risk-averse: Willing to take high risks with the potential for high returns.        
+        '''
+        q1 = QuestionLinearScale(
+        question_name = "risk",
+        question_text = question_text1,
+        question_options = [0,1],
+        option_labels = {0:"Risk-Averse", 4:"Not Risk-Averse"}
+        )
+    else:
+        question_text1 = f'''
+        "Read the following bidding strategy: {reasoning}. 
+        Do you identify it risk-averse / conservative or NOT risk-averse / aggressive and how much so? Provide detailed reasons for the classification. 
+        Classify along:
+        1: Completely risk-averse bids correspond to level 1.
+        Balanced, risk-neutral bids correspond to levels 5 - 6.
+        10: Completely risk-loving, aggressive bids correspond to level 10.
+
+        There will be bids and values of all different levels. Classify bids in a way thats internally consistent.
+        '''
+        q1 = QuestionLinearScale(
+        question_name = "risk",
+        question_text = question_text1,
+        question_options = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        # option_labels = {0:"Risk-Averse", 4:"Not Risk-Averse"}
+
+    survey = Survey(questions = [q1])
+    result_all = survey.run()
+    
+    return result_all
+
 def survey_plan(reasoning):
 
     question_text1 = f'''
