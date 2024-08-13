@@ -7,7 +7,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 
 
 def survey_plan_binary(reasoning):
-
+    
     question_text1 = f'''
     "Read the following bidding strategy: {reasoning}. 
     Do you identify it risk-averse / conservative or NOT risk-averse / aggressive? Provide detailed reasons for the classification. 
@@ -190,9 +190,9 @@ load_dotenv()
 # Define a function to process each plan
 def process_plan(reasoning):
     # sem = survey_plan(reasoning)
-    sem = survey_plan_RA(reasoning)
+    sem =survey_plan_binary(reasoning)
     # answer = sem.select("risk", "dynamic", "depend", "learn").to_pandas(remove_prefix=True)
-    answer = sem.select("risk2", "risk10").to_pandas(remove_prefix=True)
+    answer = sem.select("risk2", "strategy2", "understand2").to_pandas(remove_prefix=True)
     return answer
 
 # # Use ProcessPoolExecutor to process data in parallel
@@ -240,7 +240,7 @@ def main():
     final_df = pd.concat([df, all_results], axis=1)
 
     # Save the combined DataFrame to a CSV file
-    final_df.to_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/risk_results.csv", index=False)
+    final_df.to_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/binary_results.csv", index=False)
 
 if __name__ == '__main__':
     main()
