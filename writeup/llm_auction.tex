@@ -613,6 +613,33 @@ Now, we will turn to the regression framework.
 \end{equation}
 
 
+% \begin{table}[htbp]
+% \centering
+% \caption{Regression Results}
+% \label{tab:regression_results}
+% \begin{tabular}{lrrrrrr}
+% \toprule
+%  & coef & std err & $t$ & $P>|t|$ & $[0.025$ & $0.975]$ \\
+% \midrule
+% const & -0.300800 & 0.030000 & -9.875000 & 0.000000 & -0.361000 & -0.241000 \\
+% risk2 & 0.114400 & 0.039000 & 2.935000 & 0.004000 & 0.038000 & 0.191000 \\
+% \bottomrule
+% \end{tabular}
+% \end{table}
+
+The results are summarized in Figure \ref{fig:FP-Semantic} and \ref{fig:SP-Semantic}.   
+
+\begin{figure}[h]
+    \centering \includegraphics[width=\linewidth]{Figs/First_semantic.png}
+    \caption{\text{Semantic analysis for reasoning behind bidding differences in the FPSB} }
+    \label{fig:FP-Semantic}
+\end{figure}
+
+\begin{figure}[h]
+    \centering \includegraphics[width=\linewidth]{Figs/Second_semantic.png}
+    \caption{\text{Semantic analysis for reasoning behind bidding differences in the SPSB} }
+    \label{fig:SP-Semantic}
+\end{figure}
 
 \textbf{Strategic uncertainty and beliefs about others' irrationality:} This scale codes for how reactive a single agent is to the actions other agents make, reflecting the interdependency of strategies in multi-agent settings.
 
@@ -641,6 +668,12 @@ Therefore, we developed the scale that probes whether LLM agents demonstrate for
     Overbid = \alpha_3 Familiarity + \beta_3 FORMAT + \epsilon_3
 \end{equation}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{Figs/risk-regression.png}
+    \caption{Regression of percent bid deviation on [1, risk].}
+    \label{fig:risk-reg}
+\end{figure}
 
 % \textit{Learning.}
 % Learning refers to how well agents react to the outcomes of their own bids.
@@ -651,13 +684,7 @@ Therefore, we developed the scale that probes whether LLM agents demonstrate for
 % \end{enumerate}
 
 
-% The results are summarized in Figure \ref{fig:SemanticSummary}.   
 
-% \begin{figure}[h]
-%     \centering \includegraphics[width=0.8\linewidth]{Figs/FP_SB_semantic.png}
-%     \caption{\text{Semantic analysis for reasoning behind bidding differences in the FPSB and SPSB.} }
-%     \label{fig:SemanticSummary}
-% \end{figure}
 
 % The largest separation is in the construction of strategy. 
 % Panels 2 - 4 suggest that, even at the highest level of play, it is easier to plan ahead and react to new information in the SPSB than in the FPSB. 
@@ -679,7 +706,12 @@ Therefore, we developed the scale that probes whether LLM agents demonstrate for
 % In particular, there is a stark difference between overbids and underbids in the FPSB -- curiously, overbidding is far more likely to happen to LLMs trying to learn (that is, update on the information learned from each round).
 
 \subsection{Obvious strategy-proofness}\label{session:OSP}
-Next, we consider clock formats against sealed-bid formats. Following \cite{li2017obviously} and \cite{breitmoser2022obviousness}'s experiments, we consider clock auctions against the SPSB auction in the affiliated private values (APV) setting. 
+% Next, we consider clock formats against sealed-bid formats. Following \cite{li2017obviously} and \cite{breitmoser2022obviousness}'s experiments, we consider clock auctions against the SPSB auction in the affiliated private values (APV) setting. 
+
+After examining sealed-bid auction formats, we now turn our attention to dynamic auction formats, specifically clock auctions, and compare them to sealed-bid formats. Clock auctions are dynamic auction formats where the price increases incrementally (or decreases in reverse auctions), and bidders decide whether to stay in or drop out at each price point.
+This comparison is particularly relevant in the context of affiliated private values (APV) settings, where bidders' valuations are correlated.
+Before delving into the comparison, it's crucial to introduce the concept of obvious strategy-proofness (OSP), a theoretical notion central to understanding the behavioral implications of different auction formats \cite{li2017obviously}. 
+A mechanism is OSP if it is evident to a bidder that truthful bidding is optimal, regardless of others' actions, at every decision point.
 
 \subsubsection{Setting}
 Once again, there are $3$ bidders in each auction but now bidders draw affiliated private values of the form $v = c + p$. 
@@ -693,28 +725,57 @@ All three of the auction formats in this case are strategically equivalent to se
 The two clock auctions are obviously strategyproof, though the AC-B auction still provides bidders with `less' information than the AC auction. 
 The affiliation hence serves only to complicate the auction for bidders who don't appreciate that the dominant strategy is to bid one's value. 
 
-\subsubsection{Theoretical and empirical benchmarks}
-\citet{li2017obviously}'s experiment delivers results supporting the theoretical framework of obvious strategyproofness -- even though the AC and SPSB auctions are strategically equivalent, human subjects tend to be more truthful under the AC auction (which is OSP) than under the SPSB auction. 
-Additional empirical results by \citet{breitmoser2022obviousness} show that even OSP itself might not be sufficient in capturing the rich complexities of human behavior -- human subjects are less truthful under AC-B than they are under AC (though still more truthful than the SPSB), even though both AC and AC-B are OSP. 
-We replicated these empirical observations using LLMs, suggesting the ability of LLMs to mirror human behavior under these settings.
+\subsubsection{Theoretical benchmarks}
 
-% \begin{equation}
-%     \beta(v) = v
-% \end{equation}
+In traditional auction theory, for both the ascending clock (AC) auction and the second-price sealed-bid (SPSB) auction, the optimal bidding strategy is to bid truthfully. This can be expressed as:
+
+\begin{equation}
+    \hat{\beta}^*(v) = v
+\end{equation}
+
+where $\hat{\beta}^*(v)$ is the optimal bid for a bidder with value $v$. This theoretical benchmark suggests that under both formats, bidders should reveal their true valuations.
+
+ The concept of OSP, introduced by \cite{li2017obviously}, provides a formal framework for analyzing the ``cognitive simplicity'' of mechanisms.
+Consider a strategy $S_i$ for player $i$. 
+We say that $S_i$ obviously dominates another strategy $S'_i$ if, for any deviation from $S_i$ to $S'_i$, the best possible outcome from $S'_i$ is no better than the worst possible outcome from $S_i$.
+
+Formally, for all histories $h$ where both $S_i$ and $S'_i$ are consistent with $h$:
+\begin{equation}
+\min_{z \in Z(S_i, h)} u_i(z) \geq \max_{z' \in Z(S'_i, h)} u_i(z')
+\end{equation}
+Where: $Z(S_i, h)$ is the set of terminal histories that can result from playing $S_i$ after history $h$
+$u_i(z)$ is player $i$'s utility for terminal history $z$. 
+
+\subsubsection{Empirical benchmarks}
+\citet{li2017obviously}'s experiment delivers results supporting the theoretical framework of obvious strategyproofness -- even though the AC and SPSB auctions are strategically equivalent, human subjects tend to be more truthful under the AC auction (which is OSP) than under the SPSB auction. 
+
+Additional empirical results by \citet{breitmoser2022obviousness} show that even OSP itself might not be sufficient in capturing the rich complexities of human behavior -- human subjects are less truthful under AC-B than they are under AC (though still more truthful than the SPSB), even though both AC and AC-B are OSP. 
+% We replicated these empirical observations using LLMs, suggesting the ability of LLMs to mirror human behavior under these settings.
+
+\subsubsection{Simulation process}
+The simulation is a little different than in session \ref{section:classic}.
+
+
+
 
 \subsubsection{Simulation evidence}
-Figure 2 summarizes our findings for the APV setting. 
+Figure \ref{fig:osp} summarizes our findings for the APV setting. The x-axis stands for the rounds.
+The y-axis is the mean absolute
+deviations from LLM agents' bids to values. Blue solid curve is the mean for SPSB, red dashed for the AC-B and gree dot dashed lines for the AC.
+Error bars are the variations ...
 
 \begin{figure}[h]  
     \centering  
 \includegraphics[width=\linewidth]{Figs/OSP.png}  
     \caption{\textbf{Comparison of three strategically equivalent auctions.} Ascending-clock (AC) and its variant without dropping-out information (AC-B) are obviously strategy-proof while second-price sealed-bid (SPSB) is not. Here, the green dot-dash line plotted the mean absolute deviation from bids to values in AC. Red dash line is for AC-B. And blue solid line is for SPSB. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between, consistent with the human lab experiments in \cite{breitmoser2022obviousness}. However, there is no sign of learning over rounds.}
-    
     \label{fig:osp}
 \end{figure}
 
-The results of the LLM experiments replicate \cite{li2017obviously} and \citet{breitmoser2022obviousness} closely.
-However, we see little evidence of learning over time. This is one benchmark that we hope to reach in future iterations of this work. 
+The results of the LLM experiments replicated \cite{li2017obviously} and \citet{breitmoser2022obviousness} closely. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between.
+Noticeably, in AC, the LLM agents bid their true value within one raise in the clock. While in AC-B, we saw some cases where LLM bidders dropped out several rounds before the clock price approaching their true value.
+
+However, we see little evidence of learning over time. 
+% This is one benchmark that we hope to reach in future iterations of this work. 
 In the experiments in \citet{li2017obviously} and \citet{breitmoser2022obviousness}, human subjects improve their understanding of the mechanisms by bidding closer to their true value over time. 
 In the results presented in Figure~\ref{fig:osp}, this effect isn't as pronounced. 
 We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds.
