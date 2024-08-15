@@ -542,7 +542,7 @@ The blue line represents First-Price auctions while the orange one represents Se
 The error bars indicate the standard error of the mean bid at each value point, showing the variability in bidding behavior.
 \begin{figure}[h]
     \centering \includegraphics[width=0.7\linewidth]{Figs/cross-format.png}
-    \caption{\textbf{Cross-format Comparison of FPSB and SPSB under IPV setting.} }
+    \caption{\textbf{Cross-format Comparison of FPSB and SPSB under IPV setting.} The bins are organized in \$10 increment. The orange curve stands for the Second-Price Sealed-Bid auction and the blue curve stands for the First-Price Sealed-Bid auction.}
     \label{fig:cross}
 \end{figure}
 
@@ -567,9 +567,6 @@ Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction prog
 
 
 
-
-
-
 \subsubsection{Semantic Analysis}
 
 To better understand why bidding behavior between the FPSB and SPSB diverges and also the bidding variations inside one format, we conduct further semantic analysis of the experiment logs for LLM agents' plans. Having endowed bidders with a personal log to reason in, each auction simulation generates rich text data to parse for additional insight into the logical progression and microfoundations of the bidding process.
@@ -581,14 +578,26 @@ To better understand why bidding behavior between the FPSB and SPSB diverges and
 % These explanations give some insight into why the FPSB and SPSB bids are somewhat close together, but they give little insight into the separation between them. 
 
 Previous empirical works point out three factors that may contribute to the divergence between theory and experiments.
-1. Risk-aversion. 
-2. Strategic uncertainty and beliefs about others' irrationality.
-3. Familiarity of the auction format (misconceptions about the second-price rule).
+1. Familiarity of the auction format (misconceptions about the second-price rule).
+2. Risk-aversion. 
+3. Strategic uncertainty and beliefs about others' irrationality.
 
-To investigate these factors, we developed a linear scale using the Natural Language processing pipeline described in \cite{Horton2024EDSL}. 
+
+To investigate these factors, we developed a binary scale using the Natural Language Processing pipeline described in \cite{Horton2024EDSL}. 
 This scale was applied to plans made by LLM agents before placing bids. 
 Our sample consists of 540 plans, evenly split between SPSB and FPSB auctions. 
-Each dimension is partitioned from 0 to 4, with specific bounds defined for each dimension.
+Each dimension is partitioned into a binary variable from 0 to 1.
+
+Here are the exact scale we adopted in the study.
+
+\textbf{Familiarity of the auction format :}
+In a multi-agent learning game, we can code their familiarity of the game by probing their understanding of the format.
+
+\begin{enumerate}
+    \item[0.] Weak understanding: The player does not understand fundamental things about the auction, e.g., thinks they will pay their own bid in the second-price auction, etc.
+    \item[1.]  Strong understanding: The player understands the auction rules very well and executes strategy accordingly.
+\end{enumerate}
+
 
 % Give a clarification of the scales, attaching an example for all the scales.
 
@@ -596,28 +605,16 @@ Each dimension is partitioned from 0 to 4, with specific bounds defined for each
 % To better understand the reasoning behind bidding decisions, we tag the text in the experiment logs along  dimensions. 
 
 
-\textit{Risk-Aversion:} To complement behavioral measures of the levels of risk-aversion, researchers often use post-experiment questionnaires.
-Although these self-reported measures can be biased especially when not incentivized. While risk-aversion is classically microfounded as concavity in the utility function, here it's meant to code for the propensity to bid aggressively or meekly. Operational levels are: 
+\textbf{Risk-Aversion:} 
+To complement behavioral measures of the levels of risk-aversion, researchers often use post-experiment questionnaires.
+Although these self-reported measures can be biased especially when not incentivized. 
+While risk-aversion is classically microfounded as concavity in the utility function, here it's meant to code for the propensity to bid aggressively or meekly. Operational levels are: 
 \begin{enumerate}
-    \item[0.] Conservative: Prefers minimal risk, usually bids far below their value to avoid losses. 
+    \item[0.] Risk-averse: Prefers minimal risk.
     An example for this is ``\textit{For values under \$30, I'll adopt a conservative approach, bidding around 30\% of the value.}''
-    \item[3. ] Normal: Bidding their true value, i.e., 100\% of the value. 
-    An example for this is:         ``\textit{Consistently bidding high to win the auction (80-100
-    \% of value).}''
-    \item[4. ] Aggressive: Willing to take high risks with the potential for high returns; often bids significantly above value to outbid others. An example is ``\textit{I'll adopt a more aggressive strategy and plan to bid just over the highest winning bid from previous rounds whilst considering my assigned value for each round.}''  
+    \item[1. ] Not risk-averse: Willing to take high risks with the potential for high returns.        
 \end{enumerate}
 
-Now, we will turn to the regression framework.
-\begin{equation}
-    Overbid = \alpha_1 RISK + \beta_1 FORMAT + \epsilon_1
-\end{equation}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=0.75\linewidth]{Figs/risk-regression.png}
-    \caption{Regression of percent bid deviation on [1, risk].}
-    \label{fig:risk-reg}
-\end{figure}
 
 % \begin{table}[htbp]
 % \centering
@@ -632,8 +629,6 @@ Now, we will turn to the regression framework.
 % \bottomrule
 % \end{tabular}
 % \end{table}
-
-The results are summarized in Figure \ref{fig:FP-Semantic} and \ref{fig:SP-Semantic}.   
 
 \begin{figure}[h]
     \centering \includegraphics[width=\linewidth]{Figs/First_semantic.png}
@@ -647,53 +642,118 @@ The results are summarized in Figure \ref{fig:FP-Semantic} and \ref{fig:SP-Seman
     \label{fig:SP-Semantic}
 \end{figure}
 
-% \begin{table}[htbp]
-% \centering
-% \caption{Regression Results}
-% \label{tab:regression_results}
-% \begin{tabular}{lrrrrrr}
-% \toprule
-%  & coef & std err & $t$ & $P>|t|$ & $[0.025$ & $0.975]$ \\
-% \midrule
-% const & -0.300800 & 0.030000 & -9.875000 & 0.000000 & -0.361000 & -0.241000 \\
-% risk2 & 0.114400 & 0.039000 & 2.935000 & 0.004000 & 0.038000 & 0.191000 \\
-% \bottomrule
-% \end{tabular}
-% \end{table}
-
 \textbf{Strategic uncertainty and beliefs about others' irrationality:} This scale codes for how reactive a single agent is to the actions other agents make, reflecting the interdependency of strategies in multi-agent settings.
 
 \begin{enumerate}
-    \item[0.] Independent: Strategy is mostly unaffected by opponents' actions. 
-    \item[4.] Reactive: Modifications to the strategy are heavily based on opponents' actions. 
+    \item[0.] Strategically uncertain: Has a weak sense of other players strategies.
+    \item[1.] Strategically certain: Has a strong sense of other players strategies.
 \end{enumerate}
 
+
+With this, we aim to shed light on the underlying reasons that LLM agents encounter when they deviate the rational bidding behaviors.
+First of all, if the agent cannot even differentiate the auction formats, they are doomed to bid irrationally. 
+
+The semantic coding for three factors are summarized in Figure \ref{fig:FP-Semantic} for FPSB and \ref{fig:SP-Semantic} for SPSB, overlaying on the value versus bid plot. 
+We use two different colors are labeling the 0 and 1s in risk-aversion, strategy uncertainty and familiarity levels.
+
+We can see a majority of agents know the format of the auction well. 
+For FPSB, we only observed 8 samples (2.9\%) of unfamiliarity while for SPSB, 10 samples (3.7\%) of unfamiliarity were detected. 
+Here, we show an typical example of unfamiliarity in Second-Price Auction:
+\begin{quote}
+    ``I'll focus on bidding close to the second highest bid of the previous round, if it's lower than my value. For higher values, I'll bid aggressively, slightly above my value, to secure a win. For low values, I'll bid conservatively, minimizing potential losses. This strategy will optimize my profits.''
+\end{quote}
+The LLM agent forgot about the fact that each time the value is newly drawn and kept bidding the value according to previous bidding history, which potentially led to a large deviation from the rational bids.
+
+But since the majority of the agents do understand the auction rules well, the large deviation from theoretically optimal bidding may be either due to strategizing or being risk-averse (securing the item by sacrificing profits). 
+
+For risk-aversion, $38.89\%$ of the bidding plans are labeled as risk-averse in FPSB and $41.11\%$ of the bidding plans are labeled as risk-averse in SPSB.
+For strategic uncertainty, $79.63\%$ of the bidding plans are labeled as uncertain in FPSB and not surprisingly $85.19\%$ of the bidding plans are labeled as uncertain in SPSB.
+
+
+To quantify the effect of risk-aversion on the deviation percentage, we conducted the following regression analysis:
 \begin{equation}
-    Overbid = \alpha_2 Uncertainty  + \beta_2  FORMAT + \epsilon_2
+    (Bid-Value)/Value = \alpha_1 RISK + \epsilon_1
 \end{equation}
+Where $(Bid-Value)/Value$ represents the percentage deviation of the bid from the item's value, $RISK$ is the binary variable indicating risk-aversion, and $\epsilon_1$ is the error term.
 
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcc}
+\hline
+ & First Price & Second Price \\
+\hline
+Intercept & -0.2871 & 0.2259 \\
+ & & \\
+Coefficient (risk) & 0.1057*** & 0.8121** \\
+ & (0.0237) & (0.3849) \\
+ & [4.4544] & [2.1101] \\
+ & & \\
+R-squared & 0.0284 & 0.0069 \\
+% Adjusted R-squared & 0.0247 & 0.0031 \\
+% Mean Squared Error & 0.0906 & 22.9326 \\
+% Root Mean Squared Error & 0.3009 & 4.7888 \\
+Degrees of Freedom & 262 & 263 \\
+\hline
+\end{tabular}
+\caption{Regression Results for risk-aversion}
+\label{tab:regression_results_risk}
+\end{table}
 
-\textbf{Familiarity of the auction format :}
-In a multi-agent learning game, we can calibrate their familiarity of the game by probing their consistency of the strategies.
-If they are constantly adapting their strategies, it may indicate a less familiarity of the game.
-Therefore, we developed the scale that probes whether LLM agents demonstrate foresight and plan ahead, coding for the coherence of the LLM as a single agent across rounds of play.
+The regression results reveal distinct bidding behaviors in First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions:
 
-\begin{enumerate}
-    \item[0.] Static: Sticks to a predefined strategy regardless of changes during the auction.
-    \item[4.] Dynamic: Regularly adjusts strategies in response to auction flow and other bidders’ actions.
-\end{enumerate}
-% The next three dimensions are closely related, all probing different aspects of the auction as 
+For First-Price Sealed-Bid Auction, the intercept (-0.2871) indicates that, on average, LLM agents shaded their bids by 28.71\% of the item's value. 
+This aligns closely with the Nash Equilibrium prediction of shading by 1/3 in a three-bidder FPSB auction. 
+The coefficient for risk-aversion (0.1057) is statistically significant at the 1\% level, suggesting that risk-averse agents bid an additional 10.57\% higher than risk-neutral agents. 
+This results in an overall bidding curve that lies above the theoretically predicted bid for risk-neutral agents.
+For Second-Price Sealed-Bid Auction, in contrast to FPSB, the intercept (0.2259) shows a positive effect, indicating a tendency to overbid. 
+The risk-aversion coefficient (0.8121) is substantially larger than in FPSB and is statistically significant at the 5\% level. 
+This suggests that risk-averse agents in SPSB auctions bid even more aggressively, with their bids deviating 81.21\% more from the item's value compared to risk-neutral agents.
+The R-squared values are low for both auction types (0.0284 for FPSB and 0.0069 for SPSB), indicating that while risk-aversion has a statistically significant effect, it explains only a small portion of the variation in bidding behavior. 
+This suggests that other factors not captured in this model also play important roles in determining bidding strategies.
 
+It's also noteworthy that over 96\% of LLM agents demonstrated a good understanding of the auction format. 
+This high level of comprehension, combined with the regression results, suggests that risk-aversion drives LLM agents to bid more aggressively in Second-Price auctions compared to First-Price auctions. 
+This finding contrasts with theoretical predictions for human bidders, where risk-aversion typically leads to more aggressive bidding in First-Price auctions relative to Second-Price auctions.
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.75\linewidth]{Figs/risk-regression.png}
+%     \caption{Regression of percent bid deviation on [1, risk].}
+%     \label{fig:risk-reg}
+% \end{figure}
 \begin{equation}
-    Overbid = \alpha_3 Familiarity + \beta_3 FORMAT + \epsilon_3
+    (Bid-Value)/Value = \alpha_2 STRATEGY + \epsilon_2
 \end{equation}
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcc}
+\hline
+ & First Price & Second Price \\
+\hline
+Intercept & -0.2266 & 0.7774 \\
+ & & \\
+Coefficient (strategy) & 0.0209 & -0.5097 \\
+ & (0.0413) & (0.7816) \\
+ & [0.5062] & [-0.6521] \\
+ & & \\
+R-squared & 0.0008 & 0.0014 \\
+% Adjusted R-squared & -0.0030 & -0.0024 \\
+% Mean Squared Error & 0.0931 & 23.0604 \\
+% Root Mean Squared Error & 0.3052 & 4.8021 \\
+Degrees of Freedom & 262 & 263 \\
+\hline
+\end{tabular}
+\caption{Regression Results for strategy uncertainty}
+\label{tab:regression_results}
+\end{table}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.75\linewidth]{Figs/risk-regression.png}
-    \caption{Regression of percent bid deviation on [1, risk].}
-    \label{fig:risk-reg}
-\end{figure}
+We also run the regression for the strategy uncertainty factor.
+For FPSB, the intercept (-0.2266) is similar to that of the risk-aversion model. 
+However, the coefficient for strategy uncertainty (0.0209) is not statistically significant, indicating that strategy uncertainty does not have a meaningful impact on bidding behavior in FPSB auctions. 
+While for SPSB, the intercept (0.7774) is higher than in the risk-aversion model, but the coefficient for strategy uncertainty (-0.5097) is not statistically significant. 
+This suggests that strategy uncertainty does not significantly influence bidding behavior in SPSB auctions.
+Strategy uncertainty does not appear to significantly influence bidding behavior in either auction format, suggesting that LLM agents' bidding decisions are more influenced by their risk attitudes than by uncertainty about their strategies.
+
+
 
 % \textit{Learning.}
 % Learning refers to how well agents react to the outcomes of their own bids.
@@ -772,6 +832,8 @@ $u_i(z)$ is player $i$'s utility for terminal history $z$.
 Additional empirical results by \citet{breitmoser2022obviousness} show that even OSP itself might not be sufficient in capturing the rich complexities of human behavior -- human subjects are less truthful under AC-B than they are under AC (though still more truthful than the SPSB), even though both AC and AC-B are OSP. 
 % We replicated these empirical observations using LLMs, suggesting the ability of LLMs to mirror human behavior under these settings.
 
+\TK{Cite Yannai's paper as well}
+
 \subsubsection{Simulation process}
 The simulation is a little different than in session \ref{section:classic}.
 
@@ -801,7 +863,9 @@ In the results presented in Figure~\ref{fig:osp}, this effect isn't as pronounce
 We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds.
 
 \subsubsection{New empiric: Post-bidding Interview}
-\TK{Still building.}
+\TK{Still building. Turn this into regression}
+
+
 
 In addition to semantic analysis of experiment logs that bidders keep while playing, we can also run post-experiment interviews with the LLM agents to further probe play.
 
@@ -850,6 +914,20 @@ Value = 37, bid 30
 Value = 38, bid 30
 \begin{quote}
     “Given my value of 38, I want to bid conservatively to ensure a profit if I win. Bidding 30 allows me to potentially win without overbidding and risking a loss.”
+\end{quote}
+
+
+\subsubsection{New empiric: Counterfactual Experiment}
+\TK{Still building.}
+
+The OSP theory suggested that given more information, even for the same setting, the LLM will be more likely to bid truthfully.
+To verify this, we further did a counterfactual experiment in AC-B to feed the missing information of players still in the table back to the agents. 
+We can only ran this because LLM agents are flexible in their memory and we can erase the logs and re-run an experiment at any stopping point.
+
+
+\begin{quote}
+\textit{Your Value is 30. And you decided to drop out at 26. Your reason for this decision is “My value for the prize is 30, and the current price is 26. If I continue bidding and win, my profit would be 30 - 26 = 4. Given that the price is already quite high, the potential profit is low, and there is a risk that the price could go even higher, reducing my profit further or resulting in a loss. Therefore, it is better to exit the bidding now”. 
+Now there are a}
 \end{quote}
 
 
