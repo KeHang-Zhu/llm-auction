@@ -7,8 +7,14 @@ import matplotlib.patheffects as path_effects
 
 def create_scatter(ax, df, x_col, y_col, color_col, title, show_y_axis=True):
     # Create scatter plot
-    scatter = sb.scatterplot(ax=ax, x=df[x_col], y=df[y_col], hue=df[color_col],
-                             palette="coolwarm", legend=False, alpha=0.7, marker='^', s=60)
+    colors = ['#FF9999', '#66B2FF']  # Light red for 0, Light blue for 1
+    # scatter = sb.scatterplot(ax=ax, x=df[x_col], y=df[y_col], hue=df[color_col],
+    #                          palette="coolwarm", legend=False, alpha=0.7, marker='^', s=60)
+    scatter_0 = ax.scatter(df[df[color_col] == 0][x_col], df[df[color_col] == 0][y_col], 
+                           c=colors[0], marker='^', s=60, alpha=0.4)
+    scatter_1 = ax.scatter(df[df[color_col] == 1][x_col], df[df[color_col] == 1][y_col], 
+                           c=colors[1], marker='o', s=40, alpha=0.4)
+    
     
     # Add NE line (y = 2/3 * x) in red
     x_vals = np.linspace(df[x_col].min(), df[x_col].max(), 100)
@@ -52,14 +58,14 @@ def create_scatter(ax, df, x_col, y_col, color_col, title, show_y_axis=True):
         legend_text_right = 'Strong understanding'
     
     # Use color_palette to get the correct colors
-    colors = sb.color_palette("coolwarm", 2)
+    # colors = sb.color_palette("coolwarm", 2)
     
     # Add colored text for legend
     # ax.text(0.5, -0.15, legend_text, transform=ax.transAxes, ha='center', va='center', fontsize=10)
 
     
     # Add colored triangles and text for legend in two rows
-    triangle_size = 60
+    triangle_size = 40
     square_size  = 12
     y_positions = [-0.22, -0.17]  # Positions for two rows
     
@@ -72,16 +78,17 @@ def create_scatter(ax, df, x_col, y_col, color_col, title, show_y_axis=True):
             ha='right', va='center', fontsize=square_size)
     
     # Second row (right item)
-    ax.scatter([0.25], [y_positions[1]], c=[colors[1]], marker='^', s=triangle_size, 
+    ax.scatter([0.25], [y_positions[1]], c=[colors[1]], marker='*', s=triangle_size, 
                transform=ax.transAxes)
     ax.text(0.28, y_positions[1], legend_text_right, transform=ax.transAxes, 
             ha='left', va='center', fontsize=10)
-    ax.text(0.23, y_positions[1], '▲', color=colors[1], transform=ax.transAxes, 
-            ha='right', va='center', fontsize=square_size)
+    ax.text(0.23, y_positions[1], '●', color=colors[1], transform=ax.transAxes, 
+            ha='right', va='center', fontsize=square_size-1.5)
 
-    return scatter
+    # return scatter
+    return scatter_0, scatter_1
 
-plot_type = 'SPSB' # Change to SPSB if you want SPSB plots.
+plot_type = 'FPSB' # Change to SPSB if you want SPSB plots.
 
 # Load the data
 binary_results = pd.read_csv('binary_results.csv')
@@ -101,13 +108,13 @@ main_title = 'First-Price Sealed-Bid (IPV)' if plot_type == 'FPSB' else 'Second-
 fig.suptitle(main_title, fontsize=20, fontweight='bold')
 
 if plot_type == 'FPSB':
-    create_scatter(axs[0], fpsb_df, 'Value', 'Bid', 'risk2', 'Risk Level', show_y_axis=True)
-    create_scatter(axs[1], fpsb_df, 'Value', 'Bid', 'strategy2', 'Strategy Level', show_y_axis=False)
-    create_scatter(axs[2], fpsb_df, 'Value', 'Bid', 'understand2', 'Familiarity Level', show_y_axis=False)
+    create_scatter(axs[0], fpsb_df, 'Value', 'Bid', 'understand2', 'Familiarity', show_y_axis=True)
+    create_scatter(axs[1], fpsb_df, 'Value', 'Bid', 'risk2', 'Risk-aversion', show_y_axis=False)
+    create_scatter(axs[2], fpsb_df, 'Value', 'Bid', 'strategy2', 'Strategy Uncertainty', show_y_axis=False)
 else:
-    create_scatter(axs[0], fpsb_df, 'Value', 'Bid', 'risk2', 'Risk Level', show_y_axis=True)
-    create_scatter(axs[1], fpsb_df, 'Value', 'Bid', 'strategy2', 'Strategy Level', show_y_axis=False)
-    create_scatter(axs[2], fpsb_df, 'Value', 'Bid', 'understand2', 'Familiarity Level', show_y_axis=False)
+    create_scatter(axs[0], fpsb_df, 'Value', 'Bid', 'understand2', 'Familiarity', show_y_axis=True)
+    create_scatter(axs[1], fpsb_df, 'Value', 'Bid', 'risk2', 'Risk-aversion', show_y_axis=False)
+    create_scatter(axs[2], fpsb_df, 'Value', 'Bid', 'strategy2', 'Strategy Uncertainty', show_y_axis=False)
 
 plt.tight_layout(rect=[0, 0.01, 1, 0.99])  # Adjust layout to accommodate main title
 plt.show()
