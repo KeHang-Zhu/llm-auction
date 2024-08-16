@@ -831,6 +831,12 @@ This comparison is particularly relevant in the context of affiliated private va
 Before delving into the comparison, it's crucial to introduce the concept of obvious strategy-proofness (OSP), a theoretical notion central to understanding the behavioral implications of different auction formats \cite{li2017obviously}. 
 A mechanism is OSP if it is evident to a bidder that truthful bidding is optimal, regardless of others' actions, at every decision point.
 
+
+OSP mechanism is simple to play and thus, has lot of desired properties. 
+But the challenge within that framework is finding any OSP mechanism. 
+Here, by simulating auctions with LLM agents, we hope to provide an fast and easy way to find more OSP mechanisms in the future.
+
+
 \subsubsection{Setting}
 Once again, there are $3$ bidders in each auction but now bidders draw affiliated private values of the form $v = c + p$. 
 The common component is drawn uniformly $c \sim U[0, 79]$ and the private component is drawn uniformly $p \sim U[0, 20]$. 
@@ -865,15 +871,23 @@ Where: $Z(S_i, h)$ is the set of terminal histories that can result from playing
 $u_i(z)$ is player $i$'s utility for terminal history $z$. 
 
 \subsubsection{Empirical benchmarks}
+
 \citet{li2017obviously}'s experiment delivers results supporting the theoretical framework of obvious strategyproofness -- even though the AC and SPSB auctions are strategically equivalent, human subjects tend to be more truthful under the AC auction (which is OSP) than under the SPSB auction. 
 
-Additional empirical results by \citet{breitmoser2022obviousness} show that even OSP itself might not be sufficient in capturing the rich complexities of human behavior -- human subjects are less truthful under AC-B than they are under AC (though still more truthful than the SPSB), even though both AC and AC-B are OSP. 
-% We replicated these empirical observations using LLMs, suggesting the ability of LLMs to mirror human behavior under these settings.
+Additional empirical results by \citet{breitmoser2022obviousness} show that even OSP itself might not be sufficient in capturing the rich complexities of human behavior -- human subjects are less truthful under AC-B than they are under AC (though still more truthful than the SPSB), even though both AC and AC-B are OSP.  
+They show that alternative framing of the same auction format can improve the rate of straightforward behavior.
 
-\TK{Cite Yannai's paper as well}
+ The empirical paper by \cite{gonczarowski2023strategyproofness} takes a
+deeper look at the framing of SPSB. 
+They experimented with describing/framing a static, direct-revelation auction as the result
+of an OSP ascending auction that is simulated using participants’ directly-reported bid.
+\TK{TO BE polished}
 
 \subsubsection{Simulation process}
+
 The simulation is a little different than in session \ref{section:classic}.
+
+First, we switched to GPT-4o for building the agents since running the clock auction costs 100 times of inferences more than sealed-bid auction. Secondly, we removed the plan and reflection part during the bidding to simulate cognitively more limited auction participants.
 
 
 
@@ -890,6 +904,15 @@ Error bars are the variations ...
     \caption{\textbf{Comparison of three strategically equivalent auctions.} Ascending-clock (AC) and its variant without dropping-out information (AC-B) are obviously strategy-proof while second-price sealed-bid (SPSB) is not. Here, the green dot-dash line plotted the mean absolute deviation from bids to values in AC. Red dash line is for AC-B. And blue solid line is for SPSB. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between, consistent with the human lab experiments in \cite{breitmoser2022obviousness}. However, there is no sign of learning over rounds.}
     \label{fig:osp}
 \end{figure}
+
+We further plotted the 
+\begin{figure}[h]  
+    \centering  
+\includegraphics[width=\linewidth]{Figs/osp_scatter_plots.png}  
+    \caption{\textbf{Bid versus value scatter plot for different auction formats.}}
+    \label{fig:osp_bid}
+\end{figure}
+
 
 The results of the LLM experiments replicated \cite{li2017obviously} and \citet{breitmoser2022obviousness} closely. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between.
 Noticeably, in AC, the LLM agents bid their true value within one raise in the clock. While in AC-B, we saw some cases where LLM bidders dropped out several rounds before the clock price approaching their true value.
@@ -912,6 +935,9 @@ Conducting these post-game interviews, we collated some typical reasons:
 
 \textbf{Reasoning for dropping out in Open-Ascending Price Auction (AC)}
 
+\TK{Sample size: 
+How many bid rationally?
+How many not?}
 
 Value = 31, Drop out at 32
 \begin{quote}
@@ -924,7 +950,9 @@ Value = 20, Drop out at 20
 \end{quote}
 
 \textbf{Open-Ascending Price Auction without bidder number information (AC-B)}
-
+\TK{Sample size: 
+How many bid rationally?
+How many not?}
 Here, explanations bely a higher level of risk-aversion in LLM agents. 
 This is consistent with higher cognitive costs forcing constraints to bind earlier.
 
@@ -944,6 +972,11 @@ Value = 30,  Drop out 26
 Performance is worst in the SPSB case. 
 Post-game interviews highlight conservatism.
 
+\TK{Sample size: 
+How many bid rationally?
+How many not?}
+
+
 Value = 37, bid 30
 \begin{quote}
     "Given my value of 37, I want to ensure I make a profit if I win. Bidding 30 gives me a buffer in case the second-highest bid is close to mine."
@@ -954,12 +987,16 @@ Value = 38, bid 30
     “Given my value of 38, I want to bid conservatively to ensure a profit if I win. Bidding 30 allows me to potentially win without overbidding and risking a loss.”
 \end{quote}
 
+A question is that whether the difference is due to risk-aversion or the familiarity of the ...
+
 
 \subsubsection{New empiric: Counterfactual Experiment}
 \TK{Still building.}
 
 The OSP theory suggested that given more information, even for the same setting, the LLM will be more likely to bid truthfully.
 To verify this, we further did a counterfactual experiment in AC-B to feed the missing information of players still in the table back to the agents. 
+For example, in the AC-B auction format, when the bidder dropped out early, can we make an intervention that informs the agent the number of players left at the table, will this help them to realize the dominant strategy?
+Or in the SPSB setting, if we tell the agent that if they submit a bid, the further auction will be ran as a clock, would them behave differently?
 We can only ran this because LLM agents are flexible in their memory and we can erase the logs and re-run an experiment at any stopping point.
 
 

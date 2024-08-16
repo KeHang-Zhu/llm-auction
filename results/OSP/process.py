@@ -5,14 +5,14 @@ import os
 def parse_json_to_csv(json_file_paths, csv_file_path):
     # Prepare the CSV data
     csv_data = []
-    headers = [ "round", "bidder", "value", "bid", "winner", "AC", "Blind"]
+    headers = ["round", "bidder", "value", "bid", "winner", "AC", "Blind"]
 
     for json_file_path in json_file_paths:
         # Read the JSON file
         with open(json_file_path, 'r') as json_file:
             data = json.load(json_file)
 
-        # Get the filename without path
+        # Get the filename without the path
         filename = os.path.basename(json_file_path)
 
         for round_key, round_data in data.items():
@@ -21,13 +21,16 @@ def parse_json_to_csv(json_file_paths, csv_file_path):
             history = round_data["history"]
             winner = history["winner"]["winner"]
 
-            for i, bid_info in enumerate(history["bidding history"]):
+            # Create a mapping of bidders to their values
+            bidder_value_map = {f"Bidder {i}": value for i, value in enumerate(values)}
+
+            for bid_info in history["bidding history"]:
                 bidder = bid_info["agent"]
                 bid = bid_info["bid"]
-                value = values[i]
+                value = bidder_value_map[bidder]
                 is_winner = bidder == winner
 
-                csv_data.append([ round_number, bidder, value, bid, is_winner, False, True])
+                csv_data.append([round_number, bidder, value, bid, is_winner, False, True])
 
     # Write to CSV file
     with open(csv_file_path, 'a', newline='') as csv_file:
@@ -39,7 +42,6 @@ def parse_json_to_csv(json_file_paths, csv_file_path):
 
 # Usage
 # json_file_paths = [
-#     "/Users/wonderland/Desktop/auction/llm-auction/results/OSP/clock_ascend_second_private_open/result_10_2024-05-22_18-15-59.json",
 #     "/Users/wonderland/Desktop/auction/llm-auction/results/OSP/clock_ascend_second_private_open/result_10_2024-05-22_19-19-57.json"
 # ]
 # json_file_paths = ["/Users/wonderland/Desktop/auction/llm-auction/results/OSP/clock_ascend_second_private_blind/result_10_2024-05-22_22-10-31.json",
