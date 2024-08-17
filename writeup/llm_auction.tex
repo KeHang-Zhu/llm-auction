@@ -823,22 +823,24 @@ Strategy uncertainty does not appear to significantly influence bidding behavior
 % The difference between Figures \ref{fig:FP_sem} and \ref{fig:SP_sem} is most stark in the learning dimension. 
 % In particular, there is a stark difference between overbids and underbids in the FPSB -- curiously, overbidding is far more likely to happen to LLMs trying to learn (that is, update on the information learned from each round).
 
-\subsection{Obvious strategy-proofness}\label{session:OSP}
+\subsection{Obvious strategyproofness}\label{session:OSP}
 % Next, we consider clock formats against sealed-bid formats. Following \cite{li2017obviously} and \cite{breitmoser2022obviousness}'s experiments, we consider clock auctions against the SPSB auction in the affiliated private values (APV) setting. 
 
-After examining sealed-bid auction formats, we now turn our attention to dynamic auction formats, specifically clock auctions, and compare them to sealed-bid formats. Clock auctions are dynamic auction formats where the price increases incrementally (or decreases in reverse auctions), and bidders decide whether to stay in or drop out at each price point.
-This comparison is particularly relevant in the context of affiliated private values (APV) settings, where bidders' valuations are correlated.
-Before delving into the comparison, it's crucial to introduce the concept of obvious strategy-proofness (OSP), a theoretical notion central to understanding the behavioral implications of different auction formats \cite{li2017obviously}. 
+After examining sealed-bid auction formats, we now turn our attention to dynamic auction formats, specifically clock auctions, and compare them to sealed-bid formats. 
+Clock auctions are dynamic auction formats where the price increases incrementally (or decreases in reverse auctions), and bidders decide whether to stay in or drop out at each price point.
+These auctions are strategy-proof mechanisms since a player does not need to form beliefs about other players’ values and types. 
+She can simply report her value truthfully (bid her value) because she can do no better regardless of what the other players bid or what their bidding strategies are. That is, truthful reporting is a weakly dominant strategy. 
+
+But in reality, many people do not report their types truthfully in strategy-proof mechanisms. 
+\cite{li2017obviously} introduces OSP mechanisms as a refinement of strategyproofness that might explain why certain interactive mechanisms might be easier to recognize as strategyproof.
 A mechanism is OSP if it is evident to a bidder that truthful bidding is optimal, regardless of others' actions, at every decision point.
-
-
 OSP mechanism is simple to play and thus, has lot of desired properties. 
 But the challenge within that framework is finding any OSP mechanism. 
 Here, by simulating auctions with LLM agents, we hope to provide an fast and easy way to find more OSP mechanisms in the future.
 
 
 \subsubsection{Setting}
-Once again, there are $3$ bidders in each auction but now bidders draw affiliated private values of the form $v = c + p$. 
+There are $3$ bidders in each auction but now bidders draw affiliated private values of the form $v = c + p$. 
 The common component is drawn uniformly $c \sim U[0, 79]$ and the private component is drawn uniformly $p \sim U[0, 20]$. 
 Winners of the auction receive their own value of the prize $v$ when they win, so the `common' and `private' components only serve to make values correlated (even if draws are independent). 
 The ascending clock auction (called AC below) is the classic English auction. 
@@ -905,17 +907,37 @@ Error bars are the variations ...
     \label{fig:osp}
 \end{figure}
 
-We further plotted the 
+
+
+
+The results of the LLM experiments replicated \cite{li2017obviously} and \citet{breitmoser2022obviousness} closely. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between.
+Noticeably, in AC, the LLM agents bid their true value within one raise in the clock. While in AC-B, we saw some cases where LLM bidders dropped out several rounds before the clock price approaching their true value.
+
+Two-sample t-tests of the mean absolute deviations from bids to values showed significant differences across all comparisons of the strategyproof mechanisms (see Table \ref{tab:t-test-results}). AC exhibited significantly smaller deviations compared to both AC-B (t = -4.125, p < 0.001) and 2P (t = -5.413, p < 0.001). Additionally, the AC-B mechanism showed significantly smaller deviations than the 2P auction (t = -5.006, p < 0.001).
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Comparison} & \textbf{t-statistic} & \textbf{p-value} \\
+\hline
+AC v.s. AC-B & -4.125 & 6.737e-05 \\
+\hline
+AC v.s. 2P & -5.413 & 2.101e-07 \\
+\hline
+AC-B v.s. 2P& -5.006 & 1.043e-06 \\
+\hline
+\end{tabular}
+\caption{T-Test Results for Strategyproof mechanisms }
+\label{tab:t-test-results}
+\end{table}
+
+We further plotted the bids versus values for all the rounds in Fig \ref{fig:osp_bid}.
 \begin{figure}[h]  
     \centering  
 \includegraphics[width=\linewidth]{Figs/osp_scatter_plots.png}  
     \caption{\textbf{Bid versus value scatter plot for different auction formats.}}
     \label{fig:osp_bid}
 \end{figure}
-
-
-The results of the LLM experiments replicated \cite{li2017obviously} and \citet{breitmoser2022obviousness} closely. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between.
-Noticeably, in AC, the LLM agents bid their true value within one raise in the clock. While in AC-B, we saw some cases where LLM bidders dropped out several rounds before the clock price approaching their true value.
 
 However, we see little evidence of learning over time. 
 % This is one benchmark that we hope to reach in future iterations of this work. 
@@ -998,6 +1020,8 @@ To verify this, we further did a counterfactual experiment in AC-B to feed the m
 For example, in the AC-B auction format, when the bidder dropped out early, can we make an intervention that informs the agent the number of players left at the table, will this help them to realize the dominant strategy?
 Or in the SPSB setting, if we tell the agent that if they submit a bid, the further auction will be ran as a clock, would them behave differently?
 We can only ran this because LLM agents are flexible in their memory and we can erase the logs and re-run an experiment at any stopping point.
+
+The reason for misreporting is to a large extent caused by players’ cognitive limitations in combination with mechanism complexity. 
 
 
 \begin{quote}
