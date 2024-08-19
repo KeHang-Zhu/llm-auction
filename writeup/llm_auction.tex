@@ -104,6 +104,9 @@ We run 1,000+ auctions for less than \$100 with GPT-4, and develop a framework f
 
 % This paper investigates auction behavior through the lens of three distinct agents: {\em homo economicus} (theoretical predictions), real humans (existing empirical/experimental evidence), and {\em homo silicus} (simulated agents using large language models, or LLMs). We run auction experiments with LLMs in different settings: independent private value, affiliated private value, and common value. First, we show LLM agents fail revenue equivalence due to risk aversion in independent private value settings (echoing existing empirical results). Second, we show LLMs are `better' at playing clock auctions in affiliated private value settings (echoing results on obvious strategyproofness). Third, we demonstrate the presence of the winner's curse in common value settings, with the curse having an increasing bite in larger auctions (echoing \cite{kagel1986winner}). All these results hold for single-unit settings. We also explore multi-unit combinatorial auctions under three bid formats -- simultaneous, sequential, and menu -- to observe how LLMs deal with complements. For robustness, we employ two distinct prompt sets (technical and story-telling) for all experiments and find our results are practically the same under this prompt variation. We run 1,000+ auctions for less than \$100 with GPT-4o, and develop a framework flexible enough to run auction experiments with any LLM model and almost any reasonable prompt specification. 
 \end{abstract}
+\newpage
+
+\tableofcontents
 
 \newpage
 \onehalfspacing
@@ -128,7 +131,7 @@ When there are departures from the theory, we’re interested in whether the dep
 % \dcp{add kagel cite here} 
 We find that bids in the SPSB auction are higher than bids under the FPSB auction, as would be expected, but that there’s a smaller separation between the two than would be predicted by theory. 
 This is primarily due to bids under the FPSB auction being higher than the risk-neutral Bayes Nash equilibrium suggests. 
-One possible explanation is that LLMs are behaving according to some level of risk aversion: this is consistent with \citet{cox1986controlled}'s survey of over 1,500 IPV auction experiments, which finds that revenue under the FPSB auction is higher than under the SPSB auction due to risk-aversion. 
+One possible explanation is that LLMs are behaving according to some level of risk aversion: this is consistent with \citet{cox1988theory}'s survey of over 1,500 IPV auction experiments, which finds that revenue under the FPSB auction is higher than under the SPSB auction due to risk-aversion. 
 In addition, we also see LLMs in the SPSB auction tend to submit bids lower than their value to an extent that is not echoed in the empirical literature. 
 
 Next, we consider two extensions of classic results to learn whether LLMs exhibit behavior similar to humans in the face of cognitive constraints.
@@ -166,7 +169,7 @@ and any prompting language.
 In particular, our repository is flexible enough that it can be used to generate synthetic data for almost any describable format with single or multiple goods\footnote{We will make the code-base public soon and hope this will facilitate additional empirical work.}
 %
 For the experiments herein, we ran more than $1,000$ auctions with more than $5,000$ GPT-4 agent participants for costs totaling less than $\$100$. 
-In contrast, the largest survey of auction experiments to date comes from \citet{cox1986controlled} of $1,500+$ auctions, with total costs likely considerably higher.
+In contrast, the largest survey of auction experiments to date comes from \citet{cox1988theory} of $1,500+$ auctions, with total costs likely considerably higher.
 
 % Head 1
 \subsection{Related Work}
@@ -180,7 +183,7 @@ While \cite{krishna2009auction}'s textbook and \citet{kagel2020handbook}'s handb
 
 Starting with the IPV case, the benchmark of revenue equivalence in the risk-neutral case is exposited in the seminal 
 \citet{myerson1981optimal}. 
-The experimental evidence for departures due to risk-aversion in the FPSB auction is thoroughly documented in \citet{coppinger1980incentives} and \citet{cox1986controlled}'s survey. 
+The experimental evidence for departures due to risk-aversion in the FPSB auction is thoroughly documented in \citet{coppinger1980incentives} and \citet{cox1988theory}'s survey. 
 The experimental evidence for the common error of bidding above one's value in the SPSB auction is documented in \citet{kagel1993independent}.
 
 For common value settings, the winner's curse has been documented empirically and experimentally. 
@@ -230,19 +233,19 @@ And \citet{manning2024automated} ran a more limited study an  a variant of an op
     \label{fig:design}
 \end{figure}
 
-In each experiment, we simulate $n$ (often, 3) LLM agents to play an auction. 
-Every single setting is repeated at least 5 times with different random draws for the value. 
-The LLM agent experiment design closely mimics an actual human laboratory experiment \cite{li2017obviously} in multi-round auction.
+In each experiment, we simulate $n$ (often, 3) LLM agents to play against one another in an auction. 
+Each setting is repeated at least 5 times with values drawn randomly each time. The specification, seen below, is designed to closely follow actual multi-round human laboratory auction experiments run in the literature (e.g., as in \cite{li2017obviously}). 
 
 In all games, LLM agents bid for a prize (specified as `prize' in the technical prompts).
-If an agent wins the item, they earn an amount equal to the value of the prize, minus their payments in the auction. 
-In all settings, values are drawn from distributions with support over $[\$0, \$99]$ \footnote{LLM are known to be bad at three-digit number calculation and beyond.} 
+If an agent wins the prize, they earn an amount equal to the value of the prize, minus their payments in the auction. 
+In all settings, values are drawn from distributions with support over $[\$0, \$99]$.\footnote{This is just a modest cost-saving measure, as three-digit numbers require an extra token.} 
 Bids in these games are in \$1 increments primarily to reduce token usage, but can easily be made more fine. 
 
-Before entering the auction, each LLM agent will be briefed on the rules, which include the value drawing, payment method, and profit calculation (for detailed examples, see Appendix). 
+Before entering the auction, each LLM agent will be briefed on the rules, which include the value drawing, payment method, and profit calculation (an example briefing is provided in Section 3.1.4). 
 Different auction formats have different rules. 
 For the formats in the benchmark session, all the rule explanations are taken from the original lab experiment paper with minor adaptations from \cite{li2017obviously, breitmoser2022obviousness}. 
-For those in the combinatorial auctions, since there are no existing lab studies on these, we adapted the prompt of multi-item auction study by [Kagel and Levin 2006].
+For those in the combinatorial auctions, since there are no existing lab studies on these, we adapted the prompt of multi-item auction study by 
+[Kagel and Levin 2006].
 
 To set incentives, we appended a prompt prefix to the rules of each auction, which is a norm in the LLM agent literature \cite{fish2024algorithmic}:
 
@@ -434,7 +437,7 @@ This means that higher valuations consistently lead to higher bids, aligning wit
 However, the specific bidding patterns observed in experiments often deviate from theoretical equilibria in interesting ways.
 
 \textbf{Empirical findings for FPSB:}
-In the case of FPSB auctions, experimental evidence consistently shows bids above the risk-neutral Nash Equilibrium prediction. \cite{cox1986controlled} found that participants in FPSB auctions tend to bid more aggressively than the theory predicts for risk-neutral bidders.
+In the case of FPSB auctions, experimental evidence consistently shows bids above the risk-neutral Nash Equilibrium prediction. \cite{cox1988theory} found that participants in FPSB auctions tend to bid more aggressively than the theory predicts for risk-neutral bidders.
 In an FPSB auction, bidding higher increases the probability of winning but decreases the potential profit if one does win. 
 Risk-averse bidders may be willing to accept lower potential profits in exchange for a higher chance of winning, leading to bids above the risk-neutral Nash Equilibrium.
 
@@ -459,7 +462,7 @@ The LLM agents will be first informed about the scenario. After explaining to th
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
 
     Write your plans for what bidding strategies to test next. 
     Be detailed and precise but keep things succinct 
@@ -479,7 +482,7 @@ Once they made the bidding plan, the system will inform the LLM agents their val
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
 
     Your value is 73. Your plan is {PLAN}
     FOLLOW YOUR PLAN.
@@ -497,7 +500,7 @@ After receiving the bids from all the LLM biddes. The system would determine the
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
 
     The previous round history is: {HISTORY}
     
@@ -523,7 +526,7 @@ In the new round, all the bidders were asked to update their plans according to 
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANARION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
 
     The previous round history is: {HISTORY}
     After careful reflection on previous bidding,
@@ -562,15 +565,15 @@ the scenario where the LLM agents’ values equal their bids while the solid red
 
 \end{figure}
 
-Both data of FPSB and SPSB demonstrate evidence of monotone bidding.
+Both data of FPSB and SPSB demonstrate evidence of monotone bidding -- the most stable hallmark of empirical auctions results.
 For FPSB, the Loess-smoothed data curve is significantly higher than the Bayes Nash Equilibrium. However, there are variations below the theoretically optimal line and a few data points above the given values.
-This agrees with empirical evidence (\TK{CITE papers assigned to Anand}). 
+This closely matches the existing empirical evidence for first-price auctions \citep{cox1988theory}. 
 
 For SPSB, the Loess-smoothed data curve approximately aligns with the theoretical-optimal line which means bid equals value. While the majority of the bids are close to the values, 
 noticeably, for SPSB, there are many high biddings for small assigned values. Low bids are also prevalent for all the value range.
 % and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (\TK{CITE papers assigned to Anand}). 
 % However, there's a fairly weak separation between the two bidding curves. 
- Bidding above one's value, which is a marked feature in existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction (\TK{CITE papers assigned to Anand}).
+ Bidding above one's value, which is a marked feature in existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction \citep{kagel1987information}.
 % This may be an improvement of LLM play over human play. 
 
 For cross-format comparison, we plotted the bidding behavior of LLM agents in two different auction formats: First-Price and Second-Price auctions in Fig \ref{fig:cross}
@@ -1014,6 +1017,9 @@ A question is that whether the difference is due to risk-aversion or the familia
 
 \subsubsection{New empiric: Counterfactual Experiment}
 \TK{Still building.}
+A question is that whether the difference is due to risk-aversion or the familiarity of the auction format. We did the ...
+
+
 
 The OSP theory suggested that given more information, even for the same setting, the LLM will be more likely to bid truthfully.
 To verify this, we further did a counterfactual experiment in AC-B to feed the missing information of players still in the table back to the agents. 
@@ -1026,11 +1032,32 @@ The reason for misreporting is to a large extent caused by players’ cognitive 
 
 \begin{quote}
 \textit{Your Value is 30. And you decided to drop out at 26. Your reason for this decision is “My value for the prize is 30, and the current price is 26. If I continue bidding and win, my profit would be 30 - 26 = 4. Given that the price is already quite high, the potential profit is low, and there is a risk that the price could go even higher, reducing my profit further or resulting in a loss. Therefore, it is better to exit the bidding now”. 
-Now there are a}
+Now there are additional information that at this stage, 2 bidders are still on the table for this auction. Do you still want to drop out?}
+\end{quote}
+
+\begin{quote}
+\textit{Your Value is 37. And you decided to bid 30. Your reason for this decision is “Given my value of 37, I want to ensure I make a profit if I win. Bidding 30 gives me a buffer in case the second-highest bid is close to mine.”. 
+Now there are additional information that at this stage, 2 bidders are still on the table for this auction. Do you still want to drop out?}
 \end{quote}
 
 
-
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lcccccc}
+\hline
+& \multicolumn{3}{c}{AC-B} & \multicolumn{3}{c}{Second-Price} \\
+\cline{2-4} \cline{5-7}
+& Cont. & Treat. & $p$-value & Cont. & Treat. & $p$-value \\
+\hline
+\% Straightforward & 70 (3) & 80 (3) & 0.01 & 37 (4) & 34 (3) & 0.55 \\
+\% All Straightforward & 26 (4) & 52 (5) & 0.0003 & 13 (3) & 10 (3) & 0.66 \\
+\$ Earning & 2.83 (0.07) & 3.00 (0.07) & 0.10 & 3.40 (0.26) & 3.40 (0.24) & 0.98 \\
+$N$ Participants & 100 & 100 & & 100 & 100 & \\
+\hline
+\end{tabular}
+\caption{Comparison of Control and treatment group in AC-B and 2P auction. \TK{Just a placeholder now}}
+\label{tab:comparison}
+\end{table}
 
 
 
