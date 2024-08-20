@@ -5,7 +5,7 @@ from sklearn.metrics import r2_score, mean_squared_error
 import scipy.stats as stats
 
 # Read the CSV file
-df = pd.read_csv('binary_results.csv')
+df = pd.read_csv('binary_risk_results.csv')
 
 # Filter out rows where Value or Bid is 0
 df = df[(df['Value'] != 0) & (df['Bid'] != 0)]
@@ -63,10 +63,10 @@ y_true = df_true['percent_deviation']
 results_true = perform_regression(X_true, y_true)
 
 # Perform regression for First == False
-df_false = df[df['First'] == False]
-X_false = df_false[['risk2']]
-y_false = df_false['percent_deviation']
-results_false = perform_regression(X_false, y_false)
+# df_false = df[df['First'] == False]
+# X_false = df_false[['risk2']]
+# y_false = df_false['percent_deviation']
+# results_false = perform_regression(X_false, y_false)
 
 # Print results
 def print_results(results, condition):
@@ -83,7 +83,7 @@ def print_results(results, condition):
     print(f"Degrees of Freedom: {results['degrees_of_freedom']}")
 
 print_results(results_true, "True")
-print_results(results_false, "False")
+# print_results(results_false, "False")
 
 # Calculate percentages for risk2, separated by First
 def calculate_percentages(column, first_value):

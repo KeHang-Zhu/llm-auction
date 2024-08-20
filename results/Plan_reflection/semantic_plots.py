@@ -91,7 +91,7 @@ def create_scatter(ax, df, x_col, y_col, color_col, title, show_y_axis=True):
 plot_type = 'FPSB' # Change to SPSB if you want SPSB plots.
 
 # Load the data
-binary_results = pd.read_csv('binary_results.csv')
+binary_results = pd.read_csv('binary_risk_results.csv')
 
 # Filter for FPSB vs SPSB auction data.
 if plot_type == 'FPSB':

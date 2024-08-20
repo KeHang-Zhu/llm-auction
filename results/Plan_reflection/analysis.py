@@ -12,6 +12,11 @@ file_paths2 = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6
 "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_18-32-06.json",
 "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_18-43-30.json"]
 
+file_paths3 = ["/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-079800.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080030.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080145.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080275.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080384.json"]
 
 ## make a CSV: 
 # take the round number, player name, bid, value, plan
@@ -55,7 +60,7 @@ def parse_data(file_path, df):
             plan = plans[i]
             overbid = is_overbid(bid, value)
             underbid = is_underbid(bid, value)
-            first = file_path in file_paths1  # Check if the file is in the first set
+            first = file_path in file_paths3  # Check if the file is in the first set
             
             # Create a dictionary for the new row
             new_row = {
@@ -80,10 +85,10 @@ df = pd.DataFrame(columns=['Round', 'Player Name', 'Bid', 'Value', 'Plan', 'Over
 
 
 # Process each file path
-for file_path in file_paths1 + file_paths2:
+for file_path in file_paths3:
     df = parse_data(file_path, df)
 
 # Save the DataFrame to a CSV file
-csv_output_path = "fp_sp_auction_data.csv"
+csv_output_path = "fp_risk_auction_data.csv"
 df.to_csv(csv_output_path, index=False)
 
