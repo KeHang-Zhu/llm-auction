@@ -30,14 +30,14 @@ if __name__ == "__main__":
     number_agents = 3
     human = False
     
-    output_dir = f"experiment_logs/V6/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
+    output_dir = f"experiment_logs/V5/{seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}_risk"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
     rule = Rule_plan(seal_clock=seal_clock, price_order=price_order, private_value=private_value, open_blind=open_blind, rounds=15, common_range=[0, 79], private_range=99, increment=1, number_agents=number_agents)
     rule.describe()
 
-    N = 6  # Repeat for N times
+    N = 5  # Repeat for N times
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]

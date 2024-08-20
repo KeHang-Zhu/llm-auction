@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V4/')
+templates_dir = os.path.join(current_script_path, './rule_template/V5/')
 
 c = Cache()  
 
@@ -58,7 +58,7 @@ class Rule_plan:
         if self.seal_clock == 'clock':
             game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
         elif self.seal_clock == 'seal':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}_NO_RISKAVERSE.txt"))
         game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:
