@@ -17,7 +17,7 @@ def survey_plan_binary(reasoning, current_price, value, remaining_bidders):
     Your value towards to the money prize is {value}.
     The current price is {current_price}.
     Your previous decision is to drop out. Your reason for that is {reasoning}.
-    Now there are additional information that at this stage, {remaining_bidders} bidders are still on the table for this auction.    
+    Now there is additional information that at this stage, {remaining_bidders} bidders are still on the table for this auction.    
     Do you want to drop out?
     '''
     
@@ -26,14 +26,14 @@ def survey_plan_binary(reasoning, current_price, value, remaining_bidders):
     Your value towards to the money prize is {value}.
     The current price is {current_price}.
     Your previous decision is to drop out. Your reason for that is {reasoning}.
-    Now there are additional information that at this stage, {remaining_bidders} bidders are still on the table for this auction.    
+    Now there is additional information that at this stage, {remaining_bidders} bidders are still on the table for this auction.    
     Do you want to drop out?
     '''
     
     question_text1_1 = f'''
     {RULES}
     Your value towards to the money prize is {value}.
-    Now there are additional advice: Do NOT be afraid of risk. All you care about is maximizing expected profit. For example, a 50/50 coin flip between $0 and $101 is more valuable than a payment of $50 to you.
+    Now there is additional advice: Do NOT be afraid of risk. All you care about is maximizing expected profit. For example, a 50/50 coin flip between $0 and $101 is more valuable than a payment of $50 to you.
     The current price is {current_price}.           
     Do you want to stay in the bidding?
     '''
@@ -41,7 +41,7 @@ def survey_plan_binary(reasoning, current_price, value, remaining_bidders):
     question_text2_1 = f'''
     {RULES}
     Your value towards to the money prize is {value}.
-    Now there are additional advice: Do NOT be afraid of risk. All you care about is maximizing expected profit. For example, a 50/50 coin flip between $0 and $101 is more valuable than a payment of $50 to you.
+    Now there is additional advice: Do NOT be afraid of risk. All you care about is maximizing expected profit. For example, a 50/50 coin flip between $0 and $101 is more valuable than a payment of $50 to you.
     The current price is {current_price}.         
     Do you want to stay in the bidding?
     '''
