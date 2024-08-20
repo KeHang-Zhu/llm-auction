@@ -219,7 +219,7 @@ def process_plan(reasoning):
 
 def main():
     # Load data
-    df = pd.read_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/fp_risk_auction_data.csv")
+    df = pd.read_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/fp_risk2_auction_data.csv")
     texts = df['Plan'].tolist()
 
     # Use ProcessPoolExecutor to process data in parallel
@@ -240,7 +240,7 @@ def main():
     final_df = pd.concat([df, all_results], axis=1)
 
     # Save the combined DataFrame to a CSV file
-    final_df.to_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/binary_risk_results.csv", index=False)
+    final_df.to_csv("/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/binary_risk2_results.csv", index=False)
 
 if __name__ == '__main__':
     main()

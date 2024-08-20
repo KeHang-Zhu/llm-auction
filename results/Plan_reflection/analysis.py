@@ -12,11 +12,11 @@ file_paths2 = ["/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6
 "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_18-32-06.json",
 "/Users/wonderland/Desktop/auction/llm-auction/experiment_logs/V6/seal__second_private_close/result_15_2024-06-20_18-43-30.json"]
 
-file_paths3 = ["/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-079800.json",
-"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080030.json",
-"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080145.json",
-"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080275.json",
-"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-19_22-45-00-080384.json"]
+file_paths3 = ["/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-20_17-22-29-544684.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-20_17-22-29-546551.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-20_17-22-29-546669.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-20_17-22-29-546814.json",
+"/Users/wonderland/Desktop/auction/llm-auction/results/Plan_reflection/seal__first_private_close_risk/result_15_2024-08-20_17-22-29-546934.json"]
 
 ## make a CSV: 
 # take the round number, player name, bid, value, plan
@@ -89,6 +89,6 @@ for file_path in file_paths3:
     df = parse_data(file_path, df)
 
 # Save the DataFrame to a CSV file
-csv_output_path = "fp_risk_auction_data.csv"
+csv_output_path = "fp_risk2_auction_data.csv"
 df.to_csv(csv_output_path, index=False)
 

@@ -126,7 +126,7 @@ class SealBid():
             if len(agent.reasoning) == 0:
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
-                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between $110 and $0 is more valuable than guaranteed $50. Your plan should be within 100 words"
                 )
                 survey = Survey(questions = [q_plan])
                 result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
@@ -159,7 +159,7 @@ class SealBid():
                 # previous_plan = agent.reasoning[-1]
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
-                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. "
+                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between $110 and $0 is more valuable than guaranteed $50. LIMIT your plan to 50 words. "
                 )
             
                 # print(q_plan)
