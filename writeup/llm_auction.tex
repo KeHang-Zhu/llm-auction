@@ -1034,7 +1034,7 @@ Noticeably, in AC, the LLM agents bid their true value within one raise in the c
 Two-sample t-tests of the mean absolute deviations from bids to values showed significant differences across all comparisons of the strategyproof mechanisms (see Table \ref{tab:t-test-results}). AC exhibited significantly smaller deviations compared to both AC-B (t = -4.125, p $<$ 0.001) and 2P (t = -5.413, p $<$ 0.001). Additionally, the AC-B mechanism showed significantly smaller deviations than the 2P auction (t = -5.006, p $<$ 0.001).
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|c|c|}
+\begin{tabular}{l|c|c}
 \hline
 \textbf{Comparison} & \textbf{t-statistic} & \textbf{p-value} \\
 \hline
@@ -1136,16 +1136,34 @@ we have a sample size of 150 bidding decision and only 7.33\% of them bid truthf
 
 \subsubsection{Counterfactual Experiment}
 
-The question is that whether the difference is due to risk-aversion or the familiarity of the auction format. 
-The OSP theory suggested that given more information, even for the same setting, the LLM will be more likely to bid truthfully.
-To verify this, we further did a counterfactual experiment in AC-B to feed the missing information of players still in the table back to the agents. 
-For example, in the AC-B auction format, when the bidder dropped out early, can we make an intervention that informs the agent the number of players left at the table, will this help them to realize the dominant strategy?
-Or in the SPSB setting, if we tell the agent that if they submit a bid, the further auction will be ran as a clock, would them behave differently?
-We can only ran this because LLM agents are flexible in their memory and we can erase the logs and re-run an experiment at any stopping point.
+Misreporting in strategyproof auctions is largely attributed to players' cognitive limitations in combination with mechanism complexity.
+A key question arises: Is the difference in bidding behavior due to risk-aversion or familiarity with the auction format? The OSP theory suggests that given more information, even in the same setting, LLM agents would be more likely to bid truthfully.
 
-The reason for misreporting is to a large extent caused by players’ cognitive limitations in combination with mechanism complexity. 
+To verify this hypothesis, we conducted a counterfactual experiment in the AC-B format. 
+We aimed to assess whether providing additional information to agents who dropped out early would help them recognize the dominant strategy. 
+Similarly, in the SPSB setting, we explored whether teaching agents to think contingently would alter their behavior.
 
-\textbf{Interventions for AC-B (Second)}
+This experiment was feasible due to the flexible memory of LLM agents, allowing us to erase logs and re-run experiments at any stopping point. We designed three counterfactual interventions:
+\begin{itemize}
+\item \textbf{T1 (Second)}: A treatment to check for consistency by asking the LLM to reconsider its decision.
+\item \textbf{T2 (Risk)}: A treatment to address risk-aversion.
+\item \textbf{T3 (Info)}: A treatment providing additional information about remaining bidders.
+\end{itemize}
+
+The interventions were implemented as follows:
+
+% The reason for misreporting is to a large extent caused by players’ cognitive limitations in combination with mechanism complexity. 
+% The question is that whether the difference is due to risk-aversion or the familiarity of the auction format. 
+% The OSP theory suggested that given more information, even for the same setting, the LLM will be more likely to bid truthfully.
+% To verify this, we further did a counterfactual experiment in AC-B to feed the missing information of players still in the table back to the agents. 
+% For example, in the AC-B auction format, when the bidder dropped out early, can we make an intervention that informs the agent the number of players left at the table, will this help them to realize the dominant strategy?
+% Or in the SPSB setting, if we teach the agent how to think contingently, would them behave differently?
+% We can only ran this because LLM agents are flexible in their memory and we can erase the logs and re-run an experiment at any stopping point.
+
+
+% Here, we designed a set of three counterfactual interventions. As a starting point, we set a treatment group T1 to reflect the prompt of asking LLM the question again to see if the response change. T2 (Risk) treatment group was set to check the risk-aversion issue and T3 (Info) is the treatment group for information.  
+
+\textbf{T1: Interventions for AC-B (Second)}
 \begin{quote}
 \textit{    Your value towards to the money prize is \{value\}.
     The current price is \{current\_price\}.
@@ -1153,7 +1171,7 @@ The reason for misreporting is to a large extent caused by players’ cognitive 
     Give it a second thought. Do you want to drop out?}
 \end{quote}
 
-\textbf{Interventions for AC-B (Risk)}
+\textbf{T2: Interventions for AC-B (Risk)}
 \begin{quote}
 \textit{    Your value towards to the money prize is \{value\}.
     The current price is \{current\_price\}.
@@ -1162,7 +1180,7 @@ The reason for misreporting is to a large extent caused by players’ cognitive 
     Give it a second thought. Do you want to drop out?}
 \end{quote}
 
-\textbf{Interventions for AC-B (Info)}
+\textbf{T3: Interventions for AC-B (Info)}
 \begin{quote}
 \textit{    Your value towards to the money prize is \{value\}.
     The current price is \{current\_price\}.
@@ -1188,20 +1206,32 @@ $N$ Participants & 105 & 105 & & 105 & & 105 & \\
 \label{tab:comparison_acb}
 \end{table}
 
- In Table \ref{tab:comparison_acb}, the control group is the original AC-B experiment before. The three treatment groups are the ``Second thought'', ``Risk-neutral'' and `Give remaining player number" . In all of the three treatment groups, only the risk-neutral treatment is significant and achieved a more truthful bidding behaviors. There is no difference between the control group and the T1 (second thought) group, making it a consistent check, meaning injecting prompt didn't change anything.
-Here the group size is only 105 since it didn't involve with those winners who didn't drop out until the end.
+Table \ref{tab:comparison_acb} presents the results of our counterfactual experiment. 
+The control group represents the original AC-B experiment, while the three treatment groups correspond to ``Second thought'' (T1), ``Risk-neutral'' (T2), and ``Provide remaining player number'' (T3) interventions.
+
+Our findings reveal that only the risk-neutral treatment (T2) resulted in a statistically significant improvement in truthful bidding behaviors, with the percentage of truthful bids increasing from 53\% to 70\% ($p = 0.016$). 
+Notably, there was no significant difference between the control group and the T1 (second thought) group, serving as a consistency check and confirming that the mere injection of an additional prompt did not alter bidding behavior.
+The T3 (Info) treatment, which provided information about the number of remaining bidders, did not significantly impact truthful bidding, with results nearly identical to the control group. 
+This suggests that additional information about competitor numbers alone may not be sufficient to induce more truthful bidding in the AC-B format.
+
+It's important to note that the sample size for each group was 105 participants, as the experiment only involved those who dropped out before the auction's conclusion, excluding winners who remained until the end.
+
+%  In Table \ref{tab:comparison_acb}, the control group is the original AC-B experiment before. The three treatment groups are the ``Second thought'', ``Risk-neutral'' and `Give remaining player number" . In all of the three treatment groups, only the risk-neutral treatment is significant and achieved a more truthful bidding behaviors. There is no difference between the control group and the T1 (second thought) group, making it a consistent check, meaning injecting prompt didn't change anything.
+% Here the group size is only 105 since it didn't involve with those winners who didn't drop out until the end.
 
 
-For the second-price sealed-bid auction, we also designed three treatment groups. The first and second set are still the ``Second thought'', ``Risk-neutral''. For the third one, we added the ``Nash deviation''. 
+For the Second-Price Sealed-Bid (2P) auction, we also designed three treatment groups. 
+The first two treatments, ``Second thought'' (T1) and ``Risk-neutral'' (T2), were similar to those used in the AC-B auction. 
+For the third treatment, we introduced a ``Nash deviation'' (T3) approach, where we guided participants in strategic thinking about the game.
 
-\textbf{Interventions for 2P (Second)}
+\textbf{T1: Interventions for 2P (Second)}
 \begin{quote}
 \textit{Your Value is \{value\}. And you decided to bid \{bid\}. Your reason for that is \{reasoning\}.
  Give it a second thought. How much do you like to bid?
 }
 \end{quote}
 
-\textbf{Interventions for 2P (Risk)}
+\textbf{T2: Interventions for 2P (Risk)}
 \begin{quote}
 \textit{Your Value is \{value\}. And you decided to bid \{bid\}. Your reason for that is \{reasoning\}.
 Now there is additional advice: Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between \$105 and \$0 is more valuable than guaranteed \$50. 
@@ -1210,7 +1240,7 @@ How much do you like to bid?
 }
 \end{quote}
 
-\textbf{Interventions for 2P (Nash Deviation)}
+\textbf{T3: Interventions for 2P (Nash Deviation)}
 \begin{quote}
 \textit{Your Value is \{value\}. And you decided to bid \{bid\}. Your reason for that is \{reasoning\}.
 Now there is additional advice: Let's think step by step. Start with thinking your bidding strategy by 'If I bid down by .., I could... If I bid up by ..., I could...'. 
@@ -1237,7 +1267,25 @@ $N$ Participants & 150 & 150 & & 150 & & 150 & \\
 \label{tab:comparison_2p}
 \end{table}
 
- In Table \ref{tab:comparison_2p}, the control group is the original 2P experiment before. The three treatment groups are the ``Second thought'', ``Nash Deviation'' and ``Risk-neutral''. In all of the three treatment groups, both the risk-neutral treatment and Nash deviation group are significant different from the control group. But only risk-neutral group achieved a more truthful bidding behaviors.
+Table \ref{tab:comparison_2p} presents the results of our experiment in the 2P auction format. 
+The control group represents the original 2P experiment, while the three treatment groups correspond to ``Second thought'' (T1), ``Risk-neutral'' (T2), and ``Nash Deviation'' (T3) interventions.
+
+Our results reveal significant differences in bidding behavior across the treatment groups. 
+The T1 (Second thought) group saw a slight increase in truthful bidding from 7.3\% to 13\%, though this difference was not statistically significant (p = 0.38). 
+This finding aligns with our observations in the AC-B auction, confirming that merely prompting for reconsideration does not substantially alter bidding behavior.
+In contrast, the T2 (Risk-neutral) treatment resulted in a dramatic and statistically significant increase in truthful bidding, rising from 7.3\% in the control group to 55\% (p $<$ 0.01). 
+Moreover, the average deviation from truthful bidding decreased substantially from 2.4 to -0.12. 
+This suggests that encouraging a risk-neutral perspective significantly improves truthful bidding in 2P auctions.
+The T3 (Nash Deviation) treatment led to a modest but significant increase in truthful bidding compared to the control group (13\% vs. 7.3\%, p = 0.04). 
+However, its effect was much less pronounced than the risk-neutral treatment, with the average deviation (2.2) remaining similar to the control group.
+
+These findings indicate that risk attitudes play a crucial role in determining bidding strategies in SPSB auctions.
+While encouraging strategic thinking through the Nash Deviation approach had a positive effect on truthful bidding, it was far less effective than addressing risk attitudes.
+
+ % In Table \ref{tab:comparison_2p}, the control group is the original 2P experiment before. The three treatment groups are the ``Second thought'', ``Nash Deviation'' and ``Risk-neutral''. In all of the three treatment groups, both the risk-neutral treatment and Nash deviation group are significant different from the control group. But risk-neutral group achieved a more truthful bidding behaviors. As in the in AC-B, the T1 group is no different than the control group.
+
+
+ 
 
 
 
@@ -1257,9 +1305,9 @@ However, this naive bid actually overbids the BNE of the common value game, as i
 This overbidding is famously called the ``Winner's Curse." 
 
 Hence, the theoretical optimum here is for bidders to condition on both events and bid $\beta_i(v) = \mathbb{E}[c \, | \, v_i \wedge p_i = p^{(1)}]$, i.e., conditioning both on their value and on the event that their received private shock was the \textit{highest} (it is easy to see the second event is equivalent to the event that the bidder won with strictly monotone $\beta(\cdot)$). 
-The main experiment here \cite{kagel1986winner} makes two positive predictions on the basic common value auction: 1) that even experienced bidders fail to condition on the event where their signal is the highest (called `item valuation considerations' in their text) thereby still falling victim to the winner's curse, and 2) that the winner's curse barely shows up in small auctions (3-4 bidders) but bites in big auctions (6-7 bidders).
 
 \subsubsection{Empirical benchmarks}
+The main experiment here \cite{kagel1986winner} makes two positive predictions on the basic common value auction: 1) that even experienced bidders fail to condition on the event where their signal is the highest (called `item valuation considerations' in their text) thereby still falling victim to the winner's curse, and 2) that the winner's curse barely shows up in small auctions (3-4 bidders) but bites in big auctions (6-7 bidders).
 
 \subsubsection{Simulation evidence}
 We find evidence corroborating both of these predictions. 
