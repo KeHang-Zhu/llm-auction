@@ -146,7 +146,7 @@ class SealBid():
                 last_round = agent.history[-1]
                 q_counterfact = QuestionFreeText(
                     question_name = "q_counterfact",
-                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round history is: " + last_round + "\n" +" Do a counterfactual analysis of the last round. REMEMBER that your goal is to win the bid and make higher profits. REMEMBER YOUR PAYMENT IS YOUR BID IF YOU WIN. Let's think step by step. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' LIMIT your OUTPUT within 100 words. "
+                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round history is: " + last_round + "\n" +" Do a counterfactual analysis of the last round. REMEMBER that your goal is to win the bid and make higher profits. Let's think step by step. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' LIMIT your OUTPUT within 100 words. "
                 )
                 result = self.model.simple_ask(q_counterfact)
                 counterfact= result['choices'][0]['message']['content']

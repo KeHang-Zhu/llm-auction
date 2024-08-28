@@ -4,7 +4,7 @@ from collections import defaultdict
 def process_csv(input_file, output_file):
     with open(input_file, 'r') as infile, open(output_file, 'w', newline='') as outfile:
         reader = csv.DictReader(infile)
-        fieldnames = reader.fieldnames + ['remaining_bidders']
+        fieldnames = reader.fieldnames + ['remaining_bidders', 'Early']
         writer = csv.DictWriter(outfile, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -18,7 +18,7 @@ def process_csv(input_file, output_file):
 
         for price, rows in sorted(round_data.items()):
             bidders_this_round = set()
-            filtered_rows = []
+            exit_rows = []
 
             for row in rows:
                 bidder = int(row['bidder'].split()[-1])
@@ -26,12 +26,13 @@ def process_csv(input_file, output_file):
                 answer = int(row['answer'])
                 bidders_this_round.add(bidder)
 
-                if answer == 1 and value > price + 1:
-                    filtered_rows.append(row)
+                if answer == 1:
+                    row['Early'] = 'True' if value > price + 1 else 'False'
+                    exit_rows.append(row)
 
             remaining_bidders = len(bidders_this_round)
 
-            for row in filtered_rows:
+            for row in exit_rows:
                 row['remaining_bidders'] = remaining_bidders
                 writer.writerow(row)
 
@@ -39,5 +40,5 @@ def process_csv(input_file, output_file):
 
 # Usage
 input_file = 'combined_output_AC_B.csv'  # Replace with your input file name
-output_file = 'filtered_output_AC_B.csv'
+output_file = 'drop_output_AC_B.csv'
 process_csv(input_file, output_file)

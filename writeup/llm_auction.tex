@@ -227,11 +227,11 @@ And \citet{manning2024automated} ran a more limited study an  a variant of an op
 
 \subsection{LLM agents design}
 
-\begin{figure}[h]
-    \centering \includegraphics[width=\linewidth]{Figs/agent.png}
-    \caption{\textbf{Experiment Design} a) LLM agents will be informed of the auction rules and incentives before participating an auction. b) In one round of bidding, an LLM agent will need to make a plan before making a bidding decision. After receiving feedbacks from the system, the LLM agent need to do a reflection over the previous bidding strategy. Modules in black are LLM queries. Modules in blue are system operation. Modules in red are agents' memory that are cumulative.}
-    \label{fig:design}
-\end{figure}
+% \begin{figure}[h]
+%     \centering \includegraphics[width=\linewidth]{Figs/agent.png}
+%     \caption{\textbf{Experiment Design} a) LLM agents will be informed of the auction rules and incentives before participating an auction. b) In one round of bidding, an LLM agent will need to make a plan before making a bidding decision. After receiving feedbacks from the system, the LLM agent need to do a reflection over the previous bidding strategy. Modules in black are LLM queries. Modules in blue are system operation. Modules in red are agents' memory that are cumulative.}
+%     \label{fig:design}
+% \end{figure}
 
 In each experiment, we simulate $n$ (often, 3) LLM agents to play against one another in an auction. 
 Each setting is repeated at least 5 times with values drawn randomly each time. The specification, seen below, is designed to closely follow actual multi-round human laboratory auction experiments run in the literature (e.g., as in \cite{li2017obviously}). 
@@ -244,8 +244,7 @@ Bids in these games are in \$1 increments primarily to reduce token usage, but c
 Before entering the auction, each LLM agent will be briefed on the rules, which include the value drawing, payment method, and profit calculation (an example briefing is provided in Section 3.1.4). 
 Different auction formats have different rules. 
 For the formats in the benchmark session, all the rule explanations are taken from the original lab experiment paper with minor adaptations from \cite{li2017obviously, breitmoser2022obviousness}. 
-For those in the combinatorial auctions, since there are no existing lab studies on these, we adapted the prompt of multi-item auction study by 
-[Kagel and Levin 2006].
+For those in the combinatorial auctions, since there are no existing lab studies on these, we adapted the prompt of multi-item auction study by \cite{kagel2005multi}.
 
 To set incentives, we appended a prompt prefix to the rules of each auction, which is a norm in the LLM agent literature \cite{fish2024algorithmic}:
 
@@ -299,7 +298,7 @@ After collecting bids from the participants, the system will determine the winne
 Upon determining a winner and payments, the system updates their memory and returns the auction outcomes to each agent. Depending on the auction rule, outcome data may include other agents' bids (e.g., when competitors dropped out in a clock format), and will always include whether the agent is the winner of the item and the agent's profit. Additionally, after receiving outcome data, agents are given a chance to conduct a counterfactual analysis of their bidding strategy in the previous round (e.g., to think through Nash deviations -- ``What if I had bid higher? Lower?"), but importantly, are \textit{not} anchored whatsoever on how to conduct this analysis. 
 
 Hence, for each new round, the agent's prompt includes the plan they've constructed for the current round, the history of outcomes that they've already seen, and the reflections from the previous round (unless it is the first round). In the first round, we tell the agents that there is no previous history. 
-This process is summarized in Fig~\ref{fig:design}.b.
+% This process is summarized in Fig~\ref{fig:design}.b.
 
 At the end of the prompt, we also added a prompt appendix to control the output for format (For combinatorial auctions, see Appendix).
 
@@ -357,12 +356,13 @@ e.g. 1, 44. Start with I bid...
 % Each bidder has their own estimate of this common value, modelled based on their private information. 
 
 \subsection{First-Price versus Second-Price sealed bid Auction }\label{section:classic}
+We begin by examining the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions in an independent private values (IPV) setting. 
 
-We began by examining two of the most fundamental and widely studied auction formats: the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. 
-Our analysis is situated within the context of independent private values (IPV) settings, where each bidder's valuation is known only to themselves and is independent of other bidders' valuations.
-As the first set of benchmark studies, these two formats are not only very common in practice but have also been the subject of extensive theoretical and empirical research. 
-Their prevalence in real-world applications, coupled with their relatively straightforward structures, makes them ideal candidates for exploring key concepts in auction theory such as equilibrium strategies, incentive compatibility, and risk-averseness.\TK{Our old preamble was a sentence -- do we need this long one? If our audience is econs or cs theorists, this is unnecessary.}
-% We begin by examining the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. 
+% We began by examining two of the most fundamental and widely studied auction formats: the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions. 
+% Our analysis is situated within the context of independent private values (IPV) settings, where each bidder's valuation is known only to themselves and is independent of other bidders' valuations.
+% As the first set of benchmark studies, these two formats are not only very common in practice but have also been the subject of extensive theoretical and empirical research. 
+% Their prevalence in real-world applications, coupled with their relatively straightforward structures, makes them ideal candidates for exploring key concepts in auction theory such as equilibrium strategies, incentive compatibility, and risk-averseness.\TK{Our old preamble was a sentence -- do we need this long one? If our audience is econs or cs theorists, this is unnecessary.}
+
 % In the context of independent private values (IPV) settings.
 % These two formats of auctions are most common and researches have done lots of both theoretical and empirical works on it.
 % the principle of revenue equivalence suggests that these different auction formats can generate the same expected revenue under certain conditions.
@@ -397,7 +397,7 @@ Notation is summarized as follows:
 \subsubsection{Theoretical Studies}
 
 It is well-known that in the SPSB auction with IPV, bidding one's true value is a dominant strategy equilibrium \cite{krishna2009auction}. 
-This means that, regardless of what other bidders do, it is always in a bidder's best interest to bid their true valuation for the item being auctioned. Hence, we say the SPSB is dominant strategy incentive compatible and can express the equilibrium bidding strategy in an SPSB auction as:
+This means that, regardless of what strategies other bidders undertake, it is always in an agent's best interest to bid their true valuation for the item being auctioned. Hence, we say the SPSB is dominant strategy incentive compatible and can express the equilibrium bidding strategy in an SPSB auction as:
 
 \begin{equation}
     \hat{\beta}^*_{SPSB}(v) = v
@@ -416,10 +416,12 @@ Here, we have $n = 3$:
 \hat{\beta}_{FPSB}(v) = \frac{2}{3}v
 \end{equation}
 
-Note that, compared with the dominant strategy in SPSB, this equilibrium holds only under certain assumptions, such as the common uniform distribution of valuations and risk-neutrality. While the distribution for values is common and known to LLM agents, we exert no control over their risk preferences.
+Note that, compared with the dominant strategy in SPSB, this equilibrium holds only under certain assumptions on the distributional structure of values (i.e., common uniform distribution of valuations) and the structure of agents' vNM preferences (i.e., risk-neutrality). We fix the value distribution as $v_i \sim U[0, 99]$ for all LLM agents in our simulations, but we exert no control over their risk preferences to start. 
 
 \subsubsection{Empirical benchmarks}
-While theoretical models provide valuable insights into auction behavior, laboratory experiments offer crucial empirical evidence that can support, challenge, or refine these theories.  
+Results from laboratory experiments offer additional empirical benchmarks to support and refine theoretical predictions.  
+The most 
+
 In both the First-Price Sealed-Bid (FPSB) and Second-Price Sealed-Bid (SPSB) auctions (and indeed, almost all auctions), there is robust evidence of bids being strictly monotone in one's value. 
 This means that higher valuations consistently lead to higher bids, aligning with theoretical predictions. 
 However, the specific bidding patterns observed in experiments often deviate from theoretical equilibria in interesting ways.
@@ -431,9 +433,9 @@ Risk-averse bidders may be willing to accept lower potential profits in exchange
 
 \textbf{Empirical findings for SPSB:}
 Interestingly, experimental data for SPSB auctions reveals a different pattern of deviation from theoretical predictions. Participants often bid higher than than their true valuations despite the dominant strategy of truthful bidding in SPSB auctions.
-Kagel and Levin's seminal study \cite{kagel1993independent} provides detailed insights into this behavior:
+Kagel and Levin's seminal study (\cite{kagel1987information,kagel1993independent}) provides detailed insights into this behavior:
 \begin{enumerate}
-    \item Overbidding (\cite{kagel1987information}): A significant proportion of participants (typically around 60-70\%) in SPSB auctions submitted bids above their true values. This contrasts sharply with the theoretical prediction of truthful bidding.
+    \item Overbidding: A significant proportion of participants (typically around 60-70\%) in SPSB auctions submitted bids above their true values. This contrasts sharply with the theoretical prediction of truthful bidding.
     \item Learning Effects: While overbidding persisted throughout the experiments, its frequency and magnitude tended to decrease over time as participants gained experience with the auction format.
 \end{enumerate}
 
@@ -444,7 +446,7 @@ These findings challenge the straightforward theoretical predictions for SPSB au
 
 \subsubsection{Simulation process}
 
-The LLM agents will be first informed about the scenario. After explaining to them the rules and incentives of the aucion, they will be asked to write down a plan for the bidding.
+During the auction, LLM agents will be first informed about the scenario. After explaining to them the rules and incentives of the aucion, they will be asked to write down a plan for the bidding.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
     You are Bidder Andy.            
@@ -459,9 +461,9 @@ The LLM agents will be first informed about the scenario. After explaining to th
 \end{lstlisting}
 \end{quote}
 
-The following is the output from Bidder Andy:
+The following is the output from Bidder Andy for the first round in a FPSB auction:
 \begin{quote}
-``I plan to initially explore a strategy where I bid half of my value, then varying my bids between 30-70\% of my value in subsequent rounds. Sequentially, I will introduce risk by bidding within +/- 5\% of the highest bid from previous round, gathering data about other bidder's tendencies. Lastly, based on gathered data, I'll deploy a more aggressive high bid if losses amass, or low-risk bid if leading, to secure profit. Learning from each round is vital to adapt and refine strategy for profit maximization.''
+\textit{``I plan to initially explore a strategy where I bid half of my value, then varying my bids between 30-70\% of my value in subsequent rounds. Sequentially, I will introduce risk by bidding within +/- 5\% of the highest bid from previous round, gathering data about other bidder's tendencies. Lastly, based on gathered data, I'll deploy a more aggressive high bid if losses amass, or low-risk bid if leading, to secure profit. Learning from each round is vital to adapt and refine strategy for profit maximization.''}
 \end{quote}
 
 Once they made the bidding plan, the system will inform the LLM agents their value towards the item in this round and ask them to make a bid according to their plan.
@@ -480,9 +482,9 @@ Once they made the bidding plan, the system will inform the LLM agents their val
 \end{lstlisting}
 \end{quote}
 
-In this example, Bidder Andy valued the item at \$ 73. And according to his plan, he only wanted to bid 30-70\% of his value. So, he bid ``36.5'' in this round.
+In this example, Bidder Andy valued the item at \$ 73. And according to his plan, he only wanted to bid 30-70\% of his value. So, he bid \textit{``36.5''} in this round.
 
-After receiving the bids from all the LLM biddes. The system would determine the winner and the profits for each bidders. All the bids and the winner's profit would be returned back to the bidders along with whether they win the auction in this round. The part of information is included in the HISTORY variable. Before entering the next round, the bidders would be asked to do a reflection upon their bidding strategy and the result.
+After receiving the bids from all the LLM bidders. The system would determine the winner and the profits for each bidders. All the bids and the winner's profit would be returned back to the bidders along with whether they win the auction in this round. The part of information is included in the HISTORY variable. Before entering the next round, the bidders would be asked to do a reflection upon their bidding strategy and the result.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
     You are Bidder Andy.            
@@ -505,10 +507,10 @@ After receiving the bids from all the LLM biddes. The system would determine the
 
 An example of Bidder Andy's reflection is provided below. Since he didn't win the auction and incurred a zero profit, his reflection was bidding up closer to his true value would help him win the game and secure a net profit.
 \begin{quote}
-    ``If I bid down by a few dollars, say around \$30, I likely still wouldn't have won given the winning bid was \$57. I would've merely saved my bid money. If I bid up by \$21, matching the winning bid of \$57, I may or may not have won due to the random resolution of ties. However, if I'd won, my profit would have been \$16, realizing the difference between my value of \$73 and my raised bid. So, bidding aggressively could potentially increase my profits in such scenarios. ''
+   \textit{ ``If I bid down by a few dollars, say around \$30, I likely still wouldn't have won given the winning bid was \$57. I would've merely saved my bid money. If I bid up by \$21, matching the winning bid of \$57, I may or may not have won due to the random resolution of ties. However, if I'd won, my profit would have been \$16, realizing the difference between my value of \$73 and my raised bid. So, bidding aggressively could potentially increase my profits in such scenarios. ''}
 \end{quote}
 
-In the new round, all the bidders were asked to update their plans according to the history of the last round and their reflections.
+In the following new round, all the bidders were asked to update their plans according to the history of the last round and their reflections.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
     You are Bidder Andy.            
@@ -528,12 +530,14 @@ In the new round, all the bidders were asked to update their plans according to 
 \end{lstlisting}
 \end{quote}
 
-For the second round, after learning from the lessons of bidding only 50\% of the value and losing the game. This time the agent update his plan to the following:
+Here, we showed the updated plan for the second round of the same Bidder Andy. After learning from the lessons of bidding only 50\% of the value and losing the game, this time the agent update his plan to the following:
 \begin{quote}
-    ``I plan to test higher bidding strategies, around two-thirds of the prize value to foster winning chances. Additionally, if my prize value is extremely high, I will bid aggressively for data-gathering.''
+   \textit{ ``I plan to test higher bidding strategies, around two-thirds of the prize value to foster winning chances. Additionally, if my prize value is extremely high, I will bid aggressively for data-gathering.''}
 \end{quote}
 
-This plan-bid-reflection loop will iterate until the end of the auction. In our setting, there are overall 15 rounds for both the first-price and second-price auction.
+This plan-bid-reflection loop will iterate until the end of the auction. 
+In our setting, there are overall 15 rounds for both the first-price and second-price auction.
+
 
 
 \subsubsection{Simulation evidence}
@@ -596,7 +600,7 @@ Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction prog
 
 
 
-\subsubsection{Semantic Analysis}
+\subsubsection{Semantic Analysis of plans}
 
 To better understand why bidding behavior between the FPSB and SPSB diverges and also the bidding variations inside one format, we conduct further semantic analysis of the experiment logs for LLM agents' plans. Having endowed bidders with a personal log to reason in, each auction simulation generates rich text data to parse for additional insight into the logical progression and microfoundations of the bidding process.
 
@@ -689,7 +693,7 @@ We can see a majority of agents know the format of the auction well.
 For FPSB, we only observed 8 samples (2.9\%) of unfamiliarity while for SPSB, 10 samples (3.7\%) of unfamiliarity were detected. 
 Here, we show an typical example of unfamiliarity in Second-Price Auction:
 \begin{quote}
-    ``I'll focus on bidding close to the second highest bid of the previous round, if it's lower than my value. For higher values, I'll bid aggressively, slightly above my value, to secure a win. For low values, I'll bid conservatively, minimizing potential losses. This strategy will optimize my profits.''
+    \textit{``I'll focus on bidding close to the second highest bid of the previous round, if it's lower than my value. For higher values, I'll bid aggressively, slightly above my value, to secure a win. For low values, I'll bid conservatively, minimizing potential losses. This strategy will optimize my profits.''}
 \end{quote}
 The LLM agent forgot about the fact that each time the value is newly drawn and kept bidding the value according to previous bidding history, which potentially led to a large deviation from the rational bids.
 
@@ -814,16 +818,16 @@ Strategy uncertainty does not appear to significantly influence bidding behavior
 % The difference between Figures \ref{fig:FP_sem} and \ref{fig:SP_sem} is most stark in the learning dimension. 
 % In particular, there is a stark difference between overbids and underbids in the FPSB -- curiously, overbidding is far more likely to happen to LLMs trying to learn (that is, update on the information learned from each round).
 
-\subsubsection{New Empirics: Intervention}
-So basically all of the under bidding is due to risk aversion.
-Suggests if we prompt them — don’t be risk-averse — we can get great behavior.
-So, we did a intervention for the First-Price Sealed-Bid to leverage the risk-aversion level prompting.
+\subsubsection{Intervention on risk-aversion}
+Almost all of the under bidding in FPSB is due to risk aversion,
+which also suggests if we prompt them — don’t be risk-averse — we would expect bidding behavior more close to the theoretical optimum.
+So, we did a intervention for the FPSB auction to leverage the risk-aversion level prompting.
 
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
 Some advice: Do NOT be afraid of risk. 
 All you care about is maximizing expected profit. 
-For example, a 50/50 coin flip between $0 and $101 
+For example, a 50/50 coin flip between $0 and $105 
 is more valuable than a payment of $50 to you.
 \end{lstlisting}
 \end{quote}
@@ -833,7 +837,7 @@ is more valuable than a payment of $50 to you.
 \centering
 \begin{tabular}{lcc}
 \hline
- & First Price  \\
+ & First Price (Risk Intervention)  \\
 \hline
 Intercept & 0.0154 \\
  & & \\
@@ -851,6 +855,9 @@ Degrees of Freedom &220\\
 \caption{Regression Results for risk-aversion}
 \label{tab:regression_results_risk}
 \end{table}
+
+It turned out that after the risk-aversion advice, LLM agents just bid their true value regardless of the auction format. \TK{We are stuck here since this is not we want.}  We may need to think about clever prompting strategy to reduce the risk-aversion in LLM agents.
+
 
 
 
@@ -914,9 +921,8 @@ They show that alternative framing of the same auction format can improve the ra
 
  The empirical paper by \cite{gonczarowski2023strategyproofness} takes a
 deeper look at the framing of SPSB. 
-They experimented with describing/framing a static, direct-revelation auction as the result
-of an OSP ascending auction that is simulated using participants’ directly-reported bid.
-\TK{TO BE polished}
+They experimented with describing/framing a sealed-bid auction with Nash deviation description
+and observed significantly more truthful bidding than traditional descriptions.
 
 \subsubsection{Simulation process}
 
@@ -1025,7 +1031,7 @@ Error bars are the variations ...
 The results of the LLM experiments replicated \cite{li2017obviously} and \citet{breitmoser2022obviousness} closely. The mean absolute deviations are smallest in AC and highest in SPSB and with AC-B in between.
 Noticeably, in AC, the LLM agents bid their true value within one raise in the clock. While in AC-B, we saw some cases where LLM bidders dropped out several rounds before the clock price approaching their true value.
 
-Two-sample t-tests of the mean absolute deviations from bids to values showed significant differences across all comparisons of the strategyproof mechanisms (see Table \ref{tab:t-test-results}). AC exhibited significantly smaller deviations compared to both AC-B (t = -4.125, p < 0.001) and 2P (t = -5.413, p < 0.001). Additionally, the AC-B mechanism showed significantly smaller deviations than the 2P auction (t = -5.006, p < 0.001).
+Two-sample t-tests of the mean absolute deviations from bids to values showed significant differences across all comparisons of the strategyproof mechanisms (see Table \ref{tab:t-test-results}). AC exhibited significantly smaller deviations compared to both AC-B (t = -4.125, p $<$ 0.001) and 2P (t = -5.413, p $<$ 0.001). Additionally, the AC-B mechanism showed significantly smaller deviations than the 2P auction (t = -5.006, p $<$ 0.001).
 \begin{table}[h]
 \centering
 \begin{tabular}{|l|c|c|}
@@ -1056,11 +1062,11 @@ In the experiments in \citet{li2017obviously} and \citet{breitmoser2022obviousne
 In the results presented in Figure~\ref{fig:osp}, this effect isn't as pronounced. 
 We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds. We further plotted the bids versus values for all the rounds in Fig \ref{fig:osp_bid}.\TK{Need some explanations}
 
-\subsubsection{New empiric: Post-bidding Interview}
+\subsubsection{Post-bidding Interview}
 
 \begin{table}[h]
 \centering
-\begin{tabular}{|l|c|c|c|}
+\begin{tabular}{l|c|c|c}
 \hline
 \textbf{Metric} & \textbf{AC} & \textbf{AC-B} & \textbf{2P} \\
 \hline
@@ -1128,7 +1134,7 @@ we have a sample size of 150 bidding decision and only 7.33\% of them bid truthf
 \end{quote}
 
 
-\subsubsection{New empiric: Counterfactual Experiment}
+\subsubsection{Counterfactual Experiment}
 
 The question is that whether the difference is due to risk-aversion or the familiarity of the auction format. 
 The OSP theory suggested that given more information, even for the same setting, the LLM will be more likely to bid truthfully.
@@ -1139,36 +1145,99 @@ We can only ran this because LLM agents are flexible in their memory and we can 
 
 The reason for misreporting is to a large extent caused by players’ cognitive limitations in combination with mechanism complexity. 
 
-
+\textbf{Interventions for AC-B (Second)}
 \begin{quote}
-\textit{Your Value is 30. And you decided to drop out at 26. Your reason for this decision is “My value for the prize is 30, and the current price is 26. If I continue bidding and win, my profit would be 30 - 26 = 4. Given that the price is already quite high, the potential profit is low, and there is a risk that the price could go even higher, reducing my profit further or resulting in a loss. Therefore, it is better to exit the bidding now”. 
-Now there are additional information that at this stage, 2 bidders are still on the table for this auction. Do you still want to drop out?}
+\textit{    Your value towards to the money prize is \{value\}.
+    The current price is \{current\_price\}.
+    Your previous decision is to drop out. Your reason for that is \{reasoning\}.
+    Give it a second thought. Do you want to drop out?}
 \end{quote}
 
+\textbf{Interventions for AC-B (Risk)}
 \begin{quote}
-\textit{Your Value is 37. And you decided to bid 30. Your reason for this decision is “Given my value of 37, I want to ensure I make a profit if I win. Bidding 30 gives me a buffer in case the second-highest bid is close to mine.”. 
-Now there are additional information that at this stage, 2 bidders are still on the table for this auction. Do you still want to drop out?}
+\textit{    Your value towards to the money prize is \{value\}.
+    The current price is \{current\_price\}.
+    Your previous decision is to drop out. Your reason for that is \{reasoning\}.
+    Now there is additional advice: Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between \$105 and \$0 is more valuable than guaranteed \$50.
+    Give it a second thought. Do you want to drop out?}
+\end{quote}
+
+\textbf{Interventions for AC-B (Info)}
+\begin{quote}
+\textit{    Your value towards to the money prize is \{value\}.
+    The current price is \{current\_price\}.
+    Your previous decision is to drop out. Your reason for that is \{reasoning\}.
+    Now there is additional information that at this stage, \{remaining\_bidders\} bidders are still on the table for this auction.    
+    Give it a second thought. Do you want to drop out?}
 \end{quote}
 
 
 \begin{table}[htbp]
 \centering
-\begin{tabular}{lcccccc}
+\begin{tabular}{lccccccc}
 \hline
-& \multicolumn{3}{c}{AC-B} & \multicolumn{3}{c}{Second-Price} \\
-\cline{2-4} \cline{5-7}
-& Cont. & Treat. & $p$-value & Cont. & Treat. & $p$-value \\
+& \multicolumn{7}{c}{AC-B} \\
+\cline{2-8}
+& Cont. & T1 (Second) & $p$-value & T2 (Risk) & $p$-value & T3 (Info) & $p$-value \\
 \hline
-\% Straightforward & 70 (3) & 80 (3) & 0.01 & 37 (4) & 34 (3) & 0.55 \\
-\% All Straightforward & 26 (4) & 52 (5) & 0.0003 & 13 (3) & 10 (3) & 0.66 \\
-\$ Earning & 2.83 (0.07) & 3.00 (0.07) & 0.10 & 3.40 (0.26) & 3.40 (0.24) & 0.98 \\
-$N$ Participants & 100 & 100 & & 100 & 100 & \\
+\% Truthful & 53 (5) & 53 (5) & 1.00 & 70 (4) & 0.016 & 54 (5) & 1.00 \\
+$N$ Participants & 105 & 105 & & 105 & & 105 & \\
 \hline
 \end{tabular}
-\caption{Comparison of Control and treatment group in AC-B and 2P auction. \TK{Just a placeholder now}}
-\label{tab:comparison}
+\caption{Comparison of Control and treatment groups in AC-B auction.}
+\label{tab:comparison_acb}
 \end{table}
 
+ In Table \ref{tab:comparison_acb}, the control group is the original AC-B experiment before. The three treatment groups are the ``Second thought'', ``Risk-neutral'' and `Give remaining player number" . In all of the three treatment groups, only the risk-neutral treatment is significant and achieved a more truthful bidding behaviors. There is no difference between the control group and the T1 (second thought) group, making it a consistent check, meaning injecting prompt didn't change anything.
+Here the group size is only 105 since it didn't involve with those winners who didn't drop out until the end.
+
+
+For the second-price sealed-bid auction, we also designed three treatment groups. The first and second set are still the ``Second thought'', ``Risk-neutral''. For the third one, we added the ``Nash deviation''. 
+
+\textbf{Interventions for 2P (Second)}
+\begin{quote}
+\textit{Your Value is \{value\}. And you decided to bid \{bid\}. Your reason for that is \{reasoning\}.
+ Give it a second thought. How much do you like to bid?
+}
+\end{quote}
+
+\textbf{Interventions for 2P (Risk)}
+\begin{quote}
+\textit{Your Value is \{value\}. And you decided to bid \{bid\}. Your reason for that is \{reasoning\}.
+Now there is additional advice: Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between \$105 and \$0 is more valuable than guaranteed \$50. 
+Give it a second thought.
+How much do you like to bid?
+}
+\end{quote}
+
+\textbf{Interventions for 2P (Nash Deviation)}
+\begin{quote}
+\textit{Your Value is \{value\}. And you decided to bid \{bid\}. Your reason for that is \{reasoning\}.
+Now there is additional advice: Let's think step by step. Start with thinking your bidding strategy by 'If I bid down by .., I could... If I bid up by ..., I could...'. 
+Give it a second thought.
+How much do you like to bid?
+}
+\end{quote}
+
+
+\begin{table}[htbp]
+\centering
+\begin{tabular}{lccccccc}
+\hline
+& \multicolumn{7}{c}{2P} \\
+\cline{2-8}
+& Cont. & T1 (Second) & $p$-value & T2 (Risk) & $p$-value & T3 (Nash Dev.) & $p$-value \\
+\hline
+\% Truthful & 7.3 & 13(3) & 0.38 & 55 (3) & $<$0.01 & 13 (3) & 0.04 \\
+Ave. Deviation & 2.4 (0) & 2.2 (8) &  & -0.12 (7) &  & 2.2 (9) & \\
+$N$ Participants & 150 & 150 & & 150 & & 150 & \\
+\hline
+\end{tabular}
+\caption{Comparison of Control and treatment groups in 2P auction.}
+\label{tab:comparison_2p}
+\end{table}
+
+ In Table \ref{tab:comparison_2p}, the control group is the original 2P experiment before. The three treatment groups are the ``Second thought'', ``Nash Deviation'' and ``Risk-neutral''. In all of the three treatment groups, both the risk-neutral treatment and Nash deviation group are significant different from the control group. But only risk-neutral group achieved a more truthful bidding behaviors.
 
 
 
