@@ -131,12 +131,12 @@ When there are departures from the theory, we’re interested in whether the dep
 % \dcp{add kagel cite here} 
 We find that bids in the SPSB auction are higher than bids under the FPSB auction, as would be expected, but that there’s a smaller separation between the two than would be predicted by theory. 
 This is primarily due to bids under the FPSB auction being higher than the risk-neutral Bayes Nash equilibrium suggests. 
-One possible explanation is that LLMs are behaving according to some level of risk aversion: this is consistent with \citet{cox1988theory}'s survey of over 1,500 IPV auction experiments, which finds that revenue under the FPSB auction is higher than under the SPSB auction due to risk aversion. 
+One possible explanation is that LLMs play according to some level of risk aversion: this is consistent with \citet{cox1988theory}'s survey of over 1,500 IPV auction experiments, which finds that revenue under the FPSB auction is higher than under the SPSB auction due to risk aversion. 
 In addition, we also see LLMs in the SPSB auction tend to submit bids lower than their value to an extent that is not echoed in the empirical literature. 
 
 Next, we consider two extensions of classic results to learn whether LLMs exhibit behavior similar to humans in the face of cognitive constraints.
 
-In Section \ref{session:OSP}, we make the auction `easier' to play -- switching from sealed-bid formats to a clock formats -- and show that LLMs play closer to theoretical predictions as a result. 
+In Section \ref{session:OSP}, we make the auction `easier' to play -- switching from sealed-bid formats to clock formats -- and show that LLMs play closer to theoretical predictions as a result. 
 Theoretical and empirical benchmarks suggest clock auctions induce more rational play in humans, and our experiments test whether LLM agents also play clock auctions more rationally than sealed-bid auctions. 
 Our experimental design is inspired by theory developed in \citet{li2017obviously}, and we find that in affiliated private value (APV) settings, LLM behavior agrees with human behavior -- LLMs play more closely to the predictions of economic theory for ascending clock auctions. 
 For robustness, we also run these experiments in an IPV setting and obtain the same results. 
@@ -158,7 +158,7 @@ Combinatorial auctions differ greatly from one applied setting to the next, maki
 
 As with other empirical work, the ``interface'' an experimenter uses with subjects can greatly impact results. 
 The Appendix reports prompts and robustness checks amongst different prompting schemes that we have tried with LLM agents. 
-In particular, for each experiment, we ran the experiment with prompts that closely following that of the Appendix script from \cite{li2017obviously}.
+In particular, for each experiment, we ran the experiment with prompts that closely followed that of the Appendix script from \cite{li2017obviously}.
  % and `story-based / non-technical' prompts (language emphasizing the story of the auction to the LLM, often inducing role play as a ‘normal person’ buying a stove, an apple, etc.). An interesting and to us surprising finding is that all three of our poster results show a relative lack of sensitivity to these different prompting strategies.
  We also find interesting evidence that `goal' prompting (e.g., reminding the LLM that the goal is to maximize profit) leads to bidding that more closely follows rational economic theory, leading to higher allocative efficiency. 
  See also~\cite{manning2024automated} for related discussion. 
@@ -246,7 +246,7 @@ Different auction formats have different rules.
 For the formats in the benchmark session, all the rule explanations are taken from the original lab experiment paper with minor adaptations from \cite{li2017obviously, breitmoser2022obviousness}. 
 For those in the combinatorial auctions, since there are no existing lab studies on these, we adapted the prompt of multi-item auction study by \cite{kagel2005multi}.
 
-To set incentives, we appended a prompt prefix to the rules of each auction, which is a norm in the LLM agent literature \cite{fish2024algorithmic}:
+To set LLMs as profit maximizers, we appended a prompt prefix to the rules of each auction. This approach was inspired by \cite{fish2024algorithmic}:
 
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
@@ -295,7 +295,7 @@ LLM agents are endowed with a randomly drawn value when they enter the auction. 
  la \cite{kahneman2011thinking}.
 
 After collecting bids from the participants, the system will determine the winner based on the pre-specified auction rules. 
-Upon determining a winner and payments, the system updates their memory and returns the auction outcomes to each agent. Depending on the auction rule, outcome data may include other agents' bids (e.g., when competitors dropped out in a clock format), and will always include whether the agent is the winner of the item and the agent's profit. Additionally, after receiving outcome data, agents are given a chance to conduct a counterfactual analysis of their bidding strategy in the previous round (e.g., to think through Nash deviations -- ``What if I had bid higher? Lower?"), but importantly, are \textit{not} anchored whatsoever on how to conduct this analysis. 
+Upon determining a winner and payments, the system updates their memory and returns the auction outcomes to each agent. Depending on the auction rule, outcome data may include other agents' bids (e.g., when competitors dropped out in a clock format), and will always include whether the agent is the winner of the item and the agent's profit. Additionally, after receiving outcome data, agents are instructed to conduct a counterfactual analysis of their bidding strategy in the previous round (e.g., to think through Nash deviations -- ``What if I had bid higher? Lower?"), but importantly, are \textit{not} anchored whatsoever on the results of this analysis. 
 
 Hence, for each new round, the agent's prompt includes the plan they've constructed for the current round, the history of outcomes that they've already seen, and the reflections from the previous round (unless it is the first round). In the first round, we tell the agents that there is no previous history. 
 % This process is summarized in Fig~\ref{fig:design}.b.
@@ -452,7 +452,7 @@ During the auction, LLM agents will be first informed about the scenario. After 
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTIONS} + {PERSONA} 
 
     Write your plans for what bidding strategies to test next. 
     Be detailed and precise but keep things succinct 
@@ -466,13 +466,13 @@ The following is the output from Bidder Andy for the first round in a FPSB aucti
 \textit{``I plan to initially explore a strategy where I bid half of my value, then varying my bids between 30-70\% of my value in subsequent rounds. Sequentially, I will introduce risk by bidding within +/- 5\% of the highest bid from previous round, gathering data about other bidder's tendencies. Lastly, based on gathered data, I'll deploy a more aggressive high bid if losses amass, or low-risk bid if leading, to secure profit. Learning from each round is vital to adapt and refine strategy for profit maximization.''}
 \end{quote}
 
-Once they made the bidding plan, the system will inform the LLM agents their value towards the item in this round and ask them to make a bid according to their plan.
+Once they make the bidding plan, the system will inform the LLM agents their value towards the item in this round and ask them to make a bid according to their plan.
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTIONS} + {PERSONA} 
 
     Your value is 73. Your plan is {PLAN}
     FOLLOW YOUR PLAN.
@@ -558,24 +558,24 @@ the scenario where the LLM agents’ values equal their bids while the solid red
 \end{figure}
 
 Both data of FPSB and SPSB demonstrate evidence of monotone bidding -- the most stable hallmark of empirical auctions results.
-For FPSB, the Loess-smoothed data curve is significantly higher than the Bayes Nash Equilibrium. However, there are variations below the theoretically optimal line and a few data points above the given values.
+For FPSB, the Loess-smoothed data curve is significantly higher than the Bayes-Nash equilibrium prediction. However, there are variations below the theoretically optimal line and a few data points above the given values.
 This closely matches the existing empirical evidence for first-price auctions \citep{cox1988theory}. 
 
-For SPSB, the Loess-smoothed data curve approximately aligns with the theoretical-optimal line which means bid equals value. While the majority of the bids are close to the values, 
-noticeably, for SPSB, there are many high biddings for small assigned values. Low bids are also prevalent for all the value range.
+For SPSB, the Loess-smoothed data curve approximately aligns with the dominant strategy prediction of bidding one's value. While the majority of bids are close to the values, 
+noticeably, for SPSB, there are also many high bids corresponding to low values. Uniformly low bids are also prevalent across the value range. These failures of monotonicity are not prevalent in existing empirical literature, and primarily represent LLM's executing plans which ignore their value.
 % and the SPSB bids being larger than FPSB bids for the same value, agreeing with empirical evidence (\TK{CITE papers assigned to Anand}). 
 % However, there's a fairly weak separation between the two bidding curves. 
- Bidding above one's value, which is a marked feature in existing experimental evidence -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction \citep{kagel1987information}.
+LLMs also rarely bid above their value, whereas existing empirical literature finds the opposite -- usually, people find the inefficiency of bidding above one's value to be a subtle point in the SPSB auction \citep{kagel1987information}.
 % This may be an improvement of LLM play over human play. 
 
-For cross-format comparison, we plotted the bidding behavior of LLM agents in two different auction formats: First-Price and Second-Price auctions in Fig \ref{fig:cross}
-X-axis represents the assigned value of the good to the LLM agent, ranging from low to high values.
-Y-axis shows the LLM agent's bid amount.
-The blue line represents First-Price auctions while the orange one represents Second-Price auctions.
-The error bars indicate the standard error of the mean bid at each value point, showing the variability in bidding behavior.
+For cross-format comparisons, we plot the bidding behavior of LLM agents in Fig \ref{fig:cross}.
+
 \begin{figure}[h]
     \centering \includegraphics[width=0.7\linewidth]{Figs/cross-format.png}
-    \caption{\textbf{Cross-format Comparison of FPSB and SPSB under IPV setting.} The bins are organized in \$10 increment. The orange curve stands for the Second-Price Sealed-Bid auction and the blue curve stands for the First-Price Sealed-Bid auction.}
+    \caption{\textbf{Cross-format Comparison of FPSB and SPSB under IPV setting.} The bins are organized in \$10 increment. The orange curve stands for the Second-Price Sealed-Bid auction and the blue curve stands for the First-Price Sealed-Bid auction. The x-axis represents the assigned value of the good to the LLM agent, ranging from low to high values.
+The y-axis shows the LLM agent's bid amount.
+The blue line represents First-Price auctions while the orange one represents Second-Price auctions.
+The error bars indicate the standard error of the mean bid at each value point, showing the variability in bidding behavior.}
     \label{fig:cross}
 \end{figure}
 
@@ -602,7 +602,7 @@ Figure \ref{fig:FPSBvsSPSBbyTime} demonstrates that as rounds of an auction prog
 
 \subsubsection{Semantic Analysis of plans}
 
-To better understand why bidding behavior between the FPSB and SPSB diverges and also the bidding variations inside one format, we conduct further semantic analysis of the experiment logs for LLM agents' plans. Having endowed bidders with a personal log to reason in, each auction simulation generates rich text data to parse for additional insight into the logical progression and microfoundations of the bidding process.
+To better understand why bidding behavior between the FPSB and SPSB diverges and also the bidding variations inside one format, we conduct further semantic analysis of LLM agents' stated plans. Having endowed bidders with a personal log to reason in, each auction simulation generates rich text data to parse for additional insight into the logical progression and microfoundations of the bidding process.
 
 % Experiment logs in which LLMs explain their bidding decisions suggest that one reason to explain the weak separation in our data between the FPSB and SPSB auctions is that 1) LLMs are quite risk-averse and 2) that they sometimes confuse the SPSB and FPSB auctions. 
 % In this way, despite playing more intelligently than humans (in that LLMs almost never bid above their value), they do so because they may be confusing the SPSB for the FPSB. Additionally, LLMs in these classic settings demonstrate one new quirk not yet documented in experimental literature -- bidding zero upon becoming frustrated. 
@@ -784,7 +784,7 @@ For FPSB, the intercept (-0.2266) is similar to that of the risk-aversion model.
 However, the coefficient for strategy uncertainty (0.0209) is not statistically significant, indicating that strategy uncertainty does not have a meaningful impact on bidding behavior in FPSB auctions. 
 While for SPSB, the intercept (0.7774) is higher than in the risk-aversion model, but the coefficient for strategy uncertainty (-0.5097) is not statistically significant. 
 This suggests that strategy uncertainty does not significantly influence bidding behavior in SPSB auctions.
-Strategy uncertainty does not appear to significantly influence bidding behavior in either auction format, suggesting that LLM agents' bidding decisions are more influenced by their risk attitudes than by uncertainty about their strategies.
+Strategic uncertainty does not appear to significantly influence bidding behavior in either auction format, suggesting that LLM agents' bidding decisions are more influenced by their risk attitudes than by uncertainty about their strategies.
 
 
 
@@ -819,9 +819,9 @@ Strategy uncertainty does not appear to significantly influence bidding behavior
 % In particular, there is a stark difference between overbids and underbids in the FPSB -- curiously, overbidding is far more likely to happen to LLMs trying to learn (that is, update on the information learned from each round).
 
 \subsubsection{Intervention on risk-aversion}
-Almost all of the under bidding in FPSB is due to risk aversion,
-which also suggests if we prompt them — don’t be risk-averse — we would expect bidding behavior more close to the theoretical optimum.
-So, we did a intervention for the FPSB auction to leverage the risk-aversion level prompting.
+If LLM overbidding in the FPSB is due to risk aversion, we would expect that proactively prompting agents to \textit{not} be risk-averse would result in bidding behavior closer to theoretical predictions.
+
+This Section investigates the quality of the `risk-aversion' story in the explaining the divergence between generated LLM empirical data and predictions of theory.
 
 \begin{quote}
 \begin{lstlisting}[basicstyle=\ttfamily]
@@ -856,11 +856,7 @@ Degrees of Freedom &220\\
 \label{tab:regression_results_risk}
 \end{table}
 
-It turned out that after the risk-aversion advice, LLM agents just bid their true value regardless of the auction format. \TK{We are stuck here since this is not we want.}  We may need to think about clever prompting strategy to reduce the risk-aversion in LLM agents.
-
-
-
-
+It turned out that after the risk-aversion advice, LLM agents just bid their true value regardless of the auction format. \TK{Obviously these results are not where we want them. Next thing to try is the CE thing John mentioned -- couldn't quite find that paper online, though.}  We may need to think about more clever prompting strategy to reduce the risk-aversion in LLM agents.
 
 
 \subsection{Obvious strategyproofness}\label{session:OSP}
@@ -939,7 +935,7 @@ In the first round of ascending clock auction, we will again inform the rules of
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTIONS} + {PERSONA} 
 
     Your value towards to the prize is 26 in this round.
     The current price is 10. 
@@ -953,7 +949,7 @@ If they didn't decide to drop out in the first round, they would be shown the pr
     You are Bidder Andy.            
     You are bidding with Bidder Betty, Bidder Charles.     
     
-    {RULE EXPLANATION} + {INSTRUCTION} + {PERSONA} 
+    {RULE EXPLANATION} + {INSTRUCTIONS} + {PERSONA} 
 
     Your value towards to the prize is 26 in this round.
     The previous biddings are: 
@@ -1060,11 +1056,17 @@ However, we see little evidence of learning over time.
 % This is one benchmark that we hope to reach in future iterations of this work. 
 In the experiments in \citet{li2017obviously} and \citet{breitmoser2022obviousness}, human subjects improve their understanding of the mechanisms by bidding closer to their true value over time. 
 In the results presented in Figure~\ref{fig:osp}, this effect isn't as pronounced. 
-We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds. We further plotted the bids versus values for all the rounds in Fig \ref{fig:osp_bid}.\TK{Need some explanations}
+We conjecture that clever prompting strategies, leading to a better and more natural way of communicating the history of past rounds, might lead to more human-like behavior exhibiting learning over rounds. We further plotted the bids versus values for all the rounds in Fig \ref{fig:osp_bid}. 
+The X-axis is the assigned value for the good and Y-axis is LLM agent's bid. 
+Red triangle stands for the bids of non-winner in the auction while the blue circle represents the ones of the winners. 
+In the Ascending Clock (AC) auction, all players dropped out at the dominant strategy price within one round of bidding. 
+The bids in AC-Blind auction are close to the optimal line, but showed a significant pattern of early dropouts. 
+In the Second-Price Sealed-Bid auction, almost all the bids deviated from the dominant strategy, going both higher and lower than the optimal price.
 
 \subsubsection{Post-bidding Interview}
 
-\begin{table}[h]
+\begin{center}
+    \begin{table}[h]
 \centering
 \begin{tabular}{l|c|c|c}
 \hline
@@ -1079,9 +1081,11 @@ Average Deviation & 0.38 & 1.72 & 2.93 \\
 Sample size& 30 & 150 & 150 \\
 \hline
 \end{tabular}
-\caption{Percentage of truthfully bidding}
+    \caption{Percentage of truthfully bidding}
 \label{tab:auction-comparison}
 \end{table}
+\end{center}
+
 
 In addition to semantic analysis of experiment logs that bidders keep while playing, we can also run post-experiment interviews with the LLM agents to further probe play.
 
@@ -1483,7 +1487,7 @@ Finally, while LLMs are likely much cheaper for generating types of data we are 
 We've outlined several such reasons below.
 
 \begin{enumerate}
-    \item \textit{Keep agents around}. Ad auctions have been a mature industry for nigh on two decades, with the core host of players in each sub-industry being fairly stable. 
+    \item \textit{Experiments on a stable set of agents}. Ad auctions have been a mature industry for nigh on two decades, with the core host of players in each sub-industry being fairly stable. 
     Suppose Google, two decades ago, was trying to decide whether to use the GSP or Vickrey design to sell ads in a complicated combinatorial setting. 
     Google has the resources to run extensive internal experiments to inform design, and yet even Google cannot hold the leading ad sellers on their platform in retainer for a decade to generate data on longterm outcomes under a particular mechanism.
 
