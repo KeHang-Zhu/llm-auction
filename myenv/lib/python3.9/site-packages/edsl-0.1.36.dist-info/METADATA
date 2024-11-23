@@ -1,0 +1,108 @@
+Metadata-Version: 2.1
+Name: edsl
+Version: 0.1.36
+Summary: Create and analyze LLM-based surveys
+Home-page: https://www.expectedparrot.com/
+License: MIT
+Keywords: LLM,social science,surveys,user research
+Author: Apostolos Filippas
+Author-email: apostolos@expectedparrot.com
+Requires-Python: >=3.9.1,<3.13
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Classifier: Topic :: Software Development :: Libraries :: Application Frameworks
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Dist: aiohttp (>=3.9.1,<4.0.0)
+Requires-Dist: anthropic (>=0.23.1,<0.24.0)
+Requires-Dist: azure-ai-inference (>=1.0.0b3,<2.0.0)
+Requires-Dist: black[jupyter] (>=24.4.2,<25.0.0)
+Requires-Dist: boto3 (>=1.34.161,<2.0.0)
+Requires-Dist: google-generativeai (>=0.8.2,<0.9.0)
+Requires-Dist: groq (>=0.9.0,<0.10.0)
+Requires-Dist: jinja2 (>=3.1.2,<4.0.0)
+Requires-Dist: json-repair (>=0.28.4,<0.29.0)
+Requires-Dist: jupyter (>=1.0.0,<2.0.0)
+Requires-Dist: markdown2 (>=2.4.11,<3.0.0)
+Requires-Dist: matplotlib (>=3.8,<3.9)
+Requires-Dist: mistralai (>=1.0.2,<2.0.0)
+Requires-Dist: nest-asyncio (>=1.5.9,<2.0.0)
+Requires-Dist: numpy (>=1.22,<2.0)
+Requires-Dist: openai (>=1.4.0,<2.0.0)
+Requires-Dist: openpyxl (>=3.1.5,<4.0.0)
+Requires-Dist: pandas (>=2.1.4,<3.0.0)
+Requires-Dist: pydot (>=2.0.0,<3.0.0)
+Requires-Dist: pygments (>=2.17.2,<3.0.0)
+Requires-Dist: pymupdf (>=1.24.4,<2.0.0)
+Requires-Dist: pyreadstat (>=1.2.7,<2.0.0)
+Requires-Dist: python-docx (>=1.1.0,<2.0.0)
+Requires-Dist: python-dotenv (>=1.0.0,<2.0.0)
+Requires-Dist: restrictedpython (>=7.1,<8.0)
+Requires-Dist: rich (>=13.7.0,<14.0.0)
+Requires-Dist: setuptools (<72.0)
+Requires-Dist: simpleeval (>=0.9.13,<0.10.0)
+Requires-Dist: sqlalchemy (>=2.0.23,<3.0.0)
+Requires-Dist: tenacity (>=8.2.3,<9.0.0)
+Requires-Dist: urllib3 (>=1.25.4,<1.27)
+Project-URL: Documentation, https://docs.expectedparrot.com
+Description-Content-Type: text/markdown
+
+# Expected Parrot Domain-Specific Language 
+<p align="center">
+  <img src="https://github.com/expectedparrot/edsl/blob/main/static/logo.png?raw=true" alt="edsl.png" width="100"/>
+</p>
+
+The Expected Parrot Domain-Specific Language (EDSL) package lets you conduct computational social science and market research with AI. Use it to design surveys and experiments, simulate responses with large language models, and perform data labeling and other research tasks. Results are formatted as specified datasets and come with built-in methods for analyzing, visualizing, and sharing. 
+
+## 🔗 Links
+- [PyPI](https://pypi.org/project/edsl/)
+- [Documentation](https://docs.expectedparrot.com)
+- [Getting started](https://docs.expectedparrot.com/en/latest/starter_tutorial.html) 
+- [Discord](https://discord.com/invite/mxAYkjfy9m)
+- [Twitter](https://x.com/ExpectedParrot)
+- [LinkedIn](https://www.linkedin.com/company/expectedparrot/)
+- [Blog](https://blog.expectedparrot.com)
+
+## 🌎 Hello, World!
+A quick example:
+
+```python
+# Import a question type
+from edsl import QuestionMultipleChoice
+
+# Construct a question using the question type template
+q = QuestionMultipleChoice(
+    question_name="example_question",
+    question_text="How do you feel today?",
+    question_options=["Bad", "OK", "Good"]
+)
+
+# Run it with the default language model
+results = q.run()
+
+# Inspect the results in a dataset
+results.select("example_question").print()
+```
+
+Output:
+```python
+┏━━━━━━━━━━━━━━━━━━━┓
+┃ answer            ┃
+┃ .example_question ┃
+┡━━━━━━━━━━━━━━━━━━━┩
+│ Good              │
+└───────────────────┘
+```
+
+## 💻 Requirements
+* EDSL is compatible with Python 3.9 - 3.12.
+* API keys for large language models that you want to use, stored in a `.env` file.
+See instructions on [storing API keys](https://docs.expectedparrot.com/en/latest/api_keys.html).
+
+## 💡 Contributions, feature requests & bugs
+Interested in contributing? Want us to add a new feature? Found a bug for us to squash? 
+Please send us an email at [info@expectedparrot.com](mailto:info@expectedparrot.com) or message us at our [Discord channel](https://discord.com/invite/mxAYkjfy9m).
+

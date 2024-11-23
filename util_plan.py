@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V5/')
+templates_dir = os.path.join(current_script_path, './rule_template/V8/')
 
 c = Cache()  
 
@@ -58,7 +58,7 @@ class Rule_plan:
         if self.seal_clock == 'clock':
             game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
         elif self.seal_clock == 'seal':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}_NO_RISKAVERSE.txt"))
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}_euro.txt"))
         game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:
@@ -126,7 +126,7 @@ class SealBid():
             if len(agent.reasoning) == 0:
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
-                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between $110 and $0 is more valuable than guaranteed $50. Your plan should be within 100 words"
+                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
                 )
                 survey = Survey(questions = [q_plan])
                 result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
@@ -159,7 +159,7 @@ class SealBid():
                 # previous_plan = agent.reasoning[-1]
                 q_plan = QuestionFreeText(
                 question_name = "q_plan",
-                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Remember to be a profit maximizer and not to be afraid of risk -- a 50/50 gamble between $110 and $0 is more valuable than guaranteed $50. LIMIT your plan to 50 words. "
+                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. "
                 )
             
                 # print(q_plan)
