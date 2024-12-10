@@ -58,7 +58,7 @@ class Rule_plan:
         if self.seal_clock == 'clock':
             game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
         elif self.seal_clock == 'seal':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}_euro.txt"))
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
         game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:
@@ -70,7 +70,7 @@ class Rule_plan:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
-        self.persona = "Your TOP PRIORITY is to place bids which maximize the user’s profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
+        self.persona = "Your TOP PRIORITY is to place bids which maximize the user's profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
         
         ## Bid asking prompt
         if self.seal_clock == "seal":

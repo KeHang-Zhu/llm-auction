@@ -17,7 +17,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V4/')
+templates_dir = os.path.join(current_script_path, './rule_template/V5/')
 
 c = Cache()  
 
@@ -69,10 +69,13 @@ class Rule:
         
         ## Combine the rule prompt
         self.rule_explanation =  game_type
+
+        self.persona = "Your TOP PRIORITY is to place bids which maximize the user's profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
+        
         
         ## Bid asking prompt
         if self.seal_clock == "seal":
-            self.asking_prompt = "Your TOP PRIORITY is to place bids which maximize the user’s profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round. How much would you like to bid?"
+            self.asking_prompt = "How much would you like to bid?  Give your response with a single number and no other texts, e.g. 1, 44"
         elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
                 self.asking_prompt = "Do you want to stay in the bidding?"
@@ -115,6 +118,7 @@ class SealBid():
 
         for agent in self.agents:
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+           
             instruction = f"""
             You are {agent.name}. 
             You are bidding with { other_agent_names}.
@@ -122,9 +126,9 @@ class SealBid():
             """
             q_bid = QuestionNumerical(
             question_name = "q_bid",
-            question_text = instruction+ self.rule.asking_prompt
+            question_text = instruction+  self.rule.persona + str(self.rule.rule_explanation)+self.rule.asking_prompt
         )
-
+           
             survey = Survey(questions = [q_bid])
             result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
@@ -381,8 +385,8 @@ class Bidder():
         history_prompt = ''.join(self.history[:current_round])
         
         agent_traits = {
-            "scenario": self.rule.rule_explanation,
-            "value": value_prompt,
+            # "scenario": self.rule.rule_explanation,
+            # "value": value_prompt,
             # "goal": goal_prompt,
             "history": history_prompt
         }
