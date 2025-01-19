@@ -1,11 +1,11 @@
 This folder is the folder used for ALL rule templates for the EC submission of the llm-auctions paper. It will include:
 
-Section 3 - classic (get both of these from V4)
+Section 3 - classic (get both of these from V4).
 - first price, private values
 - second price, private values
 (could add third-price and all pay here and compare/contrast accordingly)
 
-Section 4 - OSP ()
+Section 4 - OSP (empty .txt, waiting on kehang)
 - AC. affiliated values
 - AC-B, affiliated values
 - SPSB, affiliated values
