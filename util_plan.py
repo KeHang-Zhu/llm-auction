@@ -257,15 +257,26 @@ class SealBid():
         
         self.winner = {'winner':winner, 'price':price}
         for agent in self.agents:
-            if agent.name == winner:
-                if self.rule.private_value == "private":
-                    agent.profit.append(agent.current_value - float(price))
-                elif self.rule.private_value == "common":
-                    agent.profit.append(agent.current_common - float(price))
-                agent.winning.append(True)
+            ## implement the all pay auction
+            if self.rule.price_order == "allpay":
+                for bid in self.bid_list:
+                    if bid["agent"] == agent.name:
+                        price = bid["bid"]
+                agent.profit.append(agent.current_value - price)
+                if agent.name == winner:
+                    agent.winning.append(True)
+                else:
+                    agent.winning.append(False)
             else:
-                agent.profit.append(0)
-                agent.winning.append(False)
+                if agent.name == winner:
+                    if self.rule.private_value == "private":
+                        agent.profit.append(agent.current_value - float(price))
+                    elif self.rule.private_value == "common":
+                        agent.profit.append(agent.current_common - float(price))
+                    agent.winning.append(True)
+                else:
+                    agent.profit.append(0)
+                    agent.winning.append(False)
     
 class Clock():
     def __init__(self, agents, rule, model, cache=c, history=None):
