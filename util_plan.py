@@ -125,11 +125,15 @@ class SealBid():
             You are bidding with { other_agent_names}.
             """
 
-           
+            general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
+
             if len(agent.reasoning) == 0:
+                elicit_plan = Prompt.from_txt(os.path.join(templates_dir,"plan_first.txt"))
+                prompt_elicit_plan = str(elicit_plan.render({}))
+
                 q_plan = QuestionFreeText(
-                question_name = "q_plan",
-                question_text = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" +  "write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. Your plan should be within 100 words"
+                    question_name = "q_plan",
+                    question_text = general_prompt +  prompt_elicit_plan
                 )
                 survey = Survey(questions = [q_plan])
                 result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
@@ -137,9 +141,11 @@ class SealBid():
                 # plan= result['choices'][0]['message']['content']
                 print(plan)
                 
+                elicit_bid = Prompt.from_txt(os.path.join(templates_dir,"bid_first.txt"))
+                prompt_elicit_bid = str(elicit_bid.render({"current_value":agent.current_value, "plan": plan}))
                 q_bid = QuestionNumerical(
-                question_name = "q_bid",
-                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " + "\n" + f" Your value towards to the prize is {agent.current_value} in this round." + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt
+                    question_name = "q_bid",
+                    question_text = general_prompt + prompt_elicit_bid + self.rule.asking_prompt
                     )
                 survey = Survey(questions=[q_bid])
                 result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
@@ -147,22 +153,28 @@ class SealBid():
                 
             else:
                 last_round = agent.history[-1]
+
+                reflection = Prompt.from_txt(os.path.join(templates_dir,"bid_first.txt"))
+                prompt_reflection = str(reflection.render({"last_round":last_round}))
+
                 q_counterfact = QuestionFreeText(
                     question_name = "q_counterfact",
-                    question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round history is: " + last_round + "\n" +" Do a counterfactual analysis of the last round. REMEMBER that your goal is to win the bid and make higher profits. Let's think step by step. Start your reflection with 'If I bid down by .., I could... If I bid up by ..., I could...' LIMIT your OUTPUT within 100 words. "
+                    question_text = general_prompt+ prompt_reflection
                 )
                 result = self.model.simple_ask(q_counterfact)
                 counterfact= result['choices'][0]['message']['content']
-                print("=========================== \n", counterfact)
+                # print("=========================== \n", counterfact)
                 
                 history = agent.history
                 reasoning = agent.reasoning
                 max_length = max(len(history), len(reasoning))
                 history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
                 # previous_plan = agent.reasoning[-1]
+                elicit_plan = Prompt.from_txt(os.path.join(templates_dir,"plan_after_reflec.txt"))
+                prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
                 q_plan = QuestionFreeText(
-                question_name = "q_plan",
-                question_text = str(self.rule.rule_explanation) + "\n" + instruction + self.rule.persona + "The previous round histories along with your plans are: " + history_prompt + f"After careful reflection on previous bidding, your analysis for last round is {counterfact} "+" learn from your previous rounds, Let's think step by step to make sure we make a good choice. Write your plans for what bidding strategies to test next. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. "
+                    question_name = "q_plan",
+                    question_text = general_prompt + prompt_elicit_plan
                 )
             
                 # print(q_plan)
@@ -173,9 +185,12 @@ class SealBid():
                 # plan= result['choices'][0]['message']['content']
                 print(plan, "====================\n")
                 
+                elicit_bid = Prompt.from_txt(os.path.join(templates_dir,"bid_after_reflec.txt"))
+                prompt_elicit_bid = str(elicit_bid.render({"counterfact": counterfact,"current_value": agent.current_value, "plan": plan}))
+
                 q_bid = QuestionNumerical(
-                question_name = "q_bid",
-                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "\n" + f"Your analysis for last round is: {counterfact}" "\n" + f" Your value towards to the prize is {agent.current_value} in this round."+ f"Your PLAN for this round is: {plan}" + "FOLLOW YOUR PLAN" + self.rule.asking_prompt
+                    question_name = "q_bid",
+                    question_text =  general_prompt + prompt_elicit_bid  +self.rule.asking_prompt
                     )
                 # print(q_bid)
                 # result = self.model.simple_ask(q_bid)
@@ -231,6 +246,12 @@ class SealBid():
                 winner = random.choice(same_bids)["agent"]
                 # winner = sorted_bids[0]["agent"]
                 price = sorted_bids[2]["bid"]
+        elif self.rule.price_order == "allpay":
+            if len(sorted_bids) > 0:
+                same_bids = [bid for bid in sorted_bids if bid["bid"] == sorted_bids[0]["bid"]]
+                winner = random.choice(same_bids)["agent"]
+                # winner = sorted_bids[0]["agent"]
+                price = sorted_bids[0]["bid"]
         else: 
             raise ValueError(f"Rule {self.rule.price_order} not allowed")
         
