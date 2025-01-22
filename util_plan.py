@@ -18,6 +18,7 @@ from jinja2 import Template
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(current_script_path, './rule_template/V8/')
+prompt_dir = os.path.join(current_script_path, './Prompt/')
 
 c = Cache()  
 
@@ -70,11 +71,13 @@ class Rule_plan:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
-        self.persona = "Your TOP PRIORITY is to place bids which maximize the user's profit in the long run. To do this, you should explore many different bidding strategies, including possibly risky or aggressive options for data-gathering purposes. Learn from the history of previous rounds in order to maximize your total profit. Don't forget the values are redrawn independently each round."
-        
+        persona_str = Prompt.from_txt(os.path.join(templates_dir,"persona.txt"))
+        self.persona = str(persona_str.render({}))
+
         ## Bid asking prompt
         if self.seal_clock == "seal":
-            self.asking_prompt = "How much would you like to bid?  Give your response with a single number and no other texts, e.g. 1, 44"
+            ask_str = Prompt.from_txt(os.path.join(templates_dir,"asking_sealed.txt"))
+            self.asking_prompt = str(ask_str.render({}))
         elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
                 self.asking_prompt = "Do you want to stay in the bidding?"
@@ -136,7 +139,7 @@ class SealBid():
                 
                 q_bid = QuestionNumerical(
                 question_name = "q_bid",
-                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " "\n" + f" Your value towards to the prize is {agent.current_value} in this round." + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt
+                question_text =  str(self.rule.rule_explanation) + "\n" +instruction + self.rule.persona + "This is the first round " + "\n" + f" Your value towards to the prize is {agent.current_value} in this round." + "Your PLAN for this round is:" + str(plan)  + "FOLLOW YOUR PLAN " + self.rule.asking_prompt
                     )
                 survey = Survey(questions=[q_bid])
                 result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
