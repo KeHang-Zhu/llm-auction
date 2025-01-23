@@ -322,8 +322,6 @@ class Clock():
         
         for agent in agent_in_play:
             other_agent_names = ', '.join([a.name for a in agent_in_play if a is not agent])
-
-            other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
             instruction_str = Prompt.from_txt(os.path.join(templates_dir,"instruction.txt"))
             instruction = str(instruction_str.render(
                 {"name":agent.name, "other_agent_names": other_agent_names})
