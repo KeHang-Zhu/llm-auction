@@ -5,7 +5,6 @@ import random
 import json
 import os
 import sys
-from edsl import shared_globals
 from edsl import Model
 from edsl import Agent, Scenario, Survey
 from edsl.data import Cache
@@ -17,7 +16,7 @@ from jinja2 import Template
 
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V8/')
+templates_dir = os.path.join(current_script_path, './rule_template/V10/')
 prompt_dir = os.path.join(current_script_path, './Prompt/')
 
 c = Cache()  
@@ -37,7 +36,7 @@ class Rule_plan:
     def __init__(self, seal_clock,  private_value, open_blind, rounds, 
                  ascend_descend="ascend",
                  price_order = "second",
-                 common_range=[10, 80], private_range=20, increment=1, number_agents=3):
+                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name=""):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -55,11 +54,13 @@ class Rule_plan:
 
         # value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"intro_{self.private_value}.txt"))
         # value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range, "num_bidders": self.number_agents-1})
-        
-        if self.seal_clock == 'clock':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
-        elif self.seal_clock == 'seal':
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
+        if special_name:
+            game_type_string = Prompt.from_txt(os.path.join(templates_dir,special_name))
+        else:
+            if self.seal_clock == 'clock':
+                game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
+            elif self.seal_clock == 'seal':
+                game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
         game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:
@@ -71,12 +72,12 @@ class Rule_plan:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
-        persona_str = Prompt.from_txt(os.path.join(templates_dir,"persona.txt"))
+        persona_str = Prompt.from_txt(os.path.join(prompt_dir,"persona.txt"))
         self.persona = str(persona_str.render({}))
 
         ## Bid asking prompt
         if self.seal_clock == "seal":
-            ask_str = Prompt.from_txt(os.path.join(templates_dir,"asking_sealed.txt"))
+            ask_str = Prompt.from_txt(os.path.join(prompt_dir,"asking_sealed.txt"))
             self.asking_prompt = str(ask_str.render({}))
         elif self.seal_clock == "clock":
             if self.ascend_descend == "ascend":
@@ -120,13 +121,13 @@ class SealBid():
 
         for agent in self.agents:
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
-            instruction_str = Prompt.from_txt(os.path.join(templates_dir,"instruction.txt"))
+            instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
 
             general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
 
             if len(agent.reasoning) == 0:
-                elicit_plan = Prompt.from_txt(os.path.join(templates_dir,"plan_first.txt"))
+                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
                 prompt_elicit_plan = str(elicit_plan.render({}))
 
                 q_plan = QuestionFreeText(
@@ -139,20 +140,43 @@ class SealBid():
                 # plan= result['choices'][0]['message']['content']
                 print(plan)
                 
-                elicit_bid = Prompt.from_txt(os.path.join(templates_dir,"bid_first.txt"))
+                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_first.txt"))
                 prompt_elicit_bid = str(elicit_bid.render({"current_value":agent.current_value, "plan": plan}))
+
                 q_bid = QuestionNumerical(
-                    question_name = "q_bid",
-                    question_text = general_prompt + prompt_elicit_bid + self.rule.asking_prompt
-                    )
+                    question_name="q_bid",
+                    question_text=general_prompt + prompt_elicit_bid + self.rule.asking_prompt
+                )
                 survey = Survey(questions=[q_bid])
-                result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                bid = result.select("q_bid").to_list()[0]
-                
+
+                # Initialize bid and a retry mechanism
+                retry_attempts = 3
+                attempt = 0
+                bid = None
+
+                while attempt < retry_attempts:
+                    try:
+                        # Run the survey and fetch the result
+                        result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
+                        bid = result.select("q_bid").to_list()[0]
+                        
+                        # Attempt to cast to float to check validity
+                        bid = float(bid)
+                        break  # Exit loop if bid is successfully processed
+                    except (ValueError, TypeError) as e:
+                        # Handle conversion errors or other issues
+                        print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
+                        attempt += 1
+                        continue
+
+                if bid is None or attempt == retry_attempts:
+                    raise RuntimeError("Failed to process the bid after multiple attempts.")
+
+
             else:
                 last_round = agent.history[-1]
 
-                reflection = Prompt.from_txt(os.path.join(templates_dir,"reflection.txt"))
+                reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
                 prompt_reflection = str(reflection.render({"last_round":last_round}))
 
                 q_counterfact = QuestionFreeText(
@@ -168,7 +192,7 @@ class SealBid():
                 max_length = max(len(history), len(reasoning))
                 history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
                 # previous_plan = agent.reasoning[-1]
-                elicit_plan = Prompt.from_txt(os.path.join(templates_dir,"plan_after_reflec.txt"))
+                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
                 prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
                 q_plan = QuestionFreeText(
                     question_name = "q_plan",
@@ -183,7 +207,7 @@ class SealBid():
                 # plan= result['choices'][0]['message']['content']
                 print(plan, "====================\n")
                 
-                elicit_bid = Prompt.from_txt(os.path.join(templates_dir,"bid_after_reflec.txt"))
+                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_after_reflec.txt"))
                 prompt_elicit_bid = str(elicit_bid.render({"counterfact": counterfact,"current_value": agent.current_value, "plan": plan}))
 
                 q_bid = QuestionNumerical(
@@ -322,13 +346,13 @@ class Clock():
         
         for agent in agent_in_play:
             other_agent_names = ', '.join([a.name for a in agent_in_play if a is not agent])
-            instruction_str = Prompt.from_txt(os.path.join(templates_dir,"instruction.txt"))
+            instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render(
                 {"name":agent.name, "other_agent_names": other_agent_names})
                 )
 
             if counterfact is None:
-                elicit_bid = Prompt.from_txt(os.path.join(templates_dir,"bid_clock.txt"))
+                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock.txt"))
                 prompt_elicit_bid = str(elicit_bid.render(
                     {"current_value": agent.current_value, 
                     "transcript": self.transcript, 
@@ -336,7 +360,7 @@ class Clock():
                     "plan": agent.reasoning[-1]})
                     )
             else:
-                elicit_bid = Prompt.from_txt(os.path.join(templates_dir,"bid_clock_reflec.txt"))
+                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
                 prompt_elicit_bid = str(elicit_bid.render(
                     {"counterfact": counterfact,
                      "current_value": agent.current_value, 
@@ -388,12 +412,12 @@ class Clock():
         ## elicit agent plans
         for agent in self.agents:
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
-            instruction_str = Prompt.from_txt(os.path.join(templates_dir,"instruction.txt"))
+            instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
 
             general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
             if len(agent.reasoning) == 0:
-                elicit_plan = Prompt.from_txt(os.path.join(templates_dir,"plan_first.txt"))
+                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
                 prompt_elicit_plan = str(elicit_plan.render({}))
 
                 q_plan = QuestionFreeText(
@@ -421,7 +445,7 @@ class Clock():
             else:
                 last_round = agent.history[-1]
 
-                reflection = Prompt.from_txt(os.path.join(templates_dir,"reflection.txt"))
+                reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
                 prompt_reflection = str(reflection.render({"last_round":last_round}))
 
                 q_counterfact = QuestionFreeText(
@@ -437,7 +461,7 @@ class Clock():
                 max_length = max(len(history), len(reasoning))
                 history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
                 # previous_plan = agent.reasoning[-1]
-                elicit_plan = Prompt.from_txt(os.path.join(templates_dir,"plan_after_reflec.txt"))
+                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
                 prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
                 q_plan = QuestionFreeText(
                     question_name = "q_plan",
