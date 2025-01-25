@@ -13,7 +13,7 @@ from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical
 from jinja2 import Template
-
+import re
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(current_script_path, './rule_template/V10/')
@@ -116,6 +116,25 @@ class SealBid():
     def __repr__(self):
         return f'Sealed Bid Auction: (bid_list={self.bid_list})'
     
+    def parse_bid(self, text):
+        ##  <BID>20<\BID>
+        pattern = r"<BID>.*?(\d+).*?<\\?BID>"
+        ##  <BID>20</BID>
+        match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        
+        if match:
+            try:
+                # Extract and convert the matched bid value to float
+                quantity = float(match.group(1).strip())
+                return quantity
+            except ValueError:
+                # Handle cases where the value isn't a valid number
+                raise ValueError("Invalid bid value")
+        else:
+            # Return a message if no valid match is found
+            raise ValueError("Invalid bid value")
+
+    
     def run(self):
         '''run for one round'''
 
@@ -142,31 +161,29 @@ class SealBid():
                 
                 elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_first.txt"))
                 prompt_elicit_bid = str(elicit_bid.render({"current_value":agent.current_value, "plan": plan}))
-
-                q_bid = QuestionNumerical(
-                    question_name="q_bid",
-                    question_text=general_prompt + prompt_elicit_bid + self.rule.asking_prompt
-                )
-                survey = Survey(questions=[q_bid])
-
+                
                 # Initialize bid and a retry mechanism
                 retry_attempts = 3
                 attempt = 0
                 bid = None
-
+                format_warning = ''
                 while attempt < retry_attempts:
                     try:
                         # Run the survey and fetch the result
-                        result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                        bid = result.select("q_bid").to_list()[0]
-                        
-                        # Attempt to cast to float to check validity
-                        bid = float(bid)
+                        q_bid = QuestionFreeText(
+                            question_name="q_bid",
+                            question_text=general_prompt + prompt_elicit_bid + format_warning
+                        )
+                        result = self.model.simple_ask(q_bid)
+                        bid_str= result['choices'][0]['message']['content']
+                        print(bid_str)
+                        bid = self.parse_bid(bid_str)
                         break  # Exit loop if bid is successfully processed
                     except (ValueError, TypeError) as e:
                         # Handle conversion errors or other issues
                         print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
                         attempt += 1
+                        format_warning = "Wrong format. You MUST follow the output format!"
                         continue
 
                 if bid is None or attempt == retry_attempts:
@@ -210,30 +227,33 @@ class SealBid():
                 elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_after_reflec.txt"))
                 prompt_elicit_bid = str(elicit_bid.render({"counterfact": counterfact,"current_value": agent.current_value, "plan": plan}))
 
-                q_bid = QuestionNumerical(
-                    question_name = "q_bid",
-                    question_text =  general_prompt + prompt_elicit_bid  +self.rule.asking_prompt
-                    )
-                # print(q_bid)
-                # result = self.model.simple_ask(q_bid)
-                # response = result['choices'][0]['message']['content']
-                max_retries = 5
-                retry_count = 0
+
+                retry_attempts = 3
+                attempt = 0
                 bid = None
+                format_warning = ''
+                while attempt < retry_attempts:
+                    try:
+                        # Run the survey and fetch the result
+                        q_bid = QuestionFreeText(
+                            question_name = "q_bid",
+                            question_text =  general_prompt + prompt_elicit_bid + format_warning
+                            )
+                        result = self.model.simple_ask(q_bid)
+                        bid_str= result['choices'][0]['message']['content']
+                        print(bid_str)
+                        bid = self.parse_bid(bid_str)
+                        break  # Exit loop if bid is successfully processed
+                    except (ValueError, TypeError) as e:
+                        # Handle conversion errors or other issues
+                        print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
+                        attempt += 1
+                        format_warning = "Wrong format. You MUST follow the output format!"
+                        continue
 
-                while bid is None and retry_count < max_retries:
-                    survey = Survey(questions=[q_bid])
-                    result = survey.by(agent.agent).by(self.model).run(cache=self.cache)
-                    bid = result.select("q_bid").to_list()[0]
-                    retry_count += 1
+                if bid is None or attempt == retry_attempts:
+                    raise RuntimeError("Failed to process the bid after multiple attempts.")
 
-                if bid is None:
-                    # Handle the case where no bid is received after 5 retries
-                    print("Failed to get a bid after 5 attempts.")
-                    bid = 0
-                else:
-                    # Use the bid value
-                    print(f"Received bid: {bid}")
             # print(response)
 
             agent.reasoning.append(plan)

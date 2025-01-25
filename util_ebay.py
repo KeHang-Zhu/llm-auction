@@ -20,7 +20,7 @@ from typing import List, Optional
 
 ## -  make a timeframe data class to store everybody’s reactions
 
-status = ["PENDING", "BID", "WITHDRAW", "NONE"]  # Possible actions
+status = ["PENDING", "BID"]  # Possible actions
 
 ## in each time frame, the player can choose to 
 
@@ -97,14 +97,18 @@ class Ebay:
         for t in range(self.total_periods):
             if self.auction_finished:
                 break
+            ordering = ...
             
-            # Gather actions from each agent (BID, WITHDRAW, or do nothing).
+            # Gather actions from each agent (1. BID, 2. PENDING, or 3. PENDING).
             actions_in_this_period = {}
-            for agent in self.agents:
-                actions_in_this_period[agent] = self._get_agent_action(agent, t)
 
-            # Update the highest bidder, current price based on proxy bidding
-            self._process_actions(actions_in_this_period)
+            for s in ordering:
+                agent = self.agents[s]
+
+                actions_in_this_period[agent] = self._get_agent_action(agent, t, )
+                # Update the highest bidder, current price based on proxy bidding
+                self._process_actions(actions_in_this_period)
+
             
             # Create a snapshot of the current state
             status_snapshot = AuctionStatus(
@@ -160,11 +164,16 @@ class Ebay:
             if act == "BID":
                 # Suppose the agent chooses a new maximum that is
                 #  (agent's private_value) in a naive approach:
-                self.current_max_bids[agent] = self.private_values[agent]
+                self.current_max_bids[agent] = ...
+                ## update the current price
+                ...
+
             elif act == "WITHDRAW":
                 # In many eBay contexts, you can't fully withdraw your earlier bid,
                 # but for demonstration, let's set max to 0 (i.e., not competing).
                 self.current_max_bids[agent] = 0
+                ## update the current price
+                ...
             else:
                 # "NONE" means do nothing, keep prior maximum
                 pass

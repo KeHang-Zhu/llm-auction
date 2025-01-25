@@ -15,7 +15,7 @@ def run_auction(i, human, number_agents, rule, output_dir, c):
         # a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=1)
     else:
         a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=1)
-    a.draw_value(seed=1254 + i)
+    a.draw_value(seed=1284 + i)
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     number_agents = 3
     human = False
     
-    output_dir = f"experiment_logs/V10/intervention_risk_neutrality"
+    output_dir = f"experiment_logs/V10/intervention_NE_strat_reveal"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -41,10 +41,10 @@ if __name__ == "__main__":
         private_value=private_value, open_blind=open_blind, 
         rounds=15, common_range=[0, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="intervention_risk_neutrality.txt")
+        special_name="intervention_NE_strat_reveal.txt")
     rule.describe()
 
-    N = 3 # Repeat for N times
+    N = 1 # Repeat for N times
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]
