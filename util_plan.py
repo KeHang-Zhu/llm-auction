@@ -36,7 +36,7 @@ class Rule_plan:
     def __init__(self, seal_clock,  private_value, open_blind, rounds, 
                  ascend_descend="ascend",
                  price_order = "second",
-                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name=""):
+                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, reserve_price=0):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -47,6 +47,8 @@ class Rule_plan:
         self.private_range = private_range
         self.increment = increment
         self.number_agents = number_agents
+        self.start_price= start_price
+        self.reserve_price = reserve_price
         
         ## Rule prompt
         # intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))

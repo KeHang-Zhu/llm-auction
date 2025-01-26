@@ -26,7 +26,7 @@ if __name__ == "__main__":
     c = Cache()
     
     # Rule Option Menu
-    seal_clock = 'seal'
+    seal_clock = 'ebay'
     ascend_descend = ''
     price_order = 'second'
     private_value = 'private'
@@ -34,6 +34,7 @@ if __name__ == "__main__":
     number_agents = 3
     human = False
     ebay = True
+    round =1
     
     output_dir = f"experiment_logs/V10/ebay"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
@@ -43,18 +44,20 @@ if __name__ == "__main__":
     rule = Rule_plan(
         seal_clock=seal_clock, price_order=price_order, 
         private_value=private_value, open_blind=open_blind, 
-        rounds=15, common_range=[0, 79], private_range=99, increment=1, 
+        rounds=round , common_range=[0, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="ebay_t1_proxy.txt")
+        special_name="ebay_t1_proxy.txt",)
     rule.describe()
 
     N = 1 # Repeat for N times
-    
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]
 
-    for future in concurrent.futures.as_completed(futures):
-        try:
-            future.result()
-        except Exception as e:
-            print(f"An error occurred: {e}")
+    run_auction(N, human, number_agents, rule, output_dir, c)
+    
+    # with concurrent.futures.ThreadPoolExecutor() as executor:
+    #     futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]
+
+    # for future in concurrent.futures.as_completed(futures):
+    #     try:
+    #         future.result()
+    #     except Exception as e:
+    #         print(f"An error occurred: {e}")

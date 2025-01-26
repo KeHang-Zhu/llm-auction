@@ -37,6 +37,7 @@ class AuctionStatus:
     is_finished: bool             # Has the auction ended at this time step?
     current_price: int            # The eBay 'current' winning price after proxy logic
     reserve_price: int            # Keep track for info
+    agent_selected: str           # the name for the agent in this turn
     actions: dict                 # Player actions for this period (e.g., {"player1":"BID", "player2":"NONE", ...})
     max_bids: dict                # Player max-bids after this period (e.g., {"player1":100, "player2":120, ...})
     highest_bidder: Optional[str] # Track who is currently winning
@@ -72,11 +73,13 @@ class Ebay:
         self.agents = agents
         self.start_price = rule.start_price
         self.reserve_price = rule.reserve_price
-        self.bid_increment = rule.bid_increment
+        self.bid_increment = rule.increment
         
         # eBay state
         self.current_price = rule.start_price
         self.highest_bidder = None
+        self.model = model
+        self.cache= cache
         
         # We track each player's maximum willingness to pay (only known to that player!)
         # For simulation, we'll track them in code. Realistically, players don't reveal these to each other.
@@ -99,7 +102,7 @@ class Ebay:
         for t in range(self.total_periods):
             if self.auction_finished:
                 break
-            ordering = ... ## generate random ordering
+            ordering = [0,1,2] ## generate random ordering
             
             actions_in_this_period = {}
             for turn_id, s in enumerate(ordering):
@@ -144,14 +147,15 @@ class Ebay:
 
         q_action = QuestionFreeText(
             question_name = "q_action",
-            question_text = general_prompt,
+            question_text = str(general_prompt),
         )
         survey = Survey(questions = [q_action])
         result = survey.by(self.model).run(cache = self.cache)
         response = result.select("q_action").to_list()[0]
 
         ## Parse the result
-        action, bid = self.parse_decision(response)
+        print(response)
+        action, bid = self.parse_action_and_amount(response)
 
         ## add robustness checks
         
@@ -181,7 +185,7 @@ class Ebay:
         sorted_bids = sorted(self.current_max_bids.items(), key=lambda x: x[1], reverse=True)
         
         # If no one has a positive bid, no winner for now
-        if len(sorted_bids) == 0 or sorted_bids[0][1] <= self.reserved_price:
+        if len(sorted_bids) == 0 or sorted_bids[0][1] <= self.reserve_price:
             self.highest_bidder = None
             self.current_price = self.start_price  # or keep it at old self.current_price
             return
@@ -368,6 +372,7 @@ class Auction_ebay():
                 total_periods = 20)
             history = auction.run()
         else:
+            print("=========")
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
         
