@@ -5,22 +5,25 @@ import random
 import json
 import os
 import sys
-from edsl import shared_globals
 from edsl import Model
 from edsl import Agent, Scenario, Survey
 from edsl.data import Cache
 from edsl.Base import Base
 from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
-from edsl.questions import QuestionNumerical
 from jinja2 import Template
+import re
 
 from dataclasses import dataclass
 from typing import List, Optional
 
-## -  make a timeframe data class to store everybody’s reactions
+current_script_path = os.path.dirname(os.path.abspath(__file__))
+templates_dir = os.path.join(current_script_path, './rule_template/V10/')
+prompt_dir = os.path.join(current_script_path, './Prompt/')
 
-status = ["PENDING", "BID"]  # Possible actions
+c = Cache() 
+
+status = ["HOLD", "BID"]  # Possible actions
 
 ## in each time frame, the player can choose to 
 
@@ -30,6 +33,7 @@ class AuctionStatus:
     Stores the state of the auction in one time period.
     """
     period_id: int                # Current time step (0, 1, 2, ...)
+    turn_id: int                  # turn id in each round (0,1,2,3)
     is_finished: bool             # Has the auction ended at this time step?
     current_price: int            # The eBay 'current' winning price after proxy logic
     reserve_price: int            # Keep track for info
@@ -50,14 +54,13 @@ def save_json(data, filename, directory="."):
 
 class Ebay:
     def __init__(
-        self,
-        agents: List[str],
-        start_price: int,
-        reserve_price: int,
-        bid_increment: int,
-        private_values: dict,
-        total_periods: int = 5
-    ):
+            self, 
+            agents: List[str],
+            rule, 
+            model, 
+            cache= c, 
+            history=None,
+            total_periods: int = 5):
         """
         :param agents: List of agent names/IDs, e.g. ["player1", "player2", ...]
         :param start_price: Starting price for the auction
@@ -67,13 +70,12 @@ class Ebay:
         :param total_periods: How many time steps the auction will run
         """
         self.agents = agents
-        self.start_price = start_price
-        self.reserve_price = reserve_price
-        self.bid_increment = bid_increment
-        self.private_values = private_values
+        self.start_price = rule.start_price
+        self.reserve_price = rule.reserve_price
+        self.bid_increment = rule.bid_increment
         
         # eBay state
-        self.current_price = start_price
+        self.current_price = rule.start_price
         self.highest_bidder = None
         
         # We track each player's maximum willingness to pay (only known to that player!)
@@ -97,32 +99,33 @@ class Ebay:
         for t in range(self.total_periods):
             if self.auction_finished:
                 break
-            ordering = ...
+            ordering = ... ## generate random ordering
             
-            # Gather actions from each agent (1. BID, 2. PENDING, or 3. PENDING).
             actions_in_this_period = {}
-
-            for s in ordering:
+            for turn_id, s in enumerate(ordering):
                 agent = self.agents[s]
 
-                actions_in_this_period[agent] = self._get_agent_action(agent, t, )
+                # Gather actions from each agent (1. BID, 2. PENDING).
+                ## The agent will be informed the time left
+                action, bid_in_this_period = self._get_agent_action(agent, t)
+                actions_in_this_period[agent.name] = {"action":action, "bid": bid_in_this_period}
                 # Update the highest bidder, current price based on proxy bidding
                 self._process_actions(actions_in_this_period)
 
-            
             # Create a snapshot of the current state
             status_snapshot = AuctionStatus(
                 period_id=t,
+                turn_id= turn_id,
                 is_finished=self.auction_finished,
                 current_price=self.current_price,
                 reserve_price=self.reserve_price,
-                actions=actions_in_this_period.copy(),
+                agent_selected = agent.name,
+                actions=actions_in_this_period,
                 max_bids=self.current_max_bids.copy(),
                 highest_bidder=self.highest_bidder
             )
             self.time_history.append(status_snapshot)
             
-        
         # After loop ends or last period is done, finalize the outcome
         self._finalize_auction()
 
@@ -148,9 +151,11 @@ class Ebay:
         response = result.select("q_action").to_list()[0]
 
         ## Parse the result
-        action = self.parse_decision(response)
+        action, bid = self.parse_decision(response)
+
+        ## add robustness checks
         
-        return action
+        return action, bid
 
     def _process_actions(self, actions: dict):
         """
@@ -160,20 +165,14 @@ class Ebay:
         # Then recalculate the current price based on the top 2 maximums.
         
         # 1) Update maximum bids for each agent who chooses to BID.
-        for agent, act in actions.items():
-            if act == "BID":
+        for agent, details in actions.items():
+            action = details.get("action")
+            bid = details.get("bid")
+
+            if action == "bid":
                 # Suppose the agent chooses a new maximum that is
                 #  (agent's private_value) in a naive approach:
-                self.current_max_bids[agent] = ...
-                ## update the current price
-                ...
-
-            elif act == "WITHDRAW":
-                # In many eBay contexts, you can't fully withdraw your earlier bid,
-                # but for demonstration, let's set max to 0 (i.e., not competing).
-                self.current_max_bids[agent] = 0
-                ## update the current price
-                ...
+                self.current_max_bids[agent] = bid
             else:
                 # "NONE" means do nothing, keep prior maximum
                 pass
@@ -182,7 +181,7 @@ class Ebay:
         sorted_bids = sorted(self.current_max_bids.items(), key=lambda x: x[1], reverse=True)
         
         # If no one has a positive bid, no winner for now
-        if len(sorted_bids) == 0 or sorted_bids[0][1] <= 0:
+        if len(sorted_bids) == 0 or sorted_bids[0][1] <= self.reserved_price:
             self.highest_bidder = None
             self.current_price = self.start_price  # or keep it at old self.current_price
             return
@@ -230,13 +229,40 @@ class Ebay:
         save_json(data_to_save, filename="auction_history.json", directory=".")
         
         return
-        
 
-    def parse_decision(self, action_txt):
-        ## parse the decision
-        ...
-        action= ...
-        return action
+
+    def parse_action_and_amount(self, text):
+        """
+        Parses the input text to extract the action (BID or HOLD) and the amount if applicable.
+
+        Parameters:
+        text (str): The input text containing the action and amount.
+
+        Returns:
+        float: Returns the amount as 0 for HOLD or BID (with a valid amount).
+        """
+        # Convert text to lowercase for case-insensitive matching
+        text = text.lower()
+
+        # Extract the action (bid or hold)
+        if "bid" in text:
+            action = "bid"
+        elif "hold" in text:
+            action = "hold"
+        else:
+            raise ValueError("Invalid action. Action must be BID or HOLD.")
+
+        # Process based on the action
+        if action == "bid":
+            # Extract the amount after the action
+            amount_match = re.search(r"(\d+(\.\d+)?)", text)
+            if amount_match:
+                amount = float(amount_match.group(0))
+                return action,amount
+            else:
+                raise ValueError("Amount not found for BID action.")
+        elif action == "hold":
+            return action,0.0
 
 
 class Bidder():
@@ -250,6 +276,15 @@ class Bidder():
         self.name = f"Bidder {name}"
         self.value = value_list
         self.current_value = value_list[0]
+        self.common_value = common_value_list
+        self.current_common = common_value_list[0] if common_value_list is not None else 0
+        self.submitted_bids = []
+        self.exit_price = []
+        self.profit = []
+        # self.winner_profit = []
+        self.winning = []
+        self.history = []
+        self.reasoning = []
 
         
     def __repr__(self):
@@ -261,7 +296,7 @@ class Bidder():
         self.current_value = self.value[current_round]
         self.current_common = self.common_value[current_round]
      
-class Auction_plan():
+class Auction_ebay():
     '''
     This class manages the auction process using specified agents and rules.
     '''
@@ -321,11 +356,16 @@ class Auction_plan():
  
     def run(self):
         # Simulate the auction process
-        if self.rule.seal_clock == "clock":
-            auction = Clock(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
-            history = auction.run()
-        elif self.rule.seal_clock == "seal":
-            auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
+        # if self.rule.seal_clock == "clock":
+        #     auction = Clock(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
+        #     history = auction.run()
+        # elif self.rule.seal_clock == "seal":
+        #     auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
+        #     history = auction.run()
+        if self.rule.seal_clock == "ebay":
+            auction = Ebay(
+                agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model,
+                total_periods = 20)
             history = auction.run()
         else:
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
@@ -344,8 +384,8 @@ class Auction_plan():
         self.build_bidders()
         while self.round_number < self.rule.round:
             self.run()
-            self.update_bidders()
-            self.round_number+=1
+            # self.update_bidders()
+            # self.round_number+=1
         self.data_to_json()
             
             

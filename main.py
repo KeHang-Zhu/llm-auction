@@ -6,6 +6,7 @@ import sys
 # from util import Rule, Auction
 # from util_human import Auction_human
 from util_plan import Auction_plan, Rule_plan
+from util_ebay import Auction_ebay
 import concurrent.futures
 
 def run_auction(i, human, number_agents, rule, output_dir, c):
@@ -13,8 +14,10 @@ def run_auction(i, human, number_agents, rule, output_dir, c):
     if human:
         ...
         # a = Auction_human(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=1)
+    elif ebay:
+        a = Auction_ebay(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=0.5)
     else:
-        a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=1)
+        a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=0.5)
     a.draw_value(seed=1284 + i)
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
@@ -30,8 +33,9 @@ if __name__ == "__main__":
     open_blind = 'close'
     number_agents = 3
     human = False
+    ebay = True
     
-    output_dir = f"experiment_logs/V10/intervention_NE_strat_reveal"
+    output_dir = f"experiment_logs/V10/ebay"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -41,7 +45,7 @@ if __name__ == "__main__":
         private_value=private_value, open_blind=open_blind, 
         rounds=15, common_range=[0, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="intervention_NE_strat_reveal.txt")
+        special_name="ebay_t1_proxy.txt")
     rule.describe()
 
     N = 1 # Repeat for N times
