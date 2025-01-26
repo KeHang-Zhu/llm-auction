@@ -93,6 +93,7 @@ class Ebay:
         
         # Auction log
         self.time_history: List[AuctionStatus] = []
+        self.transcript = ''
         
         # Auction length in discrete steps
         self.total_periods = total_periods
@@ -105,7 +106,6 @@ class Ebay:
         for t in range(self.total_periods):
             ordering = [0,1,2] ## generate random ordering
             
-            
             for turn_id, s in enumerate(ordering):
                 agent = self.agents[s]
 
@@ -115,7 +115,7 @@ class Ebay:
                 action, bid_in_this_period = self._get_agent_action(agent, t)
                 actions_in_this_period[agent.name] = {"action":action, "bid": bid_in_this_period}
                 # Update the highest bidder, current price based on proxy bidding
-                self._process_actions(actions_in_this_period)
+                self._process_actions(actions_in_this_period, t)
 
                 # Create a snapshot of the current state
                 status_snapshot = AuctionStatus(
@@ -144,9 +144,25 @@ class Ebay:
          - "WITHDRAW": remove from bidding
          - "NONE": do nothing
         """
+        rule_explanation = self.rule.rule_explanation
 
-        general_prompt_str = Prompt.from_txt("Prompt/ebay_asking.txt")
-        general_prompt = general_prompt_str.render({"period": current_period})
+        if self.max_bids[agent.name] > 0 :
+            previous_bid = f"You previous bid is {self.max_bids[agent.name]}. "
+        else:
+            previous_bid = f"You haven't placed any bid. "
+
+        ask_prompt_str = Prompt.from_txt("Prompt/ebay_asking.txt")
+        ask_prompt = ask_prompt_str.render(
+            {
+                "total_periods": self.total_periods,
+                "period": current_period,
+                "current_value": agent.current_value,
+                "current_price": self.current_price,
+                "transcript": self.transcript,
+                "previous_bid": previous_bid
+             }
+            ) 
+        general_prompt= rule_explanation + ask_prompt
 
         q_action = QuestionFreeText(
             question_name = "q_action",
@@ -164,12 +180,14 @@ class Ebay:
         
         return action, bid
 
-    def _process_actions(self, actions: dict):
+    def _process_actions(self, actions: dict, t_period: int):
         """
         Updates the eBay proxy bidding state given all players' declared actions.
         """
         # For each agent who says "BID", we update their maximum.
         # Then recalculate the current price based on the top 2 maximums.
+
+       
         
         # 1) Update maximum bids for each agent who chooses to BID.
         for agent_name, details in actions.items():
@@ -214,6 +232,8 @@ class Ebay:
         
         self.highest_bidder = top_bidder
         self.current_price = new_price
+
+        self.transcript += f"In round {t_period}, {agent_name} placed a bid and the price became {self.current_price}. The leading bidder is {self.highest_bidder}. \n"
 
     def _finalize_auction(self):
         """

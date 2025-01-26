@@ -58,12 +58,20 @@ class Rule_plan:
         # value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range, "num_bidders": self.number_agents-1})
         if special_name:
             game_type_string = Prompt.from_txt(os.path.join(templates_dir,special_name))
+            game_type = game_type_string.render({
+                "item_description": "256GB IPhone 16 pro",
+                "item_condition": "used",
+                "start_price":  0,
+                "reserve_price": 0,
+                "num_rounds": self.round, 
+                "bid_increment":self.increment
+            })
         else:
             if self.seal_clock == 'clock':
                 game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
             elif self.seal_clock == 'seal':
                 game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
-        game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
+            game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:
         #     multi_string = Prompt.from_txt(os.path.join(templates_dir,"multi.txt"))

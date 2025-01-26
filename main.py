@@ -34,7 +34,7 @@ if __name__ == "__main__":
     number_agents = 3
     human = False
     ebay = True
-    round =1
+    round =20
     
     output_dir = f"experiment_logs/V10/ebay"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
