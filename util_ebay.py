@@ -13,6 +13,7 @@ from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
 from jinja2 import Template
 import re
+import csv
 
 from dataclasses import dataclass
 from typing import List, Optional
@@ -34,13 +35,13 @@ class AuctionStatus:
     """
     period_id: int                # Current time step (0, 1, 2, ...)
     turn_id: int                  # turn id in each round (0,1,2,3)
-    is_finished: bool             # Has the auction ended at this time step?
     current_price: int            # The eBay 'current' winning price after proxy logic
     reserve_price: int            # Keep track for info
     agent_selected: str           # the name for the agent in this turn
-    actions: dict                 # Player actions for this period (e.g., {"player1":"BID", "player2":"NONE", ...})
+    action: str                   # Player actions for this period "BID", 
+    bid: float       
     max_bids: dict                # Player max-bids after this period (e.g., {"player1":100, "player2":120, ...})
-    highest_bidder: Optional[str] # Track who is currently winning
+    highest_bidder: str           # Track who is currently winning
 
 
 def save_json(data, filename, directory="."):
@@ -61,6 +62,8 @@ class Ebay:
             model, 
             cache= c, 
             history=None,
+            output_dir = None,
+            timestring = '',
             total_periods: int = 5):
         """
         :param agents: List of agent names/IDs, e.g. ["player1", "player2", ...]
@@ -74,6 +77,8 @@ class Ebay:
         self.start_price = rule.start_price
         self.reserve_price = rule.reserve_price
         self.bid_increment = rule.increment
+        self.output_dir = output_dir
+        self.timestring =timestring
         
         # eBay state
         self.current_price = rule.start_price
@@ -84,7 +89,7 @@ class Ebay:
         # We track each player's maximum willingness to pay (only known to that player!)
         # For simulation, we'll track them in code. Realistically, players don't reveal these to each other.
         # We start with them as None or 0:
-        self.current_max_bids = {agent: 0 for agent in agents}
+        self.current_max_bids = {agent.name: 0 for agent in agents}
         
         # Auction log
         self.time_history: List[AuctionStatus] = []
@@ -92,45 +97,43 @@ class Ebay:
         # Auction length in discrete steps
         self.total_periods = total_periods
         
-        # Flag to indicate if auction is finished
-        self.auction_finished = False
 
     def run(self):
         """
         Main driver: runs the auction for `self.total_periods` steps (or until ended).
         """
         for t in range(self.total_periods):
-            if self.auction_finished:
-                break
             ordering = [0,1,2] ## generate random ordering
             
-            actions_in_this_period = {}
+            
             for turn_id, s in enumerate(ordering):
                 agent = self.agents[s]
 
                 # Gather actions from each agent (1. BID, 2. PENDING).
                 ## The agent will be informed the time left
+                actions_in_this_period = {}
                 action, bid_in_this_period = self._get_agent_action(agent, t)
                 actions_in_this_period[agent.name] = {"action":action, "bid": bid_in_this_period}
                 # Update the highest bidder, current price based on proxy bidding
                 self._process_actions(actions_in_this_period)
 
-            # Create a snapshot of the current state
-            status_snapshot = AuctionStatus(
-                period_id=t,
-                turn_id= turn_id,
-                is_finished=self.auction_finished,
-                current_price=self.current_price,
-                reserve_price=self.reserve_price,
-                agent_selected = agent.name,
-                actions=actions_in_this_period,
-                max_bids=self.current_max_bids.copy(),
-                highest_bidder=self.highest_bidder
-            )
-            self.time_history.append(status_snapshot)
+                # Create a snapshot of the current state
+                status_snapshot = AuctionStatus(
+                    period_id=t,
+                    turn_id= turn_id,
+                    current_price=self.current_price,
+                    reserve_price=self.reserve_price,
+                    agent_selected = agent.name,
+                    action=action,
+                    bid=bid_in_this_period,
+                    max_bids=self.current_max_bids.copy(),
+                    highest_bidder=self.highest_bidder
+                )
+                self.time_history.append(status_snapshot)
             
         # After loop ends or last period is done, finalize the outcome
         self._finalize_auction()
+
 
     def _get_agent_action(self, agent: str, current_period: int) -> str:
         """
@@ -169,14 +172,14 @@ class Ebay:
         # Then recalculate the current price based on the top 2 maximums.
         
         # 1) Update maximum bids for each agent who chooses to BID.
-        for agent, details in actions.items():
+        for agent_name, details in actions.items():
             action = details.get("action")
             bid = details.get("bid")
 
             if action == "bid":
                 # Suppose the agent chooses a new maximum that is
                 #  (agent's private_value) in a naive approach:
-                self.current_max_bids[agent] = bid
+                self.current_max_bids[agent_name] = bid
             else:
                 # "NONE" means do nothing, keep prior maximum
                 pass
@@ -225,12 +228,32 @@ class Ebay:
         else:
             print(f"Auction complete. Winner: {winner} at ${final_price}")
 
-        # Mark auction as finished
-        self.auction_finished = True
+          # Serialize history to CSV
+        data_to_save = [
+            {
+                **vars(snap),
+                "max_bids": {str(k): v for k, v in snap.max_bids.items()},
+            }
+            for snap in self.time_history
+        ]
+        
+        csv_filename = os.path.join( self.output_dir,f"result_{self.total_periods}_{self.timestring}.csv")
+        try:
+            # Get fieldnames from the first entry
+            fieldnames = list(data_to_save[0].keys())
+            
+            with open(csv_filename, mode="w", newline="") as csv_file:
+                writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+                writer.writeheader()
+                for entry in data_to_save:
+                    # Convert nested dictionaries into strings for CSV
+                    entry["max_bids"] = str(entry["max_bids"])
+                    writer.writerow(entry)
 
-        # Optionally, save the entire history to JSON
-        data_to_save = [vars(snap) for snap in self.time_history]
-        save_json(data_to_save, filename="auction_history.json", directory=".")
+            print(f"Auction history saved to {csv_filename}.")
+        except Exception as e:
+            print(f"Error saving auction history to CSV: {e}")
+
         
         return
 
@@ -292,7 +315,7 @@ class Bidder():
 
         
     def __repr__(self):
-        return repr(self.agent)
+        return f"Bidder(name={self.name})"
 
     def build_bidder(self, current_round):
 
@@ -369,17 +392,19 @@ class Auction_ebay():
         if self.rule.seal_clock == "ebay":
             auction = Ebay(
                 agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model,
-                total_periods = 20)
+                output_dir = self.output_dir,
+                timestring = self.timestring,
+                total_periods = 2)
             history = auction.run()
         else:
             print("=========")
             raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
         
         
-        self.winner_list.append(history["winner"]["winner"])
-        print([agent.profit[self.round_number] for agent in self.agents])
+        # self.winner_list.append(history["winner"]["winner"])
+        # print([agent.profit[self.round_number] for agent in self.agents])
         
-        self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents], "common": self.common_value_list[self.round_number], "plan":[agent.reasoning[self.round_number] for agent in self.agents]})
+        # self.data_to_save[f"round_{self.round_number}"] = ({"round":self.round_number, "value":self.values_list[self.round_number],"history":history, "profit":[agent.profit[self.round_number] for agent in self.agents], "common": self.common_value_list[self.round_number], "plan":[agent.reasoning[self.round_number] for agent in self.agents]})
         
     def data_to_json(self):
 
@@ -387,8 +412,7 @@ class Auction_ebay():
         
     def run_repeated(self):
         self.build_bidders()
-        while self.round_number < self.rule.round:
-            self.run()
+        self.run()
             # self.update_bidders()
             # self.round_number+=1
         self.data_to_json()

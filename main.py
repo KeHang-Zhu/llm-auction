@@ -51,13 +51,12 @@ if __name__ == "__main__":
 
     N = 1 # Repeat for N times
 
-    run_auction(N, human, number_agents, rule, output_dir, c)
     
-    # with concurrent.futures.ThreadPoolExecutor() as executor:
-    #     futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = [executor.submit(run_auction, i, human, number_agents, rule, output_dir, c) for i in range(N)]
 
-    # for future in concurrent.futures.as_completed(futures):
-    #     try:
-    #         future.result()
-    #     except Exception as e:
-    #         print(f"An error occurred: {e}")
+    for future in concurrent.futures.as_completed(futures):
+        try:
+            future.result()
+        except Exception as e:
+            print(f"An error occurred: {e}")
