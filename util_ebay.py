@@ -108,20 +108,17 @@ class Ebay:
             n = len(self.agents)
             ## Generate ramdon ordering
             ordering = random.sample(range(n ), n )
-            print(ordering, "jjjjjj")
-            
+
             for turn_id, s in enumerate(ordering):
                 agent = self.agents[s]
 
                 # Gather actions from each agent (1. BID, 2. PENDING).
                 ## The agent will be informed the time left
                 actions_in_this_period = {}
-                action, bid_in_this_period = self._get_agent_action(agent, t)
+                action, bid_in_this_period = self._get_agent_action(agent, t, ordering)
                 actions_in_this_period[agent.name] = {"action":action, "bid": bid_in_this_period}
                 # Update the highest bidder, current price based on proxy bidding
                 self._process_actions(actions_in_this_period, t)
-
-                
 
                 # Create a snapshot of the current state
                 status_snapshot = AuctionStatus(
@@ -141,7 +138,7 @@ class Ebay:
         self._finalize_auction()
 
 
-    def _get_agent_action(self, agent: str, current_period: int) -> str:
+    def _get_agent_action(self, agent: str, current_period: int, ordering: List) -> str:
         """
         Decide the agent's action for this time step.
         
@@ -151,6 +148,12 @@ class Ebay:
          - "NONE": do nothing
         """
         rule_explanation = self.rule.rule_explanation
+        if current_period == self.total_periods-1:
+            ordering_message= "You may now bid. It is the last round, so we don't know if anyone will get a bid in after you."
+        else:
+            ordering_message= "The random ordering this round is " + ", ".join(self.agents[i].name for i in ordering)
+        bid_warning = '' ## if the agent decide to do something that is not allowed
+        
 
         if self.current_max_bids[agent.name] > 0 :
             previous_bid = f"You previous bid is {self.current_max_bids[agent.name]}. "
@@ -165,25 +168,38 @@ class Ebay:
                 "private_value": agent.current_value,
                 "current_price": self.current_price,
                 "transcript": self.transcript,
-                "previous_bid": previous_bid
+                "previous_bid": previous_bid,
+                "last_bid_amount": self.current_max_bids[agent.name],
+                "ordering": ordering_message
              }
             ) 
         general_prompt= rule_explanation + ask_prompt
 
-        q_action = QuestionFreeText(
-            question_name = "q_action",
-            question_text = str(general_prompt),
-        )
-    
-        survey = Survey(questions = [q_action])
-        result = survey.by(self.model).run(cache = self.cache)
-        response = result.select("q_action").to_list()[0]
+        # Initialize bid and a retry mechanism
+        retry_attempts = 3
+        attempt = 0
+        bid = None
+        while attempt < retry_attempts:
+            q_action = QuestionFreeText(
+                question_name = "q_action",
+                question_text = str(general_prompt) + bid_warning,
+            )
+        
+            survey = Survey(questions = [q_action])
+            result = survey.by(self.model).run(cache = self.cache)
+            response = result.select("q_action").to_list()[0]
 
-        ## Parse the result
-        print(response)
-        action, bid = self.parse_action_and_amount(response)
+            ## Parse the result
+            print(response)
+            action, bid = self.parse_action_and_amount(response)
 
-        ## add robustness checks
+            if action =='bid' and bid < self.current_max_bids[agent.name]:
+                bid_warning = f"Warning: your bid is lower than your previous bid. This is not allowed, please decide again!"
+            else:
+                break  # Exit loop if bid is successfully processed
+
+        if bid is None or attempt == retry_attempts:
+            raise RuntimeError("Failed to process the bid after multiple attempts.")
         
         return action, bid
 
