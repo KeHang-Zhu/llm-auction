@@ -34,7 +34,8 @@ if __name__ == "__main__":
     number_agents = 3
     human = False
     ebay = True
-    round =20
+    round = 1
+    turns = 20
     
     output_dir = f"experiment_logs/V10/ebay"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     rule = Rule_plan(
         seal_clock=seal_clock, price_order=price_order, 
         private_value=private_value, open_blind=open_blind, 
-        rounds=round , common_range=[0, 79], private_range=99, increment=1, 
+        rounds=round, turns=turns , common_range=[0, 79], private_range=99, increment=1, 
         number_agents=number_agents,
         special_name="ebay_t1_proxy.txt",)
     rule.describe()

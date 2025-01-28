@@ -36,7 +36,7 @@ class AuctionStatus:
     period_id: int                # Current time step (0, 1, 2, ...)
     turn_id: int                  # turn id in each round (0,1,2,3)
     current_price: int            # The eBay 'current' winning price after proxy logic
-    reserve_price: int            # Keep track for info
+    # reserve_price: int            # Keep track for info
     agent_selected: str           # the name for the agent in this turn
     action: str                   # Player actions for this period "BID", 
     bid: float       
@@ -75,7 +75,7 @@ class Ebay:
         """
         self.agents = agents
         self.start_price = rule.start_price
-        self.reserve_price = rule.reserve_price
+        # self.reserve_price = rule.reserve_price
         self.bid_increment = rule.increment
         self.output_dir = output_dir
         self.timestring =timestring
@@ -85,6 +85,7 @@ class Ebay:
         self.highest_bidder = None
         self.model = model
         self.cache= cache
+        self.rule= rule
         
         # We track each player's maximum willingness to pay (only known to that player!)
         # For simulation, we'll track them in code. Realistically, players don't reveal these to each other.
@@ -104,7 +105,10 @@ class Ebay:
         Main driver: runs the auction for `self.total_periods` steps (or until ended).
         """
         for t in range(self.total_periods):
-            ordering = [0,1,2] ## generate random ordering
+            n = len(self.agents)
+            ## Generate ramdon ordering
+            ordering = random.sample(range(n ), n )
+            print(ordering, "jjjjjj")
             
             for turn_id, s in enumerate(ordering):
                 agent = self.agents[s]
@@ -117,18 +121,20 @@ class Ebay:
                 # Update the highest bidder, current price based on proxy bidding
                 self._process_actions(actions_in_this_period, t)
 
+                
+
                 # Create a snapshot of the current state
                 status_snapshot = AuctionStatus(
                     period_id=t,
                     turn_id= turn_id,
                     current_price=self.current_price,
-                    reserve_price=self.reserve_price,
                     agent_selected = agent.name,
                     action=action,
                     bid=bid_in_this_period,
                     max_bids=self.current_max_bids.copy(),
                     highest_bidder=self.highest_bidder
                 )
+                
                 self.time_history.append(status_snapshot)
             
         # After loop ends or last period is done, finalize the outcome
@@ -146,8 +152,8 @@ class Ebay:
         """
         rule_explanation = self.rule.rule_explanation
 
-        if self.max_bids[agent.name] > 0 :
-            previous_bid = f"You previous bid is {self.max_bids[agent.name]}. "
+        if self.current_max_bids[agent.name] > 0 :
+            previous_bid = f"You previous bid is {self.current_max_bids[agent.name]}. "
         else:
             previous_bid = f"You haven't placed any bid. "
 
@@ -155,8 +161,8 @@ class Ebay:
         ask_prompt = ask_prompt_str.render(
             {
                 "total_periods": self.total_periods,
-                "period": current_period,
-                "current_value": agent.current_value,
+                "current_round": current_period,
+                "private_value": agent.current_value,
                 "current_price": self.current_price,
                 "transcript": self.transcript,
                 "previous_bid": previous_bid
@@ -168,6 +174,7 @@ class Ebay:
             question_name = "q_action",
             question_text = str(general_prompt),
         )
+    
         survey = Survey(questions = [q_action])
         result = survey.by(self.model).run(cache = self.cache)
         response = result.select("q_action").to_list()[0]
@@ -206,7 +213,7 @@ class Ebay:
         sorted_bids = sorted(self.current_max_bids.items(), key=lambda x: x[1], reverse=True)
         
         # If no one has a positive bid, no winner for now
-        if len(sorted_bids) == 0 or sorted_bids[0][1] <= self.reserve_price:
+        if len(sorted_bids) == 0:# or sorted_bids[0][1] <= self.reserve_price:
             self.highest_bidder = None
             self.current_price = self.start_price  # or keep it at old self.current_price
             return
@@ -243,7 +250,7 @@ class Ebay:
         winner = self.highest_bidder
         final_price = self.current_price
         
-        if winner is None or final_price < self.reserve_price:
+        if winner is None:# or final_price < self.reserve_price:
             print(f"No winner. Reserve not met or no valid bids. Final price: ${final_price}")
         else:
             print(f"Auction complete. Winner: {winner} at ${final_price}")
@@ -291,25 +298,27 @@ class Ebay:
         # Convert text to lowercase for case-insensitive matching
         text = text.lower()
 
-        # Extract the action (bid or hold)
-        if "bid" in text:
-            action = "bid"
-        elif "hold" in text:
-            action = "hold"
-        else:
-            raise ValueError("Invalid action. Action must be BID or HOLD.")
+        action_pattern = r"<action>\s*(bid|hold)\s*(?:</action>|<\\action>|<action>)"
+        amount_pattern = r"<amount>\s*(\d+(?:\.\d+)?)\s*(?:</amount>|<\\amount>|<amount>)"
+        
 
-        # Process based on the action
+        action_match = re.search(action_pattern, text, flags=re.IGNORECASE)
+        if not action_match:
+            raise ValueError("Invalid or missing action. Action must be BID or HOLD.")
+        
+        action = action_match.group(1).lower()
+
+
         if action == "bid":
-            # Extract the amount after the action
-            amount_match = re.search(r"(\d+(\.\d+)?)", text)
+            amount_match = re.search(amount_pattern, text, flags=re.IGNORECASE)
             if amount_match:
-                amount = float(amount_match.group(0))
-                return action,amount
+                amount = float(amount_match.group(1))
+                return action, amount
             else:
-                raise ValueError("Amount not found for BID action.")
+                raise ValueError("Amount not found or invalid for BID action.")
+
         elif action == "hold":
-            return action,0.0
+            return action, 0.0
 
 
 class Bidder():
@@ -409,16 +418,13 @@ class Auction_ebay():
         # elif self.rule.seal_clock == "seal":
         #     auction = SealBid(agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model)
         #     history = auction.run()
-        if self.rule.seal_clock == "ebay":
-            auction = Ebay(
-                agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model,
-                output_dir = self.output_dir,
-                timestring = self.timestring,
-                total_periods = 2)
-            history = auction.run()
-        else:
-            print("=========")
-            raise ValueError(f"Rule {self.rule.seal_clock} not allowed")
+       
+        auction = Ebay(
+            agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model,
+            output_dir = self.output_dir,
+            timestring = self.timestring,
+            total_periods = 2)
+        auction.run()
         
         
         # self.winner_list.append(history["winner"]["winner"])
