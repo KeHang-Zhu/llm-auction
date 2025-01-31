@@ -180,26 +180,30 @@ class Ebay:
         attempt = 0
         bid = None
         while attempt < retry_attempts:
-            q_action = QuestionFreeText(
-                question_name = "q_action",
-                question_text = str(general_prompt) + bid_warning,
-            )
-        
-            survey = Survey(questions = [q_action])
-            result = survey.by(self.model).run(cache = self.cache)
-            response = result.select("q_action").to_list()[0]
+            try:
+                q_action = QuestionFreeText(
+                    question_name = "q_action",
+                    question_text = str(general_prompt) + bid_warning,
+                )
+            
+                survey = Survey(questions = [q_action])
+                result = survey.by(self.model).run(cache = self.cache)
+                response = result.select("q_action").to_list()[0]
 
-            ## Parse the result
-            print(response)
-            action, bid = self.parse_action_and_amount(response)
+                ## Parse the result
+                print(response)
+                action, bid = self.parse_action_and_amount(response)
 
-            if action =='bid' and bid < self.current_max_bids[agent.name]:
-                bid_warning = f"Warning: your bid is lower than your previous bid. This is not allowed, please decide again!"
-            else:
-                break  # Exit loop if bid is successfully processed
-
-        if bid is None or attempt == retry_attempts:
-            raise RuntimeError("Failed to process the bid after multiple attempts.")
+                if action =='bid' and bid < self.current_max_bids[agent.name]:
+                    bid_warning = f"Warning: your bid is lower than your previous bid. This is not allowed, please decide again!"
+                else:
+                    break  # Exit loop if bid is successfully processed
+                
+            except Exception as e:
+                bid_warning = f"Error: {str(e)}"
+                print("An error occurred:", e)
+            if bid is None or attempt == retry_attempts:
+                raise RuntimeError("Failed to process the bid after multiple attempts.")
         
         return action, bid
 
@@ -256,7 +260,9 @@ class Ebay:
         self.highest_bidder = top_bidder
         self.current_price = new_price
 
-        self.transcript += f"In round {t_period}, {agent_name} placed a bid and the price became {self.current_price}. The leading bidder is {self.highest_bidder}. \n"
+        # self.transcript += f"In round {t_period}, {agent_name} placed a bid and the price became {self.current_price}. The leading bidder is {self.highest_bidder}. \n"
+        self.transcript += f"In round {t_period}, the price became {self.current_price}. \n"
+
 
     def _finalize_auction(self):
         """
@@ -439,7 +445,7 @@ class Auction_ebay():
             agents=self.agents, rule=self.rule, cache=self.cache, history=self.history, model=self.model,
             output_dir = self.output_dir,
             timestring = self.timestring,
-            total_periods = 2)
+            total_periods = self.rule.turns)
         auction.run()
         
         
