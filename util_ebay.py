@@ -138,7 +138,7 @@ class Ebay:
         self._finalize_auction()
 
 
-    def _get_agent_action(self, agent: str, current_period: int, ordering: List) -> str:
+    def _get_agent_action(self, agent, current_period: int, ordering: List) -> str:
         """
         Decide the agent's action for this time step.
         
@@ -163,6 +163,7 @@ class Ebay:
         ask_prompt_str = Prompt.from_txt("Prompt/ebay_asking.txt")
         ask_prompt = ask_prompt_str.render(
             {
+                "name": agent.name,
                 "total_periods": self.total_periods,
                 "current_period": current_period,
                 "private_value": agent.current_value,
@@ -173,10 +174,9 @@ class Ebay:
                 "ordering": ordering_message
              }
             ) 
-        general_prompt= rule_explanation + ask_prompt
+        general_prompt= rule_explanation +'\n'+ ask_prompt
 
         print(general_prompt)
-        sys.exit()
 
         # Initialize bid and a retry mechanism
         retry_attempts = 3
@@ -466,5 +466,5 @@ class Auction_ebay():
         self.build_bidders()
         self.run()
             # self.round_number+=1
-        self.data_to_json()
+        # self.data_to_json()
         
