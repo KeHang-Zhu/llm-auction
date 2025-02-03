@@ -37,7 +37,7 @@ if __name__ == "__main__":
     round = 1
     turns = 10
     
-    output_dir = f"experiment_logs/V10/ebay_closing"
+    output_dir = f"experiment_logs/V10/ebay_proxy"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -50,7 +50,7 @@ if __name__ == "__main__":
         special_name="ebay_t1_proxy.txt",)
     rule.describe()
 
-    N = 3 # Repeat for N times
+    N = 1 # Repeat for N times
 
     
     with concurrent.futures.ThreadPoolExecutor() as executor:

@@ -164,7 +164,7 @@ class Ebay:
         ask_prompt = ask_prompt_str.render(
             {
                 "total_periods": self.total_periods,
-                "current_round": current_period,
+                "current_period": current_period,
                 "private_value": agent.current_value,
                 "current_price": self.current_price,
                 "transcript": self.transcript,
@@ -174,6 +174,9 @@ class Ebay:
              }
             ) 
         general_prompt= rule_explanation + ask_prompt
+
+        print(general_prompt)
+        sys.exit()
 
         # Initialize bid and a retry mechanism
         retry_attempts = 3
