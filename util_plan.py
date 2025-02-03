@@ -689,13 +689,17 @@ class Auction_plan():
         
     def data_to_json(self):
 
+        print(f"open the file {self.output_dir}, start to write the results")
+        print(self.data_to_save)
         save_json(self.data_to_save, f"result_{self.round_number}_{self.timestring}.json", self.output_dir)
+        print("Write done!")
         
     def run_repeated(self):
         self.build_bidders()
         while self.round_number < self.rule.round:
             self.run()
-            self.update_bidders()
+            if self.round_number < self.rule.round-1:
+                self.update_bidders()
             self.round_number+=1
         self.data_to_json()
             
