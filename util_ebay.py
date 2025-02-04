@@ -36,7 +36,7 @@ class AuctionStatus:
     period_id: int                # Current time step (0, 1, 2, ...)
     turn_id: int                  # turn id in each round (0,1,2,3)
     current_price: int            # The eBay 'current' winning price after proxy logic
-    # reserve_price: int            # Keep track for info
+    reserve_price: int            # Keep track for info
     agent_selected: str           # the name for the agent in this turn
     action: str                   # Player actions for this period "BID", 
     bid: float       
@@ -75,7 +75,7 @@ class Ebay:
         """
         self.agents = agents
         self.start_price = rule.start_price
-        # self.reserve_price = rule.reserve_price
+        self.reserve_price = rule.reserve_price
         self.bid_increment = rule.increment
         self.output_dir = output_dir
         self.timestring =timestring
@@ -86,6 +86,7 @@ class Ebay:
         self.model = model
         self.cache= cache
         self.rule= rule
+
         
         # We track each player's maximum willingness to pay (only known to that player!)
         # For simulation, we'll track them in code. Realistically, players don't reveal these to each other.
@@ -104,7 +105,10 @@ class Ebay:
         """
         Main driver: runs the auction for `self.total_periods` steps (or until ended).
         """
-        for t in range(self.total_periods):
+        t = 0
+        if_bid = False
+        while t < self.total_periods:
+        # for t in range(self.total_periods):
             n = len(self.agents)
             ## Generate ramdon ordering
             ordering = random.sample(range(n ), n )
@@ -119,6 +123,8 @@ class Ebay:
                 actions_in_this_period[agent.name] = {"action":action, "bid": bid_in_this_period}
                 # Update the highest bidder, current price based on proxy bidding
                 self._process_actions(actions_in_this_period, t)
+                if action == "bid":
+                    if_bid = True
 
                 # Create a snapshot of the current state
                 status_snapshot = AuctionStatus(
@@ -126,6 +132,7 @@ class Ebay:
                     turn_id= turn_id,
                     current_price=self.current_price,
                     agent_selected = agent.name,
+                    reserve_price = self.reserve_price,
                     action=action,
                     bid=bid_in_this_period,
                     max_bids=self.current_max_bids.copy(),
@@ -134,6 +141,14 @@ class Ebay:
                 
                 self.time_history.append(status_snapshot)
             
+            ## time moves on
+            t += 1
+            ## if the closing rule is soft
+            if self.rule.closing:
+                if t==self.total_periods-1 and if_bid and self.total_periods<20:
+                    self.total_periods +=1
+                    if_bid = False
+
         # After loop ends or last period is done, finalize the outcome
         self._finalize_auction()
 
@@ -149,9 +164,9 @@ class Ebay:
         """
         rule_explanation = self.rule.rule_explanation
         if current_period == self.total_periods-1:
-            ordering_message= "You may now bid. It is the last round, so we don't know if anyone will get a bid in after you."
+            ordering_message= "You may now bid. It is the last day, so we don't know if anyone will get a bid in after you."
         else:
-            ordering_message= "The random ordering this round is " + ", ".join(self.agents[i].name for i in ordering)
+            ordering_message= "The random ordering of this day is " + ", ".join(self.agents[i].name for i in ordering)
         bid_warning = '' ## if the agent decide to do something that is not allowed
         
 
@@ -176,7 +191,7 @@ class Ebay:
             ) 
         general_prompt= rule_explanation +'\n'+ ask_prompt
 
-        print(general_prompt)
+        # print(general_prompt)
 
         # Initialize bid and a retry mechanism
         retry_attempts = 3
@@ -216,8 +231,6 @@ class Ebay:
         """
         # For each agent who says "BID", we update their maximum.
         # Then recalculate the current price based on the top 2 maximums.
-
-       
         
         # 1) Update maximum bids for each agent who chooses to BID.
         for agent_name, details in actions.items():
@@ -236,10 +249,10 @@ class Ebay:
         sorted_bids = sorted(self.current_max_bids.items(), key=lambda x: x[1], reverse=True)
         
         # If no one has a positive bid, no winner for now
-        if len(sorted_bids) == 0:# or sorted_bids[0][1] <= self.reserve_price:
-            self.highest_bidder = None
-            self.current_price = self.start_price  # or keep it at old self.current_price
-            return
+        # if len(sorted_bids) == 0 or sorted_bids[0][1] <= self.reserve_price:
+        #     self.highest_bidder = None
+        #     self.current_price = self.start_price  # or keep it at old self.current_price
+        #     return
         
         top_bidder, top_bid = sorted_bids[0]
         if len(sorted_bids) > 1:
@@ -264,7 +277,7 @@ class Ebay:
         self.current_price = new_price
 
         # self.transcript += f"In round {t_period}, {agent_name} placed a bid and the price became {self.current_price}. The leading bidder is {self.highest_bidder}. \n"
-        self.transcript += f"In round {t_period}, the price became {self.current_price}. \n"
+        self.transcript += f"At day {t_period}, the price became {self.current_price}. \n"
 
 
     def _finalize_auction(self):
@@ -275,7 +288,7 @@ class Ebay:
         winner = self.highest_bidder
         final_price = self.current_price
         
-        if winner is None:# or final_price < self.reserve_price:
+        if winner is None or final_price < self.reserve_price:
             print(f"No winner. Reserve not met or no valid bids. Final price: ${final_price}")
         else:
             print(f"Auction complete. Winner: {winner} at ${final_price}")

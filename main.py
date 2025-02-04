@@ -18,7 +18,7 @@ def run_auction(i, human, number_agents, rule, output_dir, c):
         a = Auction_ebay(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=0.5)
     else:
         a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=0.5)
-    a.draw_value(seed=1298 + i)
+    a.draw_value(seed=1398 + i)
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
 
@@ -36,6 +36,8 @@ if __name__ == "__main__":
     ebay = True
     round = 1
     turns = 10
+    closing = False
+    reserve_price = 0
     
     output_dir = f"experiment_logs/V10/ebay_proxy"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
@@ -47,10 +49,12 @@ if __name__ == "__main__":
         private_value=private_value, open_blind=open_blind, 
         rounds=round, turns=turns , common_range=[0, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="ebay_t1_proxy.txt",)
+        special_name="ebay_t1_proxy.txt",#"ebay_t2_closing_rule.txt",
+        closing = closing,
+        reserve_price = reserve_price)
     rule.describe()
 
-    N = 1 # Repeat for N times
+    N = 10 # Repeat for N times
 
     
     with concurrent.futures.ThreadPoolExecutor() as executor:

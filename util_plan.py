@@ -36,7 +36,7 @@ class Rule_plan:
     def __init__(self, seal_clock,  private_value, open_blind, rounds, 
                  ascend_descend="ascend",
                  price_order = "second",
-                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, turns=20):
+                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, turns=20, closing= False, reserve_price = 0):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -49,6 +49,8 @@ class Rule_plan:
         self.increment = increment
         self.number_agents = number_agents
         self.start_price= start_price
+        self.closing = closing
+        self.reserve_price = reserve_price
         
         ## Rule prompt
         # intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
@@ -63,7 +65,10 @@ class Rule_plan:
                 "item_condition": "used",
                 "start_price":  0,
                 "num_rounds": self.turns, 
-                "bid_increment":self.increment
+                "bid_increment":self.increment,
+                "private":self.private_range,
+                "increment":self.increment,
+                "num_bidders": self.number_agents-1,
             })
         else:
             if self.seal_clock == 'clock':
