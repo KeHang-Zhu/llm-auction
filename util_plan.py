@@ -69,6 +69,7 @@ class Rule_plan:
                 "private":self.private_range,
                 "increment":self.increment,
                 "num_bidders": self.number_agents-1,
+                "n":self.round
             })
         else:
             if self.seal_clock == 'clock':
@@ -157,7 +158,7 @@ class SealBid():
             instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
 
-            general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
+            general_prompt = instruction + self.rule.persona +"\n" + str(self.rule.rule_explanation) + "\n" 
 
             if len(agent.reasoning) == 0:
                 elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
@@ -171,7 +172,7 @@ class SealBid():
                 result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
                 plan = result.select("q_plan").to_list()[0]
                 # plan= result['choices'][0]['message']['content']
-                print(plan)
+                # print(plan)
                 
                 elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_first.txt"))
                 prompt_elicit_bid = str(elicit_bid.render({"current_value":agent.current_value, "plan": plan}))
