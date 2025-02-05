@@ -40,6 +40,7 @@ class AuctionStatus:
     agent_selected: str           # the name for the agent in this turn
     action: str                   # Player actions for this period "BID", 
     bid: float       
+    value: float
     max_bids: dict                # Player max-bids after this period (e.g., {"player1":100, "player2":120, ...})
     highest_bidder: str           # Track who is currently winning
 
@@ -135,6 +136,7 @@ class Ebay:
                     reserve_price = self.reserve_price,
                     action=action,
                     bid=bid_in_this_period,
+                    value = agent.current_value,
                     max_bids=self.current_max_bids.copy(),
                     highest_bidder=self.highest_bidder
                 )
