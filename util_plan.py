@@ -390,25 +390,14 @@ class Clock():
                 )
 
             # if counterfact is None:
-            elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock.txt"))
+            elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
             prompt_elicit_bid = str(elicit_bid.render(
                 {"current_value": agent.current_value, 
                 "transcript": self.transcript, 
                 "urrent_price":self.current_price, 
-                "plan": agent.reasoning[-1], #if agent.reasoning else None,
+                # "plan": agent.reasoning[-1], #if agent.reasoning else None,
                 "current_price": self.current_price})
                 )
-            # else:
-            #     elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
-            #     # print(agent.reasoning[-1])
-            #     prompt_elicit_bid = str(elicit_bid.render(
-            #         {"counterfact": agent.reflection[-1],
-            #          "current_value": agent.current_value, 
-            #         "transcript": self.transcript, 
-            #         "urrent_price":self.current_price, 
-            #         "plan": agent.reasoning[-1], #if agent.reasoning else None,
-            #         "current_price": self.current_price})
-            #         )
                 
             general_prompt = instruction +"\n"+ str(self.rule.rule_explanation) +"\n"+ prompt_elicit_bid
 
@@ -416,21 +405,32 @@ class Clock():
             #     question_name = "q_bid",
             #     question_text = general_prompt,
             # )
+            # Initialize bid and a retry mechanism
+            retry_attempts = 3
+            attempt = 0
+            bid_warning = "" ## if the agent decide to do something that is not allowed
+            while attempt < retry_attempts:
+                try:
+                    q_bid = QuestionFreeText(
+                            question_name = "q_bid",
+                            question_text = str(general_prompt) + bid_warning,
+                        )
 
-            q_bid = QuestionFreeText(
-                    question_name = "q_bid",
-                    question_text = str(general_prompt) + bid_warning,
-                )
+                    survey = Survey(questions = [q_bid])
+                    result = survey.by(self.model).run(cache = self.cache)
+                    action = result.select("q_bid").to_list()[0]
 
-            survey = Survey(questions = [q_bid])
-            result = survey.by(self.model).run(cache = self.cache)
-            response = result.select("q_bid").to_list()[0]
+                    ## Parse the result
+                    print(action)
+                    response = self.parse_action(action)
+                    print("=========",agent.name, response)
+                    break
+                except Exception as e:
+                    bid_warning = f"Error: {str(e)}"
+                    print("An error occurred:", e)
+                if attempt == retry_attempts:
+                    raise RuntimeError("Failed to process the bid after multiple attempts.")
 
-            ## Parse the result
-            print(response)
-            action = self.parse_action(response)
-            
-            print("=========",agent.name, response)
 
             if self.rule.ascend_descend == 'ascend':
                 if response.lower() == 'no':
@@ -457,79 +457,83 @@ class Clock():
     def run(self):
         '''Run the clock until the ending condition'''
 
-        ## elicit agent plans
-        for agent in self.agents:
-            other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
-            instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
-            instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
+        # ## elicit agent plans
+        # for agent in self.agents:
+        #     other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+        #     instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
+        #     instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
 
-            general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
-            if len(agent.reasoning) == 0:
-                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
-                prompt_elicit_plan = str(elicit_plan.render({}))
+        #     general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
+        #     if len(agent.reasoning) == 0:
+        #         elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
+        #         prompt_elicit_plan = str(elicit_plan.render({}))
 
-                q_plan = QuestionFreeText(
-                    question_name = "q_plan",
-                    question_text = general_prompt +  prompt_elicit_plan
-                )
-                survey = Survey(questions = [q_plan])
-                result = survey.by(self.model).run(cache = self.cache)
-                plan = result.select("q_plan").to_list()[0]
-                # plan= result['choices'][0]['message']['content']
-                print(plan)
-                agent.reasoning.append(plan)
+        #         q_plan = QuestionFreeText(
+        #             question_name = "q_plan",
+        #             question_text = general_prompt +  prompt_elicit_plan
+        #         )
+        #         survey = Survey(questions = [q_plan])
+        #         result = survey.by(self.model).run(cache = self.cache)
+        #         plan = result.select("q_plan").to_list()[0]
+        #         # plan= result['choices'][0]['message']['content']
+        #         print(plan)
+        #         agent.reasoning.append(plan)
 
-                # stop_condition = False
-                # while stop_condition is False:
-                #     self.bid_list = []
-                #     self.run_one_clock(counterfact = None)
-                #     print(self.clock+1, '+++++done')
-                #     self.clock +=1
-                #     stop_condition = self.declear_winner_and_price()
-                #     ## calculate the next clock price
-                #     self.dynamic()
-                #     print(self.__repr__())
+        #         # stop_condition = False
+        #         # while stop_condition is False:
+        #         #     self.bid_list = []
+        #         #     self.run_one_clock(counterfact = None)
+        #         #     print(self.clock+1, '+++++done')
+        #         #     self.clock +=1
+        #         #     stop_condition = self.declear_winner_and_price()
+        #         #     ## calculate the next clock price
+        #         #     self.dynamic()
+        #         #     print(self.__repr__())
 
-            else:
-                last_round = agent.history[-1]
+        #     else:
+        #         last_round = agent.history[-1]
 
-                reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
-                prompt_reflection = str(reflection.render({"last_round":last_round}))
+        #         reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
+        #         prompt_reflection = str(reflection.render({"last_round":last_round}))
 
-                q_counterfact = QuestionFreeText(
-                    question_name = "q_counterfact",
-                    question_text = general_prompt+ prompt_reflection
-                )
-                result = self.model.simple_ask(q_counterfact)
-                counterfact= result['choices'][0]['message']['content']
-                # print("=========================== \n", counterfact)
-                agent.reflection.append(counterfact)
+        #         q_counterfact = QuestionFreeText(
+        #             question_name = "q_counterfact",
+        #             question_text = general_prompt+ prompt_reflection
+        #         )
+        #         result = self.model.simple_ask(q_counterfact)
+        #         counterfact= result['choices'][0]['message']['content']
+        #         # print("=========================== \n", counterfact)
+        #         agent.reflection.append(counterfact)
                 
-                history = agent.history
-                reasoning = agent.reasoning
-                max_length = max(len(history), len(reasoning))
-                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
-                # previous_plan = agent.reasoning[-1]
-                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
-                prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
-                q_plan = QuestionFreeText(
-                    question_name = "q_plan",
-                    question_text = general_prompt + prompt_elicit_plan
-                )
-                # print(q_plan)
-                # result = self.model.simple_ask(q_plan)
-                survey = Survey(questions = [q_plan])
-                result = survey.by(self.model).run(cache = self.cache)
-                plan = result.select("q_plan").to_list()[0]
-                # plan= result['choices'][0]['message']['content']
-                print(plan, "====================\n")
-                agent.reasoning.append(plan)
+        #         history = agent.history
+        #         reasoning = agent.reasoning
+        #         max_length = max(len(history), len(reasoning))
+        #         history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
+        #         # previous_plan = agent.reasoning[-1]
+        #         elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
+        #         prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
+        #         q_plan = QuestionFreeText(
+        #             question_name = "q_plan",
+        #             question_text = general_prompt + prompt_elicit_plan
+        #         )
+        #         # print(q_plan)
+        #         # result = self.model.simple_ask(q_plan)
+        #         survey = Survey(questions = [q_plan])
+        #         result = survey.by(self.model).run(cache = self.cache)
+        #         plan = result.select("q_plan").to_list()[0]
+        #         # plan= result['choices'][0]['message']['content']
+        #         print(plan, "====================\n")
+        #         agent.reasoning.append(plan)
+
+        for agent in self.agents:
+            agent.reasoning.append("")
 
         stop_condition = False
         while stop_condition is False:
 
             self.bid_list = []
-            self.run_one_clock(counterfact = True if self.agents[0].reflection else None)
+            # self.run_one_clock(counterfact = True if self.agents[0].reflection else None)
+            self.run_one_clock()
             print(self.clock+1, '+++++done')
             self.clock +=1
             stop_condition = self.declear_winner_and_price()
@@ -553,18 +557,18 @@ class Clock():
         # Convert text to lowercase for case-insensitive matching
         text = text.lower()
 
-        bid_pattern = r"<bid>\s*(yes|no)\s*(?:</bid>|<\\bid>|<bid>)"
+        bid_pattern = r"<action>\s*(yes|no)\s*(?:</action>|<\\action>|<action>)"
         
         action_match = re.search(bid_pattern, text, flags=re.IGNORECASE)
         if not action_match:
             raise ValueError("Invalid or missing action. Action must be Yes or No.")
         
         action = action_match.group(1).lower()
-        
+
         if action == "yes" or action == "no":
             return action
         else:
-            return "please return with the correct format: <ACTION> Yes or No  </ACTION>"
+            raise RuntimeError("please return with the correct format: <ACTION> Yes or No  </ACTION>")
 
     
     def share_information(self):
