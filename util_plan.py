@@ -171,7 +171,7 @@ class SealBid():
                     question_text = general_prompt +  prompt_elicit_plan
                 )
                 survey = Survey(questions = [q_plan])
-                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                result = survey.by(self.model).run(cache = self.cache)
                 plan = result.select("q_plan").to_list()[0]
                 # plan= result['choices'][0]['message']['content']
                 # print(plan)
@@ -236,7 +236,7 @@ class SealBid():
                 # print(q_plan)
                 # result = self.model.simple_ask(q_plan)
                 survey = Survey(questions = [q_plan])
-                result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+                result = survey.by(self.model).run(cache = self.cache)
                 plan = result.select("q_plan").to_list()[0]
                 # plan= result['choices'][0]['message']['content']
                 print(plan, "====================\n")
@@ -400,7 +400,7 @@ class Clock():
                     )
             else:
                 elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
-                print(agent.reasoning[-1])
+                # print(agent.reasoning[-1])
                 prompt_elicit_bid = str(elicit_bid.render(
                     {"counterfact": agent.reflection[-1],
                      "current_value": agent.current_value, 
@@ -424,7 +424,7 @@ class Clock():
             # scenario = Scenario()
             # agent = Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds")
             survey = Survey(questions = [q_bid])
-            result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
+            result = survey.by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
             
             print("=========",agent.name, response)
@@ -448,81 +448,82 @@ class Clock():
             
         ## update the shared information
         self.transcript.append(self.share_information())
+
+        print("One clock done")
         
     def run(self):
         '''Run the clock until the ending condition'''
 
+        ## elicit agent plans
+        for agent in self.agents:
+            other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
+            instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
+            instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
+
+            general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
+            if len(agent.reasoning) == 0:
+                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
+                prompt_elicit_plan = str(elicit_plan.render({}))
+
+                q_plan = QuestionFreeText(
+                    question_name = "q_plan",
+                    question_text = general_prompt +  prompt_elicit_plan
+                )
+                survey = Survey(questions = [q_plan])
+                result = survey.by(self.model).run(cache = self.cache)
+                plan = result.select("q_plan").to_list()[0]
+                # plan= result['choices'][0]['message']['content']
+                print(plan)
+                agent.reasoning.append(plan)
+
+                # stop_condition = False
+                # while stop_condition is False:
+                #     self.bid_list = []
+                #     self.run_one_clock(counterfact = None)
+                #     print(self.clock+1, '+++++done')
+                #     self.clock +=1
+                #     stop_condition = self.declear_winner_and_price()
+                #     ## calculate the next clock price
+                #     self.dynamic()
+                #     print(self.__repr__())
+
+            else:
+                last_round = agent.history[-1]
+
+                reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
+                prompt_reflection = str(reflection.render({"last_round":last_round}))
+
+                q_counterfact = QuestionFreeText(
+                    question_name = "q_counterfact",
+                    question_text = general_prompt+ prompt_reflection
+                )
+                result = self.model.simple_ask(q_counterfact)
+                counterfact= result['choices'][0]['message']['content']
+                # print("=========================== \n", counterfact)
+                agent.reflection.append(counterfact)
+                
+                history = agent.history
+                reasoning = agent.reasoning
+                max_length = max(len(history), len(reasoning))
+                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
+                # previous_plan = agent.reasoning[-1]
+                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
+                prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
+                q_plan = QuestionFreeText(
+                    question_name = "q_plan",
+                    question_text = general_prompt + prompt_elicit_plan
+                )
+                # print(q_plan)
+                # result = self.model.simple_ask(q_plan)
+                survey = Survey(questions = [q_plan])
+                result = survey.by(self.model).run(cache = self.cache)
+                plan = result.select("q_plan").to_list()[0]
+                # plan= result['choices'][0]['message']['content']
+                print(plan, "====================\n")
+                agent.reasoning.append(plan)
+
         stop_condition = False
         while stop_condition is False:
-            ## elicit agent plans
-            for agent in self.agents:
-                other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
-                instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
-                instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
-
-                general_prompt = instruction + self.rule.persona + str(self.rule.rule_explanation) + "\n" 
-                if len(agent.reasoning) == 0:
-                    elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
-                    prompt_elicit_plan = str(elicit_plan.render({}))
-
-                    q_plan = QuestionFreeText(
-                        question_name = "q_plan",
-                        question_text = general_prompt +  prompt_elicit_plan
-                    )
-                    survey = Survey(questions = [q_plan])
-                    result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
-                    plan = result.select("q_plan").to_list()[0]
-                    # plan= result['choices'][0]['message']['content']
-                    print(plan)
-                    agent.reasoning.append(plan)
-
-                    # stop_condition = False
-                    # while stop_condition is False:
-                    #     self.bid_list = []
-                    #     self.run_one_clock(counterfact = None)
-                    #     print(self.clock+1, '+++++done')
-                    #     self.clock +=1
-                    #     stop_condition = self.declear_winner_and_price()
-                    #     ## calculate the next clock price
-                    #     self.dynamic()
-                    #     print(self.__repr__())
-
-                else:
-                    last_round = agent.history[-1]
-
-                    reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
-                    prompt_reflection = str(reflection.render({"last_round":last_round}))
-
-                    q_counterfact = QuestionFreeText(
-                        question_name = "q_counterfact",
-                        question_text = general_prompt+ prompt_reflection
-                    )
-                    result = self.model.simple_ask(q_counterfact)
-                    counterfact= result['choices'][0]['message']['content']
-                    # print("=========================== \n", counterfact)
-                    agent.reflection.append(counterfact)
-                    
-                    history = agent.history
-                    reasoning = agent.reasoning
-                    max_length = max(len(history), len(reasoning))
-                    history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
-                    # previous_plan = agent.reasoning[-1]
-                    elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
-                    prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
-                    q_plan = QuestionFreeText(
-                        question_name = "q_plan",
-                        question_text = general_prompt + prompt_elicit_plan
-                    )
-                
-                    # print(q_plan)
-                    # result = self.model.simple_ask(q_plan)
-                    survey = Survey(questions = [q_plan])
-                    result = survey.by(agent.agent).by(self.model).run(cache = self.cache)
-                    plan = result.select("q_plan").to_list()[0]
-                    # plan= result['choices'][0]['message']['content']
-                    print(plan, "====================\n")
-                    agent.reasoning.append(plan)
-
 
             self.bid_list = []
             self.run_one_clock(counterfact = True if self.agents[0].reflection else None)
