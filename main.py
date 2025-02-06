@@ -29,32 +29,34 @@ if __name__ == "__main__":
     seal_clock = 'clock'
     ascend_descend = 'ascend'
     price_order = 'second'
-    private_value = 'private'   ### private value / common value / affiliated value
-    open_blind = 'close'
+    private_value = 'affiliated'  ### private value / common value / affiliated value
+    open_blind = 'open'            ### In AC, whether the information is closed or open
     number_agents = 3
-    human = False
-    ebay = True
-    round = 1
+    human = False                  ## Humanistic prompt or not
+    ebay = False                    ## If it's eBay auction
+    round = 2
     turns = 10
     closing = True
     reserve_price = 60
     
-    output_dir = f"experiment_logs/V10/ebay_closing_rule_with_hidden_reserve_60"
+    output_dir = f"experiment_logs/V10/affiliated_ac"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     
     rule = Rule_plan(
-        seal_clock=seal_clock, price_order=price_order, 
-        private_value=private_value, open_blind=open_blind, 
-        rounds=round, turns=turns , common_range=[0, 79], private_range=99, increment=1, 
+        seal_clock=seal_clock, 
+        price_order=price_order, 
+        private_value=private_value, 
+        open_blind=open_blind, 
+        rounds=round, turns=turns , common_range=[0, 20], private_range=20, increment=1, 
         number_agents=number_agents,
-        special_name="ebay_t4_closing_rule_with_hidden_reserve.txt",#"ebay_t2_closing_rule.txt",
+        special_name="affiliated_ac.txt",
         closing = closing,
         reserve_price = reserve_price)
     rule.describe()
 
-    N = 20 # Repeat for N times
+    N = 1 # Repeat for N times
 
     
     with concurrent.futures.ThreadPoolExecutor() as executor:
