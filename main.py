@@ -34,7 +34,7 @@ if __name__ == "__main__":
     number_agents = 3
     human = False                  ## Humanistic prompt or not
     ebay = False                    ## If it's eBay auction
-    round = 10
+    round = 4
     turns = 10
     closing = True
     reserve_price = 60

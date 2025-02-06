@@ -389,43 +389,46 @@ class Clock():
                 {"name":agent.name, "other_agent_names": other_agent_names})
                 )
 
-            if counterfact is None:
-                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock.txt"))
-                prompt_elicit_bid = str(elicit_bid.render(
-                    {"current_value": agent.current_value, 
-                    "transcript": self.transcript, 
-                    "urrent_price":self.current_price, 
-                    "plan": agent.reasoning[-1], #if agent.reasoning else None,
-                    "current_price": self.current_price})
-                    )
-            else:
-                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
-                # print(agent.reasoning[-1])
-                prompt_elicit_bid = str(elicit_bid.render(
-                    {"counterfact": agent.reflection[-1],
-                     "current_value": agent.current_value, 
-                    "transcript": self.transcript, 
-                    "urrent_price":self.current_price, 
-                    "plan": agent.reasoning[-1], #if agent.reasoning else None,
-                    "current_price": self.current_price})
-                    )
+            # if counterfact is None:
+            elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock.txt"))
+            prompt_elicit_bid = str(elicit_bid.render(
+                {"current_value": agent.current_value, 
+                "transcript": self.transcript, 
+                "urrent_price":self.current_price, 
+                "plan": agent.reasoning[-1], #if agent.reasoning else None,
+                "current_price": self.current_price})
+                )
+            # else:
+            #     elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
+            #     # print(agent.reasoning[-1])
+            #     prompt_elicit_bid = str(elicit_bid.render(
+            #         {"counterfact": agent.reflection[-1],
+            #          "current_value": agent.current_value, 
+            #         "transcript": self.transcript, 
+            #         "urrent_price":self.current_price, 
+            #         "plan": agent.reasoning[-1], #if agent.reasoning else None,
+            #         "current_price": self.current_price})
+            #         )
                 
             general_prompt = instruction +"\n"+ str(self.rule.rule_explanation) +"\n"+ prompt_elicit_bid
 
-            # print(general_prompt)
+            # q_bid = QuestionYesNo(
+            #     question_name = "q_bid",
+            #     question_text = general_prompt,
+            # )
 
-            q_bid = QuestionYesNo(
-                question_name = "q_bid",
-                question_text = general_prompt,
-            )
-            # print(instruction)
-            # print(q_bid)
-            # print(agent)
-            # scenario = Scenario()
-            # agent = Agent(name = "John", instruction = "You are bidder 1, you need to stay for 2 rounds")
+            q_bid = QuestionFreeText(
+                    question_name = "q_bid",
+                    question_text = str(general_prompt) + bid_warning,
+                )
+
             survey = Survey(questions = [q_bid])
             result = survey.by(self.model).run(cache = self.cache)
             response = result.select("q_bid").to_list()[0]
+
+            ## Parse the result
+            print(response)
+            action = self.parse_action(response)
             
             print("=========",agent.name, response)
 
@@ -544,6 +547,25 @@ class Clock():
                 agent.profit.append(0)
                 agent.winning.append(False)
         return {'bidding history':self.exit_list, 'winner':self.winner}
+    
+
+    def parse_action(self, text):
+        # Convert text to lowercase for case-insensitive matching
+        text = text.lower()
+
+        bid_pattern = r"<bid>\s*(yes|no)\s*(?:</bid>|<\\bid>|<bid>)"
+        
+        action_match = re.search(bid_pattern, text, flags=re.IGNORECASE)
+        if not action_match:
+            raise ValueError("Invalid or missing action. Action must be Yes or No.")
+        
+        action = action_match.group(1).lower()
+        
+        if action == "yes" or action == "no":
+            return action
+        else:
+            return "please return with the correct format: <ACTION> Yes or No  </ACTION>"
+
     
     def share_information(self):
         if self.rule.open_blind == "open":
