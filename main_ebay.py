@@ -26,10 +26,10 @@ if __name__ == "__main__":
     c = Cache()
     
     # Rule Option Menu
-    seal_clock = 'clock'
-    ascend_descend = 'ascend'
+    seal_clock = 'ebay'
+    ascend_descend = ''
     price_order = 'second'
-    private_value = 'private'   ### private value / common value / affiliated value
+    private_value = 'private'
     open_blind = 'close'
     number_agents = 3
     human = False

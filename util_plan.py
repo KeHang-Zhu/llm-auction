@@ -326,7 +326,7 @@ class SealBid():
                     agent.winning.append(False)
             else:
                 if agent.name == winner:
-                    if self.rule.private_value == "private":
+                    if self.rule.private_value == "private" or self.rule.private_value == "affiliated":
                         agent.profit.append(agent.current_value - float(price))
                     elif self.rule.private_value == "common":
                         agent.profit.append(agent.current_common - float(price))
@@ -404,7 +404,7 @@ class Clock():
                     "plan": agent.reasoning[-1]})
                     )
                 
-            general_prompt = instruction + str(self.rule.rule_explanation) + prompt_elicit_bid
+            general_prompt = instruction +"\n"+ str(self.rule.rule_explanation) +"\n"+ prompt_elicit_bid
 
             q_bid = QuestionYesNo(
                 question_name = "q_bid",
@@ -652,6 +652,8 @@ class Auction_plan():
             # Generate a common value from a range
             if self.rule.private_value == 'private':
                 common_value = 0
+            elif self.rule.private_value == 'affiliated':
+                common_value = self.rule.common_range[1]
             elif self.rule.private_value == 'common':
                 common_value = random.randint(*self.rule.common_range)
             else:
@@ -661,7 +663,12 @@ class Auction_plan():
 
             # Generate a private value for each agent and sum it with the common value
             for j in range(self.number_agents):  # Now self.number_agents should be an integer
-                private_part = random.randint(0, self.rule.private_range)
+                
+                if self.rule.private_value == 'common':
+                    ## if common value auction, the private shock is taken from - private to +private
+                    private_part = random.randint(-self.rule.private_range, self.rule.private_range)
+                else:
+                    private_part = random.randint(0, self.rule.private_range)
                 total_value = common_value + private_part
                 self.values_list[i][j] = total_value
         print("The values for each bidder are:", self.values_list)
@@ -749,7 +756,7 @@ class Auction_plan():
         #     description = f"In round {self.round_number}, " + value_describe + profit_describe + reasoning_describe + bid_describe
             
         for agent in self.agents:
-            if self.rule.private_value == "private":
+            if self.rule.private_value == "private" or self.rule.private_value == "affiliated":
                 if self.rule.seal_clock == "seal":
                     bid_last_round = agent.submitted_bids[self.round_number]
                 elif self.rule.seal_clock == "clock":
