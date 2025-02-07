@@ -18,7 +18,7 @@ def run_auction(i, human, number_agents, rule, output_dir, c):
         a = Auction_ebay(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=0.5)
     else:
         a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4o', temperature=0.5)
-    a.draw_value(seed=1404 + i)
+    a.draw_value(seed=1403 + i) ## 1399 for affiliated ## 1299 private
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
 
@@ -26,8 +26,8 @@ if __name__ == "__main__":
     c = Cache()
     
     # Rule Option Menu
-    seal_clock = 'clock'
-    ascend_descend = 'ascend'
+    seal_clock = 'seal'
+    ascend_descend = ''
     price_order = 'second'
     private_value = 'affiliated'  ### private value / common value / affiliated value
     open_blind = 'blind'            ### In AC, whether the information is blind or open
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     closing = True
     reserve_price = 60
     
-    output_dir = f"experiment_logs/V10/affiliated_ac_closed"
+    output_dir = f"experiment_logs/V10/affiliated_spsb"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -51,12 +51,12 @@ if __name__ == "__main__":
         open_blind=open_blind, 
         rounds=round, turns=turns , common_range=[0, 20], private_range=20, increment=1, 
         number_agents=number_agents,
-        special_name="affiliated_ac_closed.txt",
+        special_name="affiliated_spsb.txt",
         closing = closing,
         reserve_price = reserve_price)
     rule.describe()
 
-    N = 5 # Repeat for N times
+    N = 6 # Repeat for N times
 
     for i in range(N):
         run_auction( i, human, number_agents, rule, output_dir, c)

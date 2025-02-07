@@ -252,6 +252,7 @@ class SealBid():
                 while attempt < retry_attempts:
                     try:
                         # Run the survey and fetch the result
+
                         q_bid = QuestionFreeText(
                             question_name = "q_bid",
                             question_text =  general_prompt + prompt_elicit_bid + format_warning
