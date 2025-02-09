@@ -257,8 +257,11 @@ class SealBid():
                             question_name = "q_bid",
                             question_text =  general_prompt + prompt_elicit_bid + format_warning
                             )
-                        result = self.model.simple_ask(q_bid)
-                        bid_str= result['choices'][0]['message']['content']
+                        survey = Survey(questions = [q_bid])
+                        result = survey.by(self.model).run(cache = self.cache)
+                        # result = self.model.simple_ask(q_bid)
+                        bid_str = result.select("q_bid").to_list()[0]
+                        # bid_str= result['choices'][0]['message']['content']
                         print(bid_str)
                         bid = self.parse_bid(bid_str)
                         break  # Exit loop if bid is successfully processed
