@@ -18,7 +18,7 @@ def run_auction(i, human, number_agents, rule, output_dir, c):
         a = Auction_ebay(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=0.5)
     else:
         a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=0.5)
-    a.draw_value(seed=1400 + i) ## 1399 for affiliated ## 1299 private
+    a.draw_value(seed=1402 + i) ## 1399 for affiliated ## 1299 private
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
 
@@ -26,8 +26,8 @@ if __name__ == "__main__":
     c = Cache()
     
     # Rule Option Menu
-    seal_clock = 'clock'
-    ascend_descend = ''
+    seal_clock = 'seal'
+    ascend_descend = 'ascend'
     price_order = 'second'
     private_value = 'affiliated'  ### private value / common value / affiliated value
     open_blind = 'open'            ### In AC, whether the information is blind or open
