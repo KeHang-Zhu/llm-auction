@@ -18,7 +18,7 @@ def run_auction(i, human, number_agents, rule, output_dir, c):
         a = Auction_ebay(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=0.5)
     else:
         a = Auction_plan(number_agents=number_agents, rule=rule, output_dir=output_dir, timestring=timestring, cache=c, model='gpt-4', temperature=0.5)
-    a.draw_value(seed=1402 + i) ## 1399 for affiliated ## 1299 private
+    a.draw_value(seed=1399 + i) ## 1399 for affiliated ## 1299 private
     a.run_repeated()
     c.write_jsonl(os.path.join(output_dir, f"raw_output__{timestring}.jsonl"))
 
@@ -28,18 +28,18 @@ if __name__ == "__main__":
     # Rule Option Menu
     seal_clock = 'seal'
     ascend_descend = 'ascend'
-    price_order = 'second'
-    private_value = 'affiliated'  ### private value / common value / affiliated value
+    price_order = 'allpay'
+    private_value = 'private'  ### private value / common value / affiliated value
     open_blind = 'open'            ### In AC, whether the information is blind or open
     number_agents = 3
     human = False                  ## Humanistic prompt or not
     ebay = False                    ## If it's eBay auction
-    round = 10
+    round = 15
     turns = 10
     closing = True
     reserve_price = 60
     
-    output_dir = f"experiment_logs/V10/affiliated_ac"
+    output_dir = f"experiment_logs/V10/private_all_pay"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -49,14 +49,14 @@ if __name__ == "__main__":
         price_order=price_order, 
         private_value=private_value, 
         open_blind=open_blind, 
-        rounds=round, turns=turns , common_range=[0, 20], private_range=20, increment=1, 
+        rounds=round, turns=turns , common_range=[20, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="affiliated_ac.txt",
+        special_name="private_all_pay.txt",
         closing = closing,
         reserve_price = reserve_price)
     rule.describe()
 
-    N = 1 # Repeat for N times
+    N = 5 # Repeat for N times
 
     for i in range(N):
         run_auction( i, human, number_agents, rule, output_dir, c)
