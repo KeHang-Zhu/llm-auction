@@ -28,7 +28,7 @@ if __name__ == "__main__":
     # Rule Option Menu
     seal_clock = 'seal'
     ascend_descend = 'ascend'
-    price_order = 'allpay'
+    price_order = 'first'
     private_value = 'private'  ### private value / common value / affiliated value
     open_blind = 'open'            ### In AC, whether the information is blind or open
     number_agents = 3
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     closing = True
     reserve_price = 60
     
-    output_dir = f"experiment_logs/V10/private_all_pay"
+    output_dir = f"experiment_logs/V10/robust_fpsb_ruble"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         open_blind=open_blind, 
         rounds=round, turns=turns , common_range=[20, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="private_all_pay.txt",
+        special_name="robust_fpsb_ruble.txt",
         closing = closing,
         reserve_price = reserve_price)
     rule.describe()
