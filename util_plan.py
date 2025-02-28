@@ -89,7 +89,7 @@ class Rule_plan:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
-        persona_str = Prompt.from_txt(os.path.join(prompt_dir,"persona.txt"))
+        persona_str = Prompt.from_txt(os.path.join(prompt_dir,"persona_one.txt"))
         self.persona = str(persona_str.render({}))
 
         ## Bid asking prompt

@@ -28,18 +28,18 @@ if __name__ == "__main__":
     # Rule Option Menu
     seal_clock = 'seal'
     ascend_descend = 'ascend'
-    price_order = 'first'
+    price_order = 'allpay'
     private_value = 'private'  ### private value / common value / affiliated value
     open_blind = 'open'            ### In AC, whether the information is blind or open
     number_agents = 3
     human = False                  ## Humanistic prompt or not
     ebay = False                    ## If it's eBay auction
-    round = 15
+    round = 1
     turns = 10
     closing = True
     reserve_price = 60
     
-    output_dir = f"experiment_logs/V10/robust_fpsb_ruble"
+    output_dir = f"experiment_logs/V10/private_all_pay_one"
     # {seal_clock}_{ascend_descend}_{price_order}_{private_value}_{open_blind}"
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -51,12 +51,12 @@ if __name__ == "__main__":
         open_blind=open_blind, 
         rounds=round, turns=turns , common_range=[20, 79], private_range=99, increment=1, 
         number_agents=number_agents,
-        special_name="robust_fpsb_ruble.txt",
+        special_name="private_all_pay.txt",
         closing = closing,
         reserve_price = reserve_price)
     rule.describe()
 
-    N = 5 # Repeat for N times
+    N = 20 # Repeat for N times
 
     for i in range(N):
         run_auction( i, human, number_agents, rule, output_dir, c)
