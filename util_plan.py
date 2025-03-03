@@ -89,7 +89,7 @@ class Rule_plan:
         ## Combine the rule prompt
         self.rule_explanation =  game_type
         
-        persona_str = Prompt.from_txt(os.path.join(prompt_dir,"persona_one.txt"))
+        persona_str = Prompt.from_txt(os.path.join(prompt_dir,"persona.txt"))
         self.persona = str(persona_str.render({}))
 
         ## Bid asking prompt
@@ -325,11 +325,12 @@ class SealBid():
                 for bid in self.bid_list:
                     if bid["agent"] == agent.name:
                         price = bid["bid"]
-                agent.profit.append(agent.current_value - price)
                 if agent.name == winner:
                     agent.winning.append(True)
+                    agent.profit.append(agent.current_value - price)
                 else:
                     agent.winning.append(False)
+                    agent.profit.append(- price)
             else:
                 if agent.name == winner:
                     if self.rule.private_value == "private" or self.rule.private_value == "affiliated":
