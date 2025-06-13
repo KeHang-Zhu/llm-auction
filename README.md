@@ -1,4 +1,26 @@
-# llm-auction
+# Learning from Synthetic Laboratory: Language Models as Auction Participants
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+
+## Table of Contents
+1. [Overview](#overview)
+2. [How to use](#getting-started)
+
+
+## Overview
+This is the code for: https://openreview.net/forum?id=XZ71GHf8aB.
+<p align="center">
+  <img src="overview.png" alt="Your Image" width="650" >
+</p>
+
+If you make use of this code in any formal way, we would appreciate a citation:
+
+```
+@article{zhuevidence,
+  title={Evidence from the Synthetic Laboratory: Language Models as Auction Participants},
+  author={Zhu, Kehang and Shah, Anand V and Jiang, Yanchen and Horton, John Joseph and Parkes, David C}
+}
+```
+
 
 ## Getting started
 
@@ -22,7 +44,7 @@ OPENAI_API_KEY = ...
 ```
 
 ## Coding design EDSL
-We will use John’s fantastic repo of EDSL to implement the LLM experiments. 
+We will use EDSL to implement the LLM experiments. 
 
 ### Rule option menu: 
     - seal_clock= 'seal' or 'clock' 
@@ -32,7 +54,8 @@ We will use John’s fantastic repo of EDSL to implement the LLM experiments.
     - open_blind='open' or 'blind' if seal_clock= 'clock' 
         - i.e. bidder don't see the drop out in the clock
 
-### TODO:
-Advanced setting:
-- If we want to design new auctions, for example, a dynamical game. In the first round, the players play SP. Then in the next round, play FP….
-Fuse Rule module and Order module.
+## 🔧 Dependencies
+The main third-party package requirement are `openai` and `edsl`.
+
+## 💡 Contributing, Feature Asks, and Bugs
+Interested collaborating in LLM as auction participants? Found a nasty bug that you would like us to squash? Please send us an email at kehangzhu@gmail.com.
