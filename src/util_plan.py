@@ -19,7 +19,7 @@ current_script_path = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(current_script_path, './rule_template/V10/')
 prompt_dir = os.path.join(current_script_path, './Prompt/')
 
-c = Cache()  
+# c = Cache()  
 
 def save_json(data, filename, directory):
     """Save data to a JSON file in the specified directory."""
@@ -109,7 +109,7 @@ class Rule_plan:
 
 
 class SealBid():
-    def __init__(self, agents, rule, model, cache= c, history=None):
+    def __init__(self, agents, rule, model, cache= None, history=None):
         
         ## for setting up stage
         self.rule = rule
@@ -171,7 +171,10 @@ class SealBid():
                     question_text = general_prompt +  prompt_elicit_plan
                 )
                 survey = Survey(questions = [q_plan])
-                result = survey.by(self.model).run(cache = self.cache)
+                result = survey.by(self.model).run(
+                            remote_inference_description="check remote reuse",
+                            remote_inference_visibility="public"
+                        )
                 plan = result.select("q_plan").to_list()[0]
                 # plan= result['choices'][0]['message']['content']
                 # print(plan)
@@ -236,7 +239,10 @@ class SealBid():
                 # print(q_plan)
                 # result = self.model.simple_ask(q_plan)
                 survey = Survey(questions = [q_plan])
-                result = survey.by(self.model).run(cache = self.cache)
+                result = survey.by(self.model).run(
+                    remote_inference_description="check remote reuse",
+                    remote_inference_visibility="public"
+                )
                 plan = result.select("q_plan").to_list()[0]
                 # plan= result['choices'][0]['message']['content']
                 print(plan, "====================\n")
@@ -258,7 +264,10 @@ class SealBid():
                             question_text =  general_prompt + prompt_elicit_bid + format_warning
                             )
                         survey = Survey(questions = [q_bid])
-                        result = survey.by(self.model).run(cache = self.cache)
+                        result = survey.by(self.model).run(
+                            remote_inference_description="check remote reuse",
+                            remote_inference_visibility="public"
+                        )
                         # result = self.model.simple_ask(q_bid)
                         bid_str = result.select("q_bid").to_list()[0]
                         # bid_str= result['choices'][0]['message']['content']
@@ -343,7 +352,7 @@ class SealBid():
                     agent.winning.append(False)
     
 class Clock():
-    def __init__(self, agents, rule, model, cache=c, history=None):
+    def __init__(self, agents, rule, model, cache=None, history=None):
         
         ## for setting up stage
         self.rule = rule
@@ -422,7 +431,10 @@ class Clock():
                         )
 
                     survey = Survey(questions = [q_bid])
-                    result = survey.by(self.model).run(cache = self.cache)
+                    result = survey.by(self.model).run(
+                            remote_inference_description="check remote reuse",
+                            remote_inference_visibility="public"
+                        )
                     action = result.select("q_bid").to_list()[0]
 
                     ## Parse the result
@@ -664,7 +676,7 @@ class Auction_plan():
     '''
     This class manages the auction process using specified agents and rules.
     '''
-    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=c, model='gpt-4o',temperature = 0):
+    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=None, model='gpt-4o',temperature = 0):
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
