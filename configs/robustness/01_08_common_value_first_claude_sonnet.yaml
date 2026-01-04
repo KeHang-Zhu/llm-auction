@@ -1,0 +1,41 @@
+# Common Value First-Price Auction (Winner's Curse) - Claude 3 Sonnet
+
+experiment:
+  name: "common_value_first_claude_sonnet"
+  version: "V10"
+  description: "First-Price Auction with Common Value (Winner's Curse) - Claude 3 Sonnet"
+
+auction:
+  number_agents: 3
+  rounds: 15
+
+rule:
+  seal_clock: "seal"
+  ascend_descend: "ascend"    # no use for seal, place holder
+  price_order: "first"
+  private_value: "common"
+  open_blind: "open"
+  closing: false
+  reserve_price: 0
+  special_name: "common_spsb.txt"  # may need first price version
+
+value:
+  common_range: [20, 79]
+  private_range: 99
+  increment: 1
+  seed_base: 1299
+
+llm:
+  model: "claude-3-sonnet-20240229"
+  temperature: 0.5
+
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: "rule_template/V10/"
+
+execution:
+  repetitions: 5
+  parallel: false
+  max_workers: 4
+  output_dir: "experiment_logs/V10/robustness/common_value_first_claude_sonnet"

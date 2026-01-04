@@ -315,9 +315,9 @@ class Clock():
     def share_information(self):
         if self.rule.open_blind == "open":
             if self.exit_number == 0:
-                return f'In clock round {self.clock+1}, the price was {self.current_price}, no players dropped out'
+                return f'In clock period {self.clock+1}, the price was {self.current_price}, no players dropped out'
             else:
-                return f'In clock round {self.clock+1}, the price was {self.current_price}, {self.exit_number} players dropped out'
+                return f'In clock period {self.clock+1}, the price was {self.current_price}, {self.exit_number} players dropped out'
         elif self.rule.open_blind == "blind":
             return None
 

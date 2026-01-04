@@ -16,8 +16,8 @@ from jinja2 import Template
 import re
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
-templates_dir = os.path.join(current_script_path, './rule_template/V10/')
-prompt_dir = os.path.join(current_script_path, './Prompt/')
+templates_dir = os.path.join(current_script_path, '../rule_template/V10/')
+prompt_dir = os.path.join(current_script_path, '../Prompt/')
 
 # c = Cache()  
 
@@ -132,164 +132,162 @@ class SealBid():
         
     def __repr__(self):
         return f'Sealed Bid Auction: (bid_list={self.bid_list})'
-    
-    def parse_bid(self, text):
-        ##  <BID>20<\BID>
-        pattern = r"<BID>.*?(\d+).*?<\\?BID>"
-        ##  <BID>20</BID>
-        match = re.search(pattern, text, flags=re.IGNORECASE | re.DOTALL)
-        
-        if match:
-            try:
-                # Extract and convert the matched bid value to float
-                quantity = float(match.group(1).strip())
-                return quantity
-            except ValueError:
-                # Handle cases where the value isn't a valid number
-                raise ValueError("Invalid bid value")
-        else:
-            # Return a message if no valid match is found
-            raise ValueError("Invalid bid value")
 
-    
+    def build_history_section(self, agent):
+        """
+        Build history information string containing all rounds' bids, results, and plans.
+
+        Args:
+            agent: Bidder object
+
+        Returns:
+            Formatted history string, empty for first round
+        """
+        if not agent.history or len(agent.history) == 0:
+            return ""
+
+        history_lines = ["=" * 70]
+        history_lines.append("HISTORY OF PREVIOUS ROUNDS")
+        history_lines.append("=" * 70)
+
+        for i, hist in enumerate(agent.history):
+            history_lines.append(f"\n{'─' * 70}")
+            history_lines.append(f"ROUND {i + 1}")
+            history_lines.append(f"{'─' * 70}")
+            history_lines.append(f"Your plan: {agent.reasoning[i] if i < len(agent.reasoning) else 'N/A'}")
+            history_lines.append(f"\nResults: {hist}")
+
+        history_lines.append(f"\n{'=' * 70}")
+        history_lines.append("CURRENT ROUND")
+        history_lines.append(f"{'=' * 70}\n")
+
+        return "\n".join(history_lines)
+
+    def parse_plan_and_action(self, text):
+        """
+        Parse LLM response for <PLAN> and <ACTION> tags.
+
+        Args:
+            text: LLM response text
+
+        Returns:
+            (plan, action) tuple
+
+        Raises:
+            ValueError: If parsing fails
+        """
+        # Parse PLAN
+        plan_pattern = r"<PLAN>(.*?)</PLAN>"
+        plan_match = re.search(plan_pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        if not plan_match:
+            raise ValueError("PLAN tag not found")
+        plan = plan_match.group(1).strip()
+
+        # Parse ACTION (number, including decimals)
+        action_pattern = r"<ACTION>\s*(\d+(?:\.\d+)?)\s*</ACTION>"
+        action_match = re.search(action_pattern, text, flags=re.IGNORECASE)
+        if not action_match:
+            raise ValueError("ACTION tag not found or invalid (must be a number)")
+        action = action_match.group(1).strip()
+
+        return plan, action
+
+
     def run(self):
-        '''run for one round'''
+        '''run for one round using unified prompt format'''
 
         for agent in self.agents:
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
             instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render({"name":agent.name, "other_agent_names": other_agent_names}))
 
-            general_prompt = instruction + self.rule.persona +"\n" + str(self.rule.rule_explanation) + "\n" 
+            general_prompt = instruction + self.rule.persona +"\n" + str(self.rule.rule_explanation) + "\n"
 
-            if len(agent.reasoning) == 0:
-                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_first.txt"))
-                prompt_elicit_plan = str(elicit_plan.render({}))
+            # Build history section
+            history_section = self.build_history_section(agent)
 
-                q_plan = QuestionFreeText(
-                    question_name = "q_plan",
-                    question_text = general_prompt +  prompt_elicit_plan
-                )
-                survey = Survey(questions = [q_plan])
-                result = survey.by(self.model).run(
-                            remote_inference_description="check remote reuse",
-                            remote_inference_visibility="public"
-                        )
-                plan = result.select("q_plan").to_list()[0]
-                # plan= result['choices'][0]['message']['content']
-                # print(plan)
-                
-                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_first.txt"))
-                prompt_elicit_bid = str(elicit_bid.render({"current_value":agent.current_value, "plan": plan}))
-                
-                # Initialize bid and a retry mechanism
-                retry_attempts = 3
-                attempt = 0
-                bid = None
-                format_warning = ''
-                while attempt < retry_attempts:
-                    try:
-                        # Run the survey and fetch the result
-                        q_bid = QuestionFreeText(
-                            question_name="q_bid",
-                            question_text=general_prompt + prompt_elicit_bid + format_warning
-                        )
-                        result = self.model.simple_ask(q_bid)
-                        bid_str= result['choices'][0]['message']['content']
-                        print(bid_str)
-                        bid = self.parse_bid(bid_str)
-                        break  # Exit loop if bid is successfully processed
-                    except (ValueError, TypeError) as e:
-                        # Handle conversion errors or other issues
-                        print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
-                        attempt += 1
-                        format_warning = "Wrong format. You MUST follow the output format!"
-                        continue
+            # Build transcript (empty for sealed bid, but included for consistency)
+            transcript = ""
 
-                if bid is None or attempt == retry_attempts:
-                    raise RuntimeError("Failed to process the bid after multiple attempts.")
+            # Determine round number
+            current_round = len(agent.reasoning) + 1
+            total_rounds = self.rule.round
 
+            # Use unified template
+            unified_template = Prompt.from_txt(os.path.join(prompt_dir, "unified_sealed_bid.txt"))
+            prompt_content = str(unified_template.render({
+                "history_section": history_section,
+                "current_round": current_round,
+                "total_rounds": total_rounds,
+                "current_value": agent.current_value,
+                "transcript": transcript
+            }))
 
-            else:
-                last_round = agent.history[-1]
+            full_prompt = general_prompt + prompt_content
 
-                reflection = Prompt.from_txt(os.path.join(prompt_dir,"reflection.txt"))
-                prompt_reflection = str(reflection.render({"last_round":last_round}))
+            # Retry mechanism
+            retry_attempts = 3
+            attempt = 0
+            bid = None
+            plan = None
+            format_warning = ''
 
-                q_counterfact = QuestionFreeText(
-                    question_name = "q_counterfact",
-                    question_text = general_prompt+ prompt_reflection
-                )
-                result = self.model.simple_ask(q_counterfact)
-                counterfact= result['choices'][0]['message']['content']
-                # print("=========================== \n", counterfact)
-                
-                history = agent.history
-                reasoning = agent.reasoning
-                max_length = max(len(history), len(reasoning))
-                history_prompt = ''.join([history[i] +" your plan for this round is: "+ reasoning[i] if i < len(history) and i < len(reasoning) else history[i] if i < len(history) else reasoning[i] for i in range(max_length)])
-                # previous_plan = agent.reasoning[-1]
-                elicit_plan = Prompt.from_txt(os.path.join(prompt_dir,"plan_after_reflec.txt"))
-                prompt_elicit_plan = str(elicit_plan.render({"history": history_prompt, "counterfact":counterfact}))
-                q_plan = QuestionFreeText(
-                    question_name = "q_plan",
-                    question_text = general_prompt + prompt_elicit_plan
-                )
-            
-                # print(q_plan)
-                # result = self.model.simple_ask(q_plan)
-                survey = Survey(questions = [q_plan])
-                result = survey.by(self.model).run(
-                    remote_inference_description="check remote reuse",
-                    remote_inference_visibility="public"
-                )
-                plan = result.select("q_plan").to_list()[0]
-                # plan= result['choices'][0]['message']['content']
-                print(plan, "====================\n")
-                
-                elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_after_reflec.txt"))
-                prompt_elicit_bid = str(elicit_bid.render({"counterfact": counterfact,"current_value": agent.current_value, "plan": plan}))
+            while attempt < retry_attempts:
+                try:
+                    q_bid = QuestionFreeText(
+                        question_name="q_bid",
+                        question_text=full_prompt + format_warning
+                    )
 
+                    survey = Survey(questions=[q_bid])
+                    result = survey.by(self.model).run(cache = self.cache)
+                    response = result.select("q_bid").to_list()[0]
 
-                retry_attempts = 3
-                attempt = 0
-                bid = None
-                format_warning = ''
-                while attempt < retry_attempts:
-                    try:
-                        # Run the survey and fetch the result
+                    # Print LLM response with clear separator
+                    print("\n" + "="*70)
+                    print(f"[SealBid] LLM Response (Agent: {agent.name}, Round: {current_round}, Attempt: {attempt+1})")
+                    print("="*70)
+                    print(response)
+                    print("="*70 + "\n")
 
-                        q_bid = QuestionFreeText(
-                            question_name = "q_bid",
-                            question_text =  general_prompt + prompt_elicit_bid + format_warning
-                            )
-                        survey = Survey(questions = [q_bid])
-                        result = survey.by(self.model).run(
-                            remote_inference_description="check remote reuse",
-                            remote_inference_visibility="public"
-                        )
-                        # result = self.model.simple_ask(q_bid)
-                        bid_str = result.select("q_bid").to_list()[0]
-                        # bid_str= result['choices'][0]['message']['content']
-                        print(bid_str)
-                        bid = self.parse_bid(bid_str)
-                        break  # Exit loop if bid is successfully processed
-                    except (ValueError, TypeError) as e:
-                        # Handle conversion errors or other issues
-                        print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
-                        attempt += 1
-                        format_warning = "Wrong format. You MUST follow the output format!"
-                        continue
+                    # Parse PLAN and ACTION
+                    plan, action = self.parse_plan_and_action(response)
+                    bid = float(action)
 
-                if bid is None or attempt == retry_attempts:
-                    raise RuntimeError("Failed to process the bid after multiple attempts.")
+                    # Validate PLAN content
+                    if len(plan) == 0:
+                        raise ValueError("PLAN cannot be empty")
 
-            # print(response)
+                    # Validate bid range (depends on value model)
+                    if self.rule.private_value == 'private':
+                        max_bid = self.rule.private_range
+                    else:  # affiliated or common
+                        max_bid = self.rule.common_range[1] + self.rule.private_range
 
+                    if bid < 0 or bid > max_bid:
+                        raise ValueError(f"Bid {bid} out of range [0, {max_bid}]")
+
+                    # Validate bid increment (handle floating point precision)
+                    remainder = abs(bid % self.rule.increment)
+                    if remainder > 1e-9 and abs(remainder - self.rule.increment) > 1e-9:
+                        raise ValueError(f"Bid {bid} must be a multiple of increment {self.rule.increment}")
+
+                    break  # Exit loop if bid is successfully processed
+
+                except (ValueError, TypeError) as e:
+                    print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
+                    attempt += 1
+                    format_warning = f"\n\nWrong format or invalid value. Error: {str(e)}. You MUST follow the output format!"
+                    continue
+
+            if bid is None or attempt == retry_attempts:
+                raise RuntimeError("Failed to process the bid after multiple attempts.")
+
+            # Store plan and bid
             agent.reasoning.append(plan)
             self.bid_list.append({"agent":agent.name,"bid": bid})
             agent.submitted_bids.append(bid)
-            
+
         print(self.bid_list, '\n Value list:',[agent.current_value for agent in self.agents])
         self.declare_winner_and_price()
         print(self.winner)
@@ -380,7 +378,53 @@ class Clock():
     
     def __repr__(self):
         return f'Clock Auction: (bid_list={self.bid_list})'
-        
+
+    def parse_plan_and_action_clock(self, text):
+        """
+        Parse Clock auction response for <PLAN> and <ACTION> tags.
+
+        Args:
+            text: LLM response text
+
+        Returns:
+            (plan, action) tuple, action is "yes" or "no"
+
+        Raises:
+            ValueError: If parsing fails
+        """
+        # Parse PLAN
+        plan_pattern = r"<PLAN>(.*?)</PLAN>"
+        plan_match = re.search(plan_pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        if not plan_match:
+            raise ValueError("PLAN tag not found")
+        plan = plan_match.group(1).strip()
+
+        # Parse ACTION (Yes/No)
+        action_pattern = r"<ACTION>\s*(yes|no)\s*</ACTION>"
+        action_match = re.search(action_pattern, text, flags=re.IGNORECASE)
+        if not action_match:
+            raise ValueError("ACTION tag not found or invalid (must be Yes or No)")
+        action = action_match.group(1).lower()
+
+        return plan, action
+
+    def build_history_section_clock(self):
+        """
+        Build history information string for clock auctions.
+
+        Returns:
+            Formatted history string, empty for first period
+        """
+        if not self.transcript or len(self.transcript) == 0:
+            return ""
+
+        history_lines = ["=== History of Previous Periods ==="]
+        for trans in self.transcript:
+            history_lines.append(trans)
+        history_lines.append("\n=== Current Period ===")
+
+        return "\n".join(history_lines)
+
     def dynamic(self):
         if self.rule.ascend_descend == "ascend":
             self.current_price +=self.change
@@ -390,7 +434,7 @@ class Clock():
             raise ValueError(f"Rule {self.rule.ascend_descend} not allowed")
     
     def run_one_clock(self, counterfact=None):
-        '''run for one round'''
+        '''run for one period using unified prompt format'''
         self.exit_number = 0
         print("===========",self.current_price)
         agent_in_play = self.agent_left[:]
@@ -403,50 +447,75 @@ class Clock():
                 {"name":agent.name, "other_agent_names": other_agent_names})
                 )
 
-            # if counterfact is None:
-            elicit_bid = Prompt.from_txt(os.path.join(prompt_dir,"bid_clock_reflec.txt"))
-            prompt_elicit_bid = str(elicit_bid.render(
-                {"current_value": agent.current_value, 
-                "transcript": self.transcript, 
-                "urrent_price":self.current_price, 
-                # "plan": agent.reasoning[-1], #if agent.reasoning else None,
-                "current_price": self.current_price})
-                )
-                
-            general_prompt = instruction +"\n"+ str(self.rule.rule_explanation) +"\n"+ prompt_elicit_bid
+            general_prompt = instruction +"\n"+ str(self.rule.rule_explanation) +"\n"
 
-            # q_bid = QuestionYesNo(
-            #     question_name = "q_bid",
-            #     question_text = general_prompt,
-            # )
-            # Initialize bid and a retry mechanism
+            # Build history section
+            history_section = self.build_history_section_clock()
+
+            # Build transcript
+            transcript = "\n".join(self.transcript) if self.transcript else ""
+
+            # Use unified clock template
+            unified_template = Prompt.from_txt(os.path.join(prompt_dir, "unified_clock.txt"))
+            prompt_content = str(unified_template.render({
+                "history_section": history_section,
+                "clock_cycle": self.clock + 1,
+                "current_value": agent.current_value,
+                "current_price": self.current_price,
+                "next_price": self.current_price + self.rule.increment,
+                "transcript": transcript
+            }))
+
+            full_prompt = general_prompt + prompt_content
+
+            # Retry mechanism
             retry_attempts = 3
             attempt = 0
-            bid_warning = "" ## if the agent decide to do something that is not allowed
+            response = None
+            plan = None
+            bid_warning = ""
+
             while attempt < retry_attempts:
                 try:
-                    q_bid = QuestionFreeText(
-                            question_name = "q_bid",
-                            question_text = str(general_prompt) + bid_warning,
-                        )
+                    q_action = QuestionFreeText(
+                        question_name="q_action",
+                        question_text=full_prompt + bid_warning
+                    )
 
-                    survey = Survey(questions = [q_bid])
-                    result = survey.by(self.model).run(
-                            remote_inference_description="check remote reuse",
-                            remote_inference_visibility="public"
-                        )
-                    action = result.select("q_bid").to_list()[0]
+                    survey = Survey(questions=[q_action])
+                    result = survey.by(self.model).run(cache = self.cache)
+                    action_response = result.select("q_action").to_list()[0]
 
-                    ## Parse the result
-                    print(action)
-                    response = self.parse_action(action)
-                    print("=========",agent.name, response)
+                    # Print LLM response with clear separator
+                    print("\n" + "="*70)
+                    print(f"[Clock] LLM Response (Agent: {agent.name}, Clock: {self.clock+1}, Attempt: {attempt+1})")
+                    print("="*70)
+                    print(action_response)
+                    print("="*70 + "\n")
+
+                    # Parse PLAN and ACTION
+                    plan, response = self.parse_plan_and_action_clock(action_response)
+
+                    # Validate PLAN content
+                    if len(plan) == 0:
+                        raise ValueError("PLAN cannot be empty")
+
+                    # Store the plan
+                    if len(agent.reasoning) <= self.clock:
+                        agent.reasoning.append(plan)
+                    else:
+                        agent.reasoning[self.clock] = plan
+
+                    print("=========", agent.name, response)
                     break
+
                 except Exception as e:
-                    bid_warning = f"Error: {str(e)}"
+                    bid_warning = f"\nError: {str(e)}. Please follow the format!"
                     print("An error occurred:", e)
-                if attempt == retry_attempts:
-                    raise RuntimeError("Failed to process the bid after multiple attempts.")
+                    attempt += 1
+
+            if attempt == retry_attempts:
+                raise RuntimeError("Failed to process the action after multiple attempts.")
 
 
             if self.rule.ascend_descend == 'ascend':
@@ -568,32 +637,16 @@ class Clock():
                 agent.profit.append(0)
                 agent.winning.append(False)
         return {'bidding history':self.exit_list, 'winner':self.winner}
-    
 
-    def parse_action(self, text):
-        # Convert text to lowercase for case-insensitive matching
-        text = text.lower()
+    # DEPRECATED: parse_action() has been replaced by parse_plan_and_action_clock()
+    # Old method kept for reference but no longer used
 
-        bid_pattern = r"<action>\s*(yes|no)\s*(?:</action>|<\\action>|<action>)"
-        
-        action_match = re.search(bid_pattern, text, flags=re.IGNORECASE)
-        if not action_match:
-            raise ValueError("Invalid or missing action. Action must be Yes or No.")
-        
-        action = action_match.group(1).lower()
-
-        if action == "yes" or action == "no":
-            return action
-        else:
-            raise RuntimeError("please return with the correct format: <ACTION> Yes or No  </ACTION>")
-
-    
     def share_information(self):
         if self.rule.open_blind == "open":
             if self.exit_number == 0:
-                return f'In clock round {self.clock+1}, the price was {self.current_price}, no players dropped out'
+                return f'In clock period {self.clock+1}, the price was {self.current_price}, no players dropped out'
             else:
-                return f'In clock round {self.clock+1}, the price was {self.current_price}, {self.exit_number} players dropped out'
+                return f'In clock period {self.clock+1}, the price was {self.current_price}, {self.exit_number} players dropped out'
         elif self.rule.open_blind == "blind":
             return None
 
@@ -676,11 +729,14 @@ class Auction_plan():
     '''
     This class manages the auction process using specified agents and rules.
     '''
-    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=None, model='gpt-4o',temperature = 0):
+    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=None, model='gpt-4o',temperature = 0, service_name=None):
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
-        self.model= Model(model, temperature=temperature)
+        if service_name:
+            self.model= Model(model, temperature=temperature, service_name=service_name)
+        else:
+            self.model= Model(model, temperature=temperature)
         self.cache = cache
         self.output_dir = output_dir
         self.timestring =timestring
@@ -781,18 +837,12 @@ class Auction_plan():
             bid_describe = "All the bids for this round were {}".format(', '.join(map(str, sorted_bids)))
             if self.rule.price_order == "second":
                 bid_describe += f". The highest bidder won with a bid of {sorted_bids[0]} and paid {sorted_bids[1]}."
-            elif self.rule.price_order == "first":
-                bid_describe += f". The highest bidder won with a bid of {sorted_bids[0]} and would’ve preferred to bid {float(sorted_bids[1]) + 1}."
         elif self.rule.seal_clock == "clock":
             bids = [agent.exit_price[self.round_number] for agent in self.agents]
             sorted_bids = sorted(bids, reverse=True)
             bid_describe = "All the exit prices for this round were {}".format(', '.join(map(str, sorted_bids)))
 
 
-        # if self.winner_list[self.round_number] == "NA":
-        #     winner_profit = 0
-        # else:
-        winner_profit = next(agent.profit[self.round_number] for agent in self.agents if agent.name == self.winner_list[self.round_number])
         
         # for agent in self.agents:
         #     if self.rule.seal_clock == "seal":
@@ -824,9 +874,8 @@ class Auction_plan():
                     f"In round {self.round_number}, "
                     + value_describe + "\n"
                     + total_profit_describe + "\n"
-                    + bid_describe + f" The winner's profit was {winner_profit}."
+                    + bid_describe
                     + f" Did you win the auction: {'Yes' if agent.winning[self.round_number] else 'No'}"
-                    + '++++++++++'
                 )
             elif self.rule.private_value == "common":
                 if self.rule.seal_clock == "seal":
@@ -841,7 +890,7 @@ class Auction_plan():
                     f"In round {self.round_number}, "
                     + value_describe + "\n"
                     + total_profit_describe + "\n"
-                    + bid_describe + f" The winner's profit was {winner_profit}."  + "\n"
+                    + bid_describe + "\n"
                     + (f"Your reasoning for your decision was '{agent.reasoning[self.round_number]}' " if self.rule.seal_clock == "seal" else "")
                 )
             agent.history.append(description)

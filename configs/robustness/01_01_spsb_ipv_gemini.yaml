@@ -1,0 +1,41 @@
+# SPSB with IPV - Gemini 1.5 Flash
+
+experiment:
+  name: "spsb_ipv_gemini"
+  version: "V10"
+  description: "Second-Price Sealed Bid with Independent Private Values (Gemini 1.5 Flash)"
+
+auction:
+  number_agents: 3
+  rounds: 5
+
+rule:
+  seal_clock: "seal"
+  price_order: "second"
+  private_value: "private"
+  open_blind: "open"
+  closing: false
+  reserve_price: 0
+  special_name: "private_second_price.txt"
+
+value:
+  common_range: [20, 79]
+  private_range: 99
+  increment: 0.5
+  seed_base: 1299
+
+llm:
+  model: "gemini-1.5-flash"
+  service_name: "google"
+  temperature: 0.5
+
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: "rule_template/V10/"
+
+execution:
+  repetitions: 5
+  parallel: false
+  max_workers: 4
+  output_dir: "experiment_logs/V10/robustness/spsb_ipv_gemini"
