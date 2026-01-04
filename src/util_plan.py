@@ -194,7 +194,11 @@ class SealBid():
 
 
     def run(self):
-        '''run for one round using unified prompt format'''
+        '''run for one round using parallel Survey (Mechanism 1: within-round parallelization)'''
+
+        # STEP 1: Build prompts for all agents upfront
+        agent_prompts = []
+        agent_metadata = []
 
         for agent in self.agents:
             other_agent_names = ', '.join([a.name for a in self.agents if a is not agent])
@@ -224,64 +228,40 @@ class SealBid():
             }))
 
             full_prompt = general_prompt + prompt_content
+            agent_prompts.append(full_prompt)
+            agent_metadata.append({
+                'agent': agent,
+                'current_round': current_round
+            })
 
-            # Retry mechanism
-            retry_attempts = 3
-            attempt = 0
-            bid = None
-            plan = None
-            format_warning = ''
+        # STEP 2: Create parallel Survey with unique question names
+        questions = []
+        for i, full_prompt in enumerate(agent_prompts):
+            agent = agent_metadata[i]['agent']
+            agent_name = agent.name.replace(" ", "_")
 
-            while attempt < retry_attempts:
-                try:
-                    q_bid = QuestionFreeText(
-                        question_name="q_bid",
-                        question_text=full_prompt + format_warning
-                    )
+            q_bid = QuestionFreeText(
+                question_name=f"q_bid_{agent_name}",
+                question_text=full_prompt
+            )
+            questions.append(q_bid)
 
-                    survey = Survey(questions=[q_bid])
-                    result = survey.by(self.model).run(cache = self.cache)
-                    response = result.select("q_bid").to_list()[0]
+        # STEP 3: Execute all LLM calls in parallel
+        survey = Survey(questions=questions)
+        result = survey.by(self.model).run(cache=self.cache)
 
-                    # Print LLM response with clear separator
-                    print("\n" + "="*70)
-                    print(f"[SealBid] LLM Response (Agent: {agent.name}, Round: {current_round}, Attempt: {attempt+1})")
-                    print("="*70)
-                    print(response)
-                    print("="*70 + "\n")
+        # STEP 4: Parse all responses and handle retries
+        for i, metadata in enumerate(agent_metadata):
+            agent = metadata['agent']
+            agent_name = agent.name.replace(" ", "_")
+            question_name = f"q_bid_{agent_name}"
 
-                    # Parse PLAN and ACTION
-                    plan, action = self.parse_plan_and_action(response)
-                    bid = float(action)
+            response = result.select(question_name).to_list()[0]
 
-                    # Validate PLAN content
-                    if len(plan) == 0:
-                        raise ValueError("PLAN cannot be empty")
-
-                    # Validate bid range (depends on value model)
-                    if self.rule.private_value == 'private':
-                        max_bid = self.rule.private_range
-                    else:  # affiliated or common
-                        max_bid = self.rule.common_range[1] + self.rule.private_range
-
-                    if bid < 0 or bid > max_bid:
-                        raise ValueError(f"Bid {bid} out of range [0, {max_bid}]")
-
-                    # Validate bid increment (handle floating point precision)
-                    remainder = abs(bid % self.rule.increment)
-                    if remainder > 1e-9 and abs(remainder - self.rule.increment) > 1e-9:
-                        raise ValueError(f"Bid {bid} must be a multiple of increment {self.rule.increment}")
-
-                    break  # Exit loop if bid is successfully processed
-
-                except (ValueError, TypeError) as e:
-                    print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
-                    attempt += 1
-                    format_warning = f"\n\nWrong format or invalid value. Error: {str(e)}. You MUST follow the output format!"
-                    continue
-
-            if bid is None or attempt == retry_attempts:
-                raise RuntimeError("Failed to process the bid after multiple attempts.")
+            # Call helper method to handle parsing and retries
+            bid, plan = self._parse_and_validate_bid(
+                response, agent, metadata['current_round'], agent_prompts[i]
+            )
 
             # Store plan and bid
             agent.reasoning.append(plan)
@@ -292,8 +272,81 @@ class SealBid():
         self.declare_winner_and_price()
         print(self.winner)
         return {'bidding history':self.bid_list, 'winner':self.winner}
-    
-            
+
+
+    def _parse_and_validate_bid(self, initial_response, agent, current_round, full_prompt):
+        '''
+        Handle parsing, validation, and retry logic for a single agent's bid.
+
+        Args:
+            initial_response: Initial LLM response from parallel Survey
+            agent: Bidder object
+            current_round: Current round number
+            full_prompt: Agent's full prompt (for retry)
+
+        Returns:
+            (bid, plan) tuple
+
+        Raises:
+            RuntimeError: If all retry attempts fail
+        '''
+        retry_attempts = 3
+        attempt = 0
+        format_warning = ''
+        response = initial_response
+
+        while attempt < retry_attempts:
+            try:
+                # Print response with clear separator
+                print("\n" + "="*70)
+                print(f"[SealBid] LLM Response (Agent: {agent.name}, Round: {current_round}, Attempt: {attempt+1})")
+                print("="*70)
+                print(response)
+                print("="*70 + "\n")
+
+                # Parse PLAN and ACTION
+                plan, action = self.parse_plan_and_action(response)
+                bid = float(action)
+
+                # Validate PLAN content
+                if len(plan) == 0:
+                    raise ValueError("PLAN cannot be empty")
+
+                # Validate bid range (depends on value model)
+                if self.rule.private_value == 'private':
+                    max_bid = self.rule.private_range
+                else:  # affiliated or common
+                    max_bid = self.rule.common_range[1] + self.rule.private_range
+
+                if bid < 0 or bid > max_bid:
+                    raise ValueError(f"Bid {bid} out of range [0, {max_bid}]")
+
+                # Validate bid increment (handle floating point precision)
+                remainder = abs(bid % self.rule.increment)
+                if remainder > 1e-9 and abs(remainder - self.rule.increment) > 1e-9:
+                    raise ValueError(f"Bid {bid} must be a multiple of increment {self.rule.increment}")
+
+                return bid, plan  # Success
+
+            except (ValueError, TypeError) as e:
+                print(f"Error processing bid: {e}. Retrying ({attempt + 1}/{retry_attempts})...")
+                attempt += 1
+
+                if attempt < retry_attempts:
+                    # Retry individually for this agent only (doesn't affect other successful agents)
+                    format_warning = f"\n\nWrong format or invalid value. Error: {str(e)}. You MUST follow the output format!"
+                    q_retry = QuestionFreeText(
+                        question_name="q_bid_retry",
+                        question_text=full_prompt + format_warning
+                    )
+                    survey_retry = Survey(questions=[q_retry])
+                    result_retry = survey_retry.by(self.model).run(cache=self.cache)
+                    response = result_retry.select("q_bid_retry").to_list()[0]
+
+        raise RuntimeError(f"Failed to process bid for {agent.name} after {retry_attempts} attempts")
+
+
+
     def declare_winner_and_price(self):
         '''Sort the bid list by the 'bid' key in descending order to find the highest bids'''
         sorted_bids = sorted(self.bid_list, key=lambda x: float(x['bid']), reverse=True)
@@ -434,13 +487,16 @@ class Clock():
             raise ValueError(f"Rule {self.rule.ascend_descend} not allowed")
     
     def run_one_clock(self, counterfact=None):
-        '''run for one period using unified prompt format'''
+        '''run for one period using parallel Survey (Mechanism 1: within-period parallelization)'''
         self.exit_number = 0
         print("===========",self.current_price)
-        agent_in_play = self.agent_left[:]
+        agent_in_play = self.agent_left[:]  # Keep snapshot mechanism
+
+        # STEP 1: Build prompts for all active agents upfront
+        agent_prompts = []
+        agent_metadata = []
 
         for agent in agent_in_play:
-
             other_agent_names = ', '.join([a.name for a in agent_in_play if a is not agent])
             instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render(
@@ -467,79 +523,127 @@ class Clock():
             }))
 
             full_prompt = general_prompt + prompt_content
+            agent_prompts.append(full_prompt)
+            agent_metadata.append({'agent': agent})
 
-            # Retry mechanism
-            retry_attempts = 3
-            attempt = 0
-            response = None
-            plan = None
-            bid_warning = ""
+        # STEP 2: Create parallel Survey with unique question names
+        questions = []
+        for i, full_prompt in enumerate(agent_prompts):
+            agent = agent_metadata[i]['agent']
+            agent_name = agent.name.replace(" ", "_")
 
-            while attempt < retry_attempts:
-                try:
-                    q_action = QuestionFreeText(
-                        question_name="q_action",
-                        question_text=full_prompt + bid_warning
-                    )
+            q_action = QuestionFreeText(
+                question_name=f"q_action_{agent_name}_clock_{self.clock}",
+                question_text=full_prompt
+            )
+            questions.append(q_action)
 
-                    survey = Survey(questions=[q_action])
-                    result = survey.by(self.model).run(cache = self.cache)
-                    action_response = result.select("q_action").to_list()[0]
+        # STEP 3: Execute all LLM calls in parallel
+        survey = Survey(questions=questions)
+        result = survey.by(self.model).run(cache=self.cache)
 
-                    # Print LLM response with clear separator
-                    print("\n" + "="*70)
-                    print(f"[Clock] LLM Response (Agent: {agent.name}, Clock: {self.clock+1}, Attempt: {attempt+1})")
-                    print("="*70)
-                    print(action_response)
-                    print("="*70 + "\n")
+        # STEP 4: Parse all responses and process dropout decisions
+        for i, metadata in enumerate(agent_metadata):
+            agent = metadata['agent']
+            agent_name = agent.name.replace(" ", "_")
+            question_name = f"q_action_{agent_name}_clock_{self.clock}"
 
-                    # Parse PLAN and ACTION
-                    plan, response = self.parse_plan_and_action_clock(action_response)
+            response_text = result.select(question_name).to_list()[0]
 
-                    # Validate PLAN content
-                    if len(plan) == 0:
-                        raise ValueError("PLAN cannot be empty")
+            # Call helper method to handle parsing and retries
+            plan, action = self._parse_and_validate_clock_action(
+                response_text, agent, agent_prompts[i]
+            )
 
-                    # Store the plan
-                    if len(agent.reasoning) <= self.clock:
-                        agent.reasoning.append(plan)
-                    else:
-                        agent.reasoning[self.clock] = plan
+            # Store the plan
+            if len(agent.reasoning) <= self.clock:
+                agent.reasoning.append(plan)
+            else:
+                agent.reasoning[self.clock] = plan
 
-                    print("=========", agent.name, response)
-                    break
+            print("=========", agent.name, action)
 
-                except Exception as e:
-                    bid_warning = f"\nError: {str(e)}. Please follow the format!"
-                    print("An error occurred:", e)
-                    attempt += 1
-
-            if attempt == retry_attempts:
-                raise RuntimeError("Failed to process the action after multiple attempts.")
-
-
+            # Process dropout decision (keep existing logic)
             if self.rule.ascend_descend == 'ascend':
-                if response.lower() == 'no':
-                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+                if action.lower() == 'no':
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": action.lower()})
                     self.agent_left.remove(agent)
                     agent.exit_price.append(str(self.current_price))
                     self.exit_number += 1
                     self.exit_list.append({"agent":agent.name,"bid": self.current_price})
                 else:
-                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": action.lower()})
             elif self.rule.ascend_descend == 'descend':
-                if response.lower() == 'yes':
+                if action.lower() == 'yes':
                     self.agent_left.append(agent)
-                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": action.lower()})
                     agent.exit_price.append(str(self.current_price))
                 else:
-                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": response.lower()})
-            
+                    self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": action.lower()})
+
         ## update the shared information
         self.transcript.append(self.share_information())
 
         print("One clock done")
-        
+
+
+    def _parse_and_validate_clock_action(self, initial_response, agent, full_prompt):
+        '''
+        Handle parsing, validation, and retry logic for a single agent's clock action.
+
+        Args:
+            initial_response: Initial LLM response from parallel Survey
+            agent: Bidder object
+            full_prompt: Agent's full prompt (for retry)
+
+        Returns:
+            (plan, action) tuple where action is "yes" or "no"
+
+        Raises:
+            RuntimeError: If all retry attempts fail
+        '''
+        retry_attempts = 3
+        attempt = 0
+        bid_warning = ""
+        response = initial_response
+
+        while attempt < retry_attempts:
+            try:
+                # Print response with clear separator
+                print("\n" + "="*70)
+                print(f"[Clock] LLM Response (Agent: {agent.name}, Clock: {self.clock+1}, Attempt: {attempt+1})")
+                print("="*70)
+                print(response)
+                print("="*70 + "\n")
+
+                # Parse PLAN and ACTION
+                plan, action = self.parse_plan_and_action_clock(response)
+
+                # Validate PLAN content
+                if len(plan) == 0:
+                    raise ValueError("PLAN cannot be empty")
+
+                return plan, action  # Success
+
+            except Exception as e:
+                bid_warning = f"\nError: {str(e)}. Please follow the format!"
+                print("An error occurred:", e)
+                attempt += 1
+
+                if attempt < retry_attempts:
+                    # Retry individually for this agent only
+                    q_retry = QuestionFreeText(
+                        question_name="q_action_retry",
+                        question_text=full_prompt + bid_warning
+                    )
+                    survey_retry = Survey(questions=[q_retry])
+                    result_retry = survey_retry.by(self.model).run(cache=self.cache)
+                    response = result_retry.select("q_action_retry").to_list()[0]
+
+        raise RuntimeError(f"Failed to process action for {agent.name} after {retry_attempts} attempts")
+
+
+
     def run(self):
         '''Run the clock until the ending condition'''
 
