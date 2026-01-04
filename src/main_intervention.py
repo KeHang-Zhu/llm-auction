@@ -1,4 +1,4 @@
-from edsl.data import Cache
+from edsl import Cache
 import logging
 import os
 import pandas as pd

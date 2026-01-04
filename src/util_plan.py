@@ -7,8 +7,8 @@ import os
 import sys
 from edsl import Model
 from edsl import Agent, Scenario, Survey
-from edsl.data import Cache
-from edsl.Base import Base
+from edsl import Cache
+from edsl.base import Base
 from edsl.questions import QuestionFreeText, QuestionYesNo
 from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical

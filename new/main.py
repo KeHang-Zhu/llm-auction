@@ -24,9 +24,10 @@ import pandas as pd
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from edsl.data import Cache
+from edsl import Cache
 from experiment.config import ExperimentConfig
 from experiment.metadata import MetadataManager
+from export_results import export_experiment_results
 
 # Import auction classes
 from util_plan import Auction_plan, Rule_plan
@@ -377,6 +378,25 @@ class ExperimentOrchestrator:
 
         if results_summary['failed_runs'] > 0:
             logger.warning(f"  Failed: {results_summary['failed_runs']} runs")
+
+        # Auto-export results to CSV
+        logger.info("Exporting results to CSV...")
+        try:
+            # Save CSV in the run directory under results/
+            csv_output_dir = str(self.metadata_mgr.run_dir / "results")
+
+            csv_path = export_experiment_results(
+                run_dir=str(self.metadata_mgr.run_dir),
+                config_path=self.config_path,
+                output_dir=csv_output_dir,
+                silent=True
+            )
+            if csv_path:
+                logger.info(f"  CSV exported: {csv_path}")
+            else:
+                logger.warning("  CSV export failed (no result files found)")
+        except Exception as e:
+            logger.error(f"  CSV export error: {e}", exc_info=True)
 
     def run(self):
         """
