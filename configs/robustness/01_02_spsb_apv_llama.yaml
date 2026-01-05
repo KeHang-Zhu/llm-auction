@@ -1,0 +1,41 @@
+# SPSB with APV - Llama 3-8B
+
+experiment:
+  name: "spsb_apv_llama"
+  version: "V10"
+  description: "Second-Price Sealed Bid with Affiliated Private Values (Llama 3-8B)"
+
+auction:
+  number_agents: 3
+  rounds: 1
+
+rule:
+  seal_clock: "seal"
+  price_order: "second"
+  private_value: "affiliated"
+  open_blind: "open"
+  closing: false
+  reserve_price: 0
+  special_name: "affiliated_spsb.txt"
+
+value:
+  common_range: [10, 49]
+  private_range: 49
+  increment: 0.1
+  seed_base: 1399  # 1399 for affiliated
+
+llm:
+  model: "meta-llama/Meta-Llama-3-8B-Instruct"
+  service_name: "together"
+  temperature: 0.5
+
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: "rule_template/V10/"
+
+execution:
+  repetitions: 5
+  parallel: false
+  max_workers: 4
+  output_dir: "robustness_logs/V10/spsb_apv_llama"

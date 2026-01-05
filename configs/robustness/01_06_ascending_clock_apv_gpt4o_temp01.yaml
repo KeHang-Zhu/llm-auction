@@ -1,0 +1,41 @@
+# Ascending Clock with APV - GPT-4o Temperature 0.1
+
+experiment:
+  name: "ascending_clock_apv_gpt4o_temp01"
+  version: "V10"
+  description: "Ascending Clock Auction with Affiliated Private Values (GPT-4o temp=0.1)"
+
+auction:
+  number_agents: 3
+  rounds: 1
+
+rule:
+  seal_clock: "clock"
+  ascend_descend: "ascend"
+  price_order: "second"
+  private_value: "affiliated"
+  open_blind: "open"
+  closing: false
+  reserve_price: 0
+  special_name: "affiliated_ac.txt"
+
+value:
+  common_range: [10, 49]
+  private_range: 49
+  increment: 0.5
+  seed_base: 1399  # 1399 for affiliated
+
+llm:
+  model: "gpt-4o"
+  temperature: 0.1
+
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: "rule_template/V10/"
+
+execution:
+  repetitions: 5
+  parallel: false
+  max_workers: 4
+  output_dir: "robustness_logs/V10/ascending_clock_apv_gpt4o_temp01"

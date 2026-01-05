@@ -165,7 +165,7 @@ class SealBid():
 
     def parse_plan_and_action(self, text):
         """
-        Parse LLM response for <PLAN> and <ACTION> tags.
+        Parse LLM response for <PLAN> and <ACTION> tags with robust handling.
 
         Args:
             text: LLM response text
@@ -183,12 +183,22 @@ class SealBid():
             raise ValueError("PLAN tag not found")
         plan = plan_match.group(1).strip()
 
-        # Parse ACTION (number, including decimals)
-        action_pattern = r"<ACTION>\s*(\d+(?:\.\d+)?)\s*</ACTION>"
-        action_match = re.search(action_pattern, text, flags=re.IGNORECASE)
-        if not action_match:
-            raise ValueError("ACTION tag not found or invalid (must be a number)")
-        action = action_match.group(1).strip()
+        # Parse ACTION with robust handling
+        # First, try to extract content between ACTION tags (including brackets, spaces, etc.)
+        action_content_pattern = r"<ACTION>(.*?)</ACTION>"
+        action_content_match = re.search(action_content_pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        if not action_content_match:
+            raise ValueError("ACTION tag not found")
+
+        action_content = action_content_match.group(1).strip()
+
+        # Now extract the number from the content (handles formats like "[45]", "45", " 45 ", etc.)
+        number_pattern = r"(\d+(?:\.\d+)?)"
+        number_match = re.search(number_pattern, action_content)
+        if not number_match:
+            raise ValueError("ACTION tag must contain a valid number")
+
+        action = number_match.group(1).strip()
 
         return plan, action
 
@@ -434,7 +444,7 @@ class Clock():
 
     def parse_plan_and_action_clock(self, text):
         """
-        Parse Clock auction response for <PLAN> and <ACTION> tags.
+        Parse Clock auction response for <PLAN> and <ACTION> tags with robust handling.
 
         Args:
             text: LLM response text
@@ -452,12 +462,22 @@ class Clock():
             raise ValueError("PLAN tag not found")
         plan = plan_match.group(1).strip()
 
-        # Parse ACTION (Yes/No)
-        action_pattern = r"<ACTION>\s*(yes|no)\s*</ACTION>"
-        action_match = re.search(action_pattern, text, flags=re.IGNORECASE)
-        if not action_match:
-            raise ValueError("ACTION tag not found or invalid (must be Yes or No)")
-        action = action_match.group(1).lower()
+        # Parse ACTION with robust handling
+        # First, extract content between ACTION tags
+        action_content_pattern = r"<ACTION>(.*?)</ACTION>"
+        action_content_match = re.search(action_content_pattern, text, flags=re.IGNORECASE | re.DOTALL)
+        if not action_content_match:
+            raise ValueError("ACTION tag not found")
+
+        action_content = action_content_match.group(1).strip()
+
+        # Now extract yes/no from the content (handles formats like "[Yes]", "Yes", " No ", etc.)
+        yes_no_pattern = r"\b(yes|no)\b"
+        yes_no_match = re.search(yes_no_pattern, action_content, flags=re.IGNORECASE)
+        if not yes_no_match:
+            raise ValueError("ACTION tag must contain 'Yes' or 'No'")
+
+        action = yes_no_match.group(1).lower()
 
         return plan, action
 

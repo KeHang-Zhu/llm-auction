@@ -1,0 +1,43 @@
+# Ascending Clock Auction with Affiliated Private Values (Closed) - Gemini 2.0 Flash
+# Closed: Bidders are NOT told when someone drops out
+
+experiment:
+  name: "ascending_clock_apv_closed_gemini"
+  version: "V10"
+  description: "Ascending Clock Auction with Affiliated Private Values (Closed) - Gemini 2.0 Flash"
+
+auction:
+  number_agents: 3
+  rounds: 1
+
+rule:
+  seal_clock: "clock"
+  ascend_descend: "ascend"
+  price_order: "second"
+  private_value: "affiliated"
+  open_blind: "blind"  # blind = closed (no dropout information shown)
+  closing: false
+  reserve_price: 0
+  special_name: "affiliated_ac_closed.txt"
+
+value:
+  common_range: [10, 49]
+  private_range: 49
+  increment: 0.5
+  seed_base: 1399  # 1399 for affiliated
+
+llm:
+  model: "gpt-4o"
+  service_name: "openai"
+  temperature: 1.0
+
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: "rule_template/V10/"
+
+execution:
+  repetitions: 5
+  parallel: false
+  max_workers: 4
+  output_dir: "robustness_logs/V10/ascending_clock_apv_closed_gemini"
