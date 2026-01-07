@@ -62,12 +62,22 @@ def flatten_results_to_csv(config_path: str, result_json_path: str, output_csv_p
         plans = round_data['plan']
 
         # Process each player in this round
+        # Player name order is fixed: Andy, Betty, Charles (maps to values array indices)
+        player_name_to_idx = {
+            'Bidder Andy': 0,
+            'Bidder Betty': 1,
+            'Bidder Charles': 2
+        }
+
         for idx, bid_entry in enumerate(bidding_history):
             player_name = bid_entry['agent']
             player_bid = bid_entry['bid']
-            player_value = values[idx]
-            player_profit = profits[idx]
-            player_plan = plans[idx]
+
+            # Get correct index based on player name (not bidding history order)
+            player_idx = player_name_to_idx.get(player_name, idx)
+            player_value = values[player_idx]
+            player_profit = profits[player_idx]
+            player_plan = plans[player_idx]
             is_winner = (player_name == winner_name)
 
             row = {
@@ -159,6 +169,11 @@ def export_experiment_results(run_dir: str, config_path: str, output_dir: str = 
 
     exp_name = config['experiment']['name']
     output_csv = os.path.join(output_dir, f"{exp_name}_results.csv")
+
+    # Delete existing CSV file to avoid appending to old data
+    if os.path.exists(output_csv):
+        os.remove(output_csv)
+        log(f"Removed existing CSV: {output_csv}")
 
     # Process each result file
     total_rows = 0
