@@ -772,7 +772,7 @@ class Clock():
             else:
                 return f'In clock period {self.clock+1}, the price was {self.current_price}, {self.exit_number} players dropped out'
         elif self.rule.open_blind == "blind":
-            return None
+            return ""  # Return empty string instead of None to avoid join() error
 
 
     def declear_winner_and_price(self):
