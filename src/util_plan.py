@@ -14,12 +14,31 @@ from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical
 from jinja2 import Template
 import re
+import yaml
+from functools import lru_cache
 
 current_script_path = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(current_script_path, '../rule_template/V10/')
 prompt_dir = os.path.join(current_script_path, '../Prompt/')
 
 # c = Cache()  
+
+@lru_cache(maxsize=1)
+def load_payment_examples(path: str):
+    """
+    Load payment example text snippets from a YAML file.
+    Returns an empty dict if the file is missing or invalid.
+    """
+    try:
+        with open(path, "r") as f:
+            data = yaml.safe_load(f) or {}
+            if isinstance(data, dict):
+                return data
+    except FileNotFoundError:
+        return {}
+    except Exception as exc:
+        print(f"Warning: failed to load payment examples from {path}: {exc}")
+    return {}
 
 def save_json(data, filename, directory):
     """Save data to a JSON file in the specified directory."""
@@ -36,7 +55,8 @@ class Rule_plan:
     def __init__(self, seal_clock,  private_value, open_blind, rounds, 
                  ascend_descend="ascend",
                  price_order = "second",
-                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, turns=20, closing= False, reserve_price = 0):
+                 common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, turns=20, closing= False, reserve_price = 0,
+                 include_payment_example=False, payment_example_key=None, payment_examples_path=None):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -88,6 +108,14 @@ class Rule_plan:
         
         ## Combine the rule prompt
         self.rule_explanation =  game_type
+
+        if include_payment_example:
+            examples_path = payment_examples_path or os.path.join(prompt_dir, "payment_examples.yaml")
+            examples = load_payment_examples(examples_path)
+            key = (payment_example_key or self._default_payment_example_key()).lower()
+            example_text = examples.get(key)
+            if example_text:
+                self.rule_explanation = f"{self.rule_explanation}\n\nPayment example: {example_text}"
         
         persona_str = Prompt.from_txt(os.path.join(prompt_dir,"persona.txt"))
         self.persona = str(persona_str.render({}))
@@ -101,8 +129,12 @@ class Rule_plan:
                 self.asking_prompt = "Do you want to stay in the bidding?"
             elif self.asking_prompt == "descend":
                 self.asking_prompt = "Do you want to accept the current price?"
-                
 
+    def _default_payment_example_key(self):
+        if self.seal_clock == "clock":
+            return "clock_open" if self.open_blind == "open" else "clock_closed"
+        return self.price_order
+                
     def describe(self):
         # Provides a description of the auction rule
         print(f"Auction Type: {self.seal_clock}, \nBidding Order: {self.ascend_descend}, \nValue Type: {self.private_value}, \n Information Type: {self.open_blind}, \n price order: {self.price_order}")

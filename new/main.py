@@ -113,10 +113,14 @@ class ExperimentOrchestrator:
         rule_config = self.config.get_section('rule')
         value_config = self.config.get_section('value')
         auction_config = self.config.get_section('auction')
+        prompt_config = self.config.get_section('prompt')
 
         # Handle eBay special parameters
         turns = rule_config.get('turns', 20)
         start_price = rule_config.get('start_price', 0)
+        include_payment_example = prompt_config.get('include_payment_example', False)
+        payment_example_key = prompt_config.get('payment_example_key')
+        payment_examples_path = prompt_config.get('payment_examples_path')
 
         rule = Rule_plan(
             seal_clock=rule_config['seal_clock'],
@@ -133,7 +137,10 @@ class ExperimentOrchestrator:
             special_name=rule_config.get('special_name', ''),
             start_price=start_price,
             closing=rule_config['closing'],
-            reserve_price=rule_config['reserve_price']
+            reserve_price=rule_config['reserve_price'],
+            include_payment_example=include_payment_example,
+            payment_example_key=payment_example_key,
+            payment_examples_path=payment_examples_path
         )
 
         return rule
