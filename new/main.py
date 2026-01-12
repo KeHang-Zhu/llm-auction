@@ -95,10 +95,17 @@ class ExperimentOrchestrator:
         self.metadata_mgr.save_config_snapshot(self.config.to_dict())
 
         # Copy prompt files
+        prompt_dir = self.config.get('prompt.prompt_dir', 'Prompt/')
+        rule_template_dir = self.config.get('prompt.rule_template_dir', 'rule_template/V10/')
+        include_payment_example = self.config.get('prompt.include_payment_example', False)
+        payment_examples_path = self.config.get('prompt.payment_examples_path')
+
         self.metadata_mgr.copy_prompt_files(
-            prompt_dir=self.config.get('prompt.prompt_dir', 'Prompt/'),
-            rule_template_dir=self.config.get('prompt.rule_template_dir', 'rule_template/V10/'),
-            special_name=self.config.special_rule_template
+            prompt_dir=prompt_dir,
+            rule_template_dir=rule_template_dir,
+            special_name=self.config.special_rule_template,
+            include_payment_example=include_payment_example,
+            payment_examples_path=payment_examples_path
         )
 
         logger.info(f"Run directory: {self.metadata_mgr.run_dir}")
