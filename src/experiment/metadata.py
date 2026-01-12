@@ -96,7 +96,9 @@ class MetadataManager:
         return config_file
 
     def copy_prompt_files(self, prompt_dir: str, rule_template_dir: str,
-                         special_name: Optional[str] = None) -> List[str]:
+                         special_name: Optional[str] = None,
+                         include_payment_example: bool = False,
+                         payment_examples_path: Optional[str] = None) -> List[str]:
         """
         Copy prompt files used in experiment to run directory.
 
@@ -144,6 +146,17 @@ class MetadataManager:
                 logger.info(f"Copied rule template: {special_name}")
             else:
                 logger.warning(f"Rule template not found: {src}")
+
+        # Copy payment examples (optional)
+        if include_payment_example:
+            examples_path = Path(payment_examples_path) if payment_examples_path else (prompt_dir / "payment_examples.yaml")
+            if examples_path.exists():
+                dest = prompts_dest / "payment_examples.yaml"
+                shutil.copy2(examples_path, dest)
+                copied_files.append("prompts/payment_examples.yaml")
+                logger.debug("Copied payment examples file")
+            else:
+                logger.warning(f"Payment examples file not found: {examples_path}")
 
         return copied_files
 
@@ -403,7 +416,9 @@ def create_experiment_run(config_dict: Dict[str, Any],
     prompt_files = metadata_mgr.copy_prompt_files(
         prompt_dir=prompt_config.get('prompt_dir', 'Prompt/'),
         rule_template_dir=prompt_config.get('rule_template_dir', 'rule_template/V10/'),
-        special_name=rule_config.get('special_name')
+        special_name=rule_config.get('special_name'),
+        include_payment_example=prompt_config.get('include_payment_example', False),
+        payment_examples_path=prompt_config.get('payment_examples_path')
     )
 
     logger.info(f"Experiment run created: {metadata_mgr.run_dir}")
