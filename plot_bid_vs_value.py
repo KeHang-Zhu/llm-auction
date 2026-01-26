@@ -18,10 +18,9 @@ import yaml
 VALUE_COLUMNS = ["player_value", "value", "Value"]
 BID_COLUMNS = ["bid", "Bid", "offer"]
 RUN_GLOBS = [
-    ("experiment_logs", Path("experiment_logs/V10")),
-    ("robustness_logs", Path("robustness_logs/V10")),
+    ("experiment_logs_with_explanation", Path("experiment_logs_with_explanation/V10")),
 ]
-OUTPUT_DIR = Path("results/bid_vs_value_plots/V10")
+OUTPUT_DIR = Path("results/bid_vs_value_plots/V10_with_explanation")
 ORDER_AUCTION = ["FP", "SP", "Clock", "TP", "All-pay", "Other"]
 ORDER_ENV = [
     "IPV",
@@ -220,6 +219,7 @@ def build_titles(meta: Dict, base_label: str, run_dir: Path) -> Tuple[str, str, 
         meta.get("auction_type_label", "Auction"),
         meta.get("environment_label", "Env"),
         pretty_model_name(meta.get("model")),
+        "(with payment rule explanation)",
     ]
     main_title = " · ".join(filter(None, main_parts))
 
