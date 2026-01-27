@@ -52,11 +52,12 @@ class Rule_plan:
     '''
     This class defines different auction rules and their behaviors.
     '''
-    def __init__(self, seal_clock,  private_value, open_blind, rounds, 
+    def __init__(self, seal_clock,  private_value, open_blind, rounds,
                  ascend_descend="ascend",
                  price_order = "second",
                  common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, turns=20, closing= False, reserve_price = 0,
-                 include_payment_example=False, payment_example_key=None, payment_examples_path=None):
+                 include_payment_example=False, payment_example_key=None, payment_examples_path=None,
+                 templates_dir=None):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -71,15 +72,26 @@ class Rule_plan:
         self.start_price= start_price
         self.closing = closing
         self.reserve_price = reserve_price
-        
+
+        # Use provided templates_dir or fall back to global default
+        if templates_dir is None:
+            # Use global templates_dir defined at module level
+            _templates_dir = globals()['templates_dir']
+        else:
+            # Use provided templates_dir (resolve relative paths)
+            if not os.path.isabs(templates_dir):
+                _templates_dir = os.path.join(current_script_path, '..', templates_dir)
+            else:
+                _templates_dir = templates_dir
+
         ## Rule prompt
-        # intro_string = Prompt.from_txt(os.path.join(templates_dir,"intro.txt"))
+        # intro_string = Prompt.from_txt(os.path.join(_templates_dir,"intro.txt"))
         # intro = intro_string.render({"n":self.round})
 
-        # value_explain_string = Prompt.from_txt(os.path.join(templates_dir,f"intro_{self.private_value}.txt"))
+        # value_explain_string = Prompt.from_txt(os.path.join(_templates_dir,f"intro_{self.private_value}.txt"))
         # value_explain = value_explain_string.render({"increment":self.increment,"common_low":self.common_range[0], "common_high":self.common_range[1],"private":self.private_range, "num_bidders": self.number_agents-1})
         if special_name:
-            game_type_string = Prompt.from_txt(os.path.join(templates_dir,special_name))
+            game_type_string = Prompt.from_txt(os.path.join(_templates_dir,special_name))
             game_type = game_type_string.render({
                 "item_description": "256GB IPhone 16 pro",
                 "item_condition": "used",
@@ -95,9 +107,9 @@ class Rule_plan:
             })
         else:
             if self.seal_clock == 'clock':
-                game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
+                game_type_string = Prompt.from_txt(os.path.join(_templates_dir,f"{self.ascend_descend}_{self.private_value}_{self.open_blind}.txt"))
             elif self.seal_clock == 'seal':
-                game_type_string = Prompt.from_txt(os.path.join(templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
+                game_type_string = Prompt.from_txt(os.path.join(_templates_dir,f"{self.price_order}_price_{self.private_value}.txt"))
             game_type = game_type_string.render({"increment":self.increment,"min_price":self.common_range[0],"max_price":self.common_range[1]+self.private_range, "common_low":self.common_range[0], "common_high":self.common_range[1],"num_bidders": self.number_agents-1, "private":self.private_range, "n":self.round})
         
         # if self.round > 1:

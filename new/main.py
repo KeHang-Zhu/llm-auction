@@ -128,6 +128,7 @@ class ExperimentOrchestrator:
         include_payment_example = prompt_config.get('include_payment_example', False)
         payment_example_key = prompt_config.get('payment_example_key')
         payment_examples_path = prompt_config.get('payment_examples_path')
+        rule_template_dir = prompt_config.get('rule_template_dir')
 
         rule = Rule_plan(
             seal_clock=rule_config['seal_clock'],
@@ -147,7 +148,8 @@ class ExperimentOrchestrator:
             reserve_price=rule_config['reserve_price'],
             include_payment_example=include_payment_example,
             payment_example_key=payment_example_key,
-            payment_examples_path=payment_examples_path
+            payment_examples_path=payment_examples_path,
+            templates_dir=rule_template_dir
         )
 
         return rule
