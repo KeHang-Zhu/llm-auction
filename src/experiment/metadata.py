@@ -141,6 +141,8 @@ class MetadataManager:
             src = rule_template_dir / special_name
             if src.exists():
                 dest = prompts_dest / "rule_template" / special_name
+                # Create parent directories if they don't exist
+                dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dest)
                 copied_files.append(f"prompts/rule_template/{special_name}")
                 logger.info(f"Copied rule template: {special_name}")
