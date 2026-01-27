@@ -1,0 +1,36 @@
+experiment:
+  name: third_price_ipv
+  version: V10
+  description: Third-Price Sealed Bid with Independent Private Values
+auction:
+  number_agents: 3
+  rounds: 1
+rule:
+  seal_clock: seal
+  price_order: third
+  private_value: private
+  open_blind: open
+  closing: false
+  reserve_price: 0
+  special_name: private_third_price.txt
+value:
+  common_range:
+  - 10
+  - 49
+  private_range: 49
+  increment: 0.1
+  seed_base: 1299
+llm:
+  model: gpt-4o
+  temperature: 0.5
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/V10/
+  include_payment_example: true
+  use_two_step: true
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 4
+  output_dir: experiment_logs/V10/third_ipv_two_step
