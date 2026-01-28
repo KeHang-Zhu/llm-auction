@@ -366,14 +366,9 @@ class SealBid():
                 if len(plan) == 0:
                     raise ValueError("PLAN cannot be empty")
 
-                # Validate bid range (depends on value model)
-                if self.rule.private_value == 'private':
-                    max_bid = self.rule.private_range
-                else:  # affiliated or common
-                    max_bid = self.rule.common_range[1] + self.rule.private_range
-
-                if bid < 0 or bid > max_bid:
-                    raise ValueError(f"Bid {bid} out of range [0, {max_bid}]")
+                # Validate bid range (only check lower bound)
+                if bid < 0:
+                    raise ValueError(f"Bid {bid} must be non-negative")
 
                 # Validate bid increment (handle floating point precision)
                 remainder = abs(bid % self.rule.increment)
