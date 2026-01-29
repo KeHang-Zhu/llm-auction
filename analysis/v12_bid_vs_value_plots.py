@@ -13,7 +13,7 @@ import pandas as pd
 from matplotlib.lines import Line2D
 
 # Paths
-EXPERIMENT_DIR = Path("experiment_logs/V12")
+EXPERIMENT_DIR = Path("experiment_logs_cutoff/V12")
 OUTPUT_DIR = Path("results/v12_interventions/bid_vs_value")
 
 # Categorize ALL interventions into cognitive axes
