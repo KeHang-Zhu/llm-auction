@@ -1,0 +1,36 @@
+experiment:
+  name: loss_aversion_mixed_frame_third
+  version: V12
+  description: Loss Aversion Mixed Frame - Third Price Auction
+auction:
+  number_agents: 3
+  rounds: 1
+rule:
+  seal_clock: seal
+  ascend_descend: ascend
+  price_order: third
+  private_value: private
+  open_blind: open
+  closing: false
+  reserve_price: 0
+  special_name: third_price_interventions/loss_aversion_mixed_frame.txt
+value:
+  common_range:
+  - 20
+  - 49
+  private_range: 49
+  increment: 0.1
+  seed_base: 1299
+llm:
+  model: claude-3-5-haiku-20241022
+  temperature: 0.5
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/V12/
+  include_payment_example: true
+execution:
+  repetitions: 30
+  parallel: true
+  max_workers: 4
+  output_dir: experiment_logs/V12/intervention_claude/loss_aversion_mixed_frame_third
