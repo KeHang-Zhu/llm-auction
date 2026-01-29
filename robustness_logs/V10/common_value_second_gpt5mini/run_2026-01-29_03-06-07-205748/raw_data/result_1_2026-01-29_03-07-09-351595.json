@@ -1,0 +1,41 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            23,
+            30,
+            5
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 23.8
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 24.5
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 22.5
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Betty",
+                "price": 23.8
+            }
+        },
+        "profit": [
+            0,
+            1.1999999999999993,
+            0
+        ],
+        "common": 25,
+        "plan": [
+            "[I correct for the winner\u2019s curse in this common\u2011value, second\u2011price auction. Given my signal 23 the prior on the common value is flat, but being the highest signal makes lower common values more likely. Calculating E[V | my signal=23 and I\u2019m highest] \u2248 23.78. I\u2019ll round to the nearest $0.1.]",
+            "[Signal s=30. Common value C ~ uniform{20,...,29}; noise ~ uniform{-20,...,20}. For each c in 20..29, P(S=30|C=c) is constant, so posterior on C is uniform. Thus E[C | S=30] = (20+29)/2 = 24.5. In a second-price auction the optimal bid is your expected common value given your signal to avoid the winner's curse. I will bid that expected value.]",
+            "[Signal s=5 implies c \u2208 [20,25] so posterior on common value is uniform; E[c|s]= (20+25)/2 = 22.5. In a second-price auction, bidding your posterior mean captures expected common value while limiting winner\u2019s curse exposure (you pay the second-highest bid). I will bid my Bayesian estimate 22.5 (nearest $0.1) to maximize expected long-run profit given no prior history.]"
+        ]
+    }
+}

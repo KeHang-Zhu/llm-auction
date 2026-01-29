@@ -1,0 +1,41 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            10,
+            30,
+            25
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 20.0
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 49.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 49.0
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Betty",
+                "price": 20.0
+            }
+        },
+        "profit": [
+            0,
+            10.0,
+            0
+        ],
+        "common": 0,
+        "plan": [
+            "[Third-price: if I'm highest I pay the minimum of the other two bids, so my bid only affects the win probability. Assuming opponents bid their values (naive baseline), maximize E[profit] = (b/49)^2*(10 - b/3). This is maximized at b = 20, giving positive expected profit (~$0.56). Bidding 20 wins when both opponents' bids < 20 and yields positive expected payoff against truthful opponents. I'll submit 20 (increments of $0.1 allowed).]",
+            "[Payment equals the third-highest bid (the lower opponent bid), so my bid only affects win probability, not the price I pay when I win. To maximize expected surplus with independent uniform values, bid as high as reasonable to win more often. I'll bid the apparent upper support $49. Risk: if both opponents bid above $30 I may incur a loss, but that outcome is relatively unlikely.]",
+            "[I have v=$25. In this 3-bidder third-price auction the winner pays the lowest bid, so if I'm highest the price depends only on opponents. Against opponents bidding their values (uniform 0\u201349), the best-response maximizes b^2*(v - b/3) leading to b*=2v, capped by support. For v=25 this recommends bidding the upper bound. I will bid at the top of the support to maximize win probability while keeping positive expected surplus.]"
+        ]
+    }
+}
