@@ -1,0 +1,35 @@
+experiment:
+  name: spsb_apv_gpt4o_temp10
+  version: V10
+  description: Second-Price Sealed Bid with Affiliated Private Values (GPT-4o temp=1.0)
+auction:
+  number_agents: 3
+  rounds: 1
+rule:
+  seal_clock: seal
+  price_order: second
+  private_value: affiliated
+  open_blind: open
+  closing: false
+  reserve_price: 0
+  special_name: affiliated_spsb.txt
+value:
+  common_range:
+  - 0
+  - 29
+  private_range: 20
+  increment: 0.1
+  seed_base: 1399
+llm:
+  model: gpt-4o
+  temperature: 1.0
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/V10/
+  include_payment_example: true
+execution:
+  repetitions: 100
+  parallel: false
+  max_workers: 4
+  output_dir: robustness_logs/V10/spsb_apv_gpt4o_temp10

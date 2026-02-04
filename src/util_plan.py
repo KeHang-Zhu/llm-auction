@@ -950,7 +950,7 @@ class Auction_plan():
         
     def build_bidders(self):
         '''Instantiate bidders with the value and rule'''
-        name_list = ["Andy", "Betty", "Charles", "David", "Ethel", "Florian"]
+        name_list = ["Andy", "Betty", "Charles", "David", "Ethel", "Florian", "Gray"]
         for i in range(self.number_agents):
             bidder_values = [self.values_list[round_num][i] for round_num in range(self.rule.round)]
             agent = Bidder(value_list=bidder_values, common_value_list=self.common_value_list, name = name_list[i], rule=self.rule)

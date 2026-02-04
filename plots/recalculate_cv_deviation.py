@@ -84,22 +84,22 @@ def calculate_cv_deviation(auction_path, auction_type='first_price'):
     # Mean absolute deviation
     mad = deviations_array.mean()
 
-    # Mean theoretical profit (for scaling)
-    mean_theoretical = np.abs(theoretical_profits).mean()
-
-    if mean_theoretical == 0:
-        mean_theoretical = 1  # avoid division by zero
+    # Fixed scaling factor for CV auctions
+    scaling_factor = 20
 
     # SMAD
-    smad = 100 * mad / mean_theoretical
+    smad = 100 * mad / scaling_factor
 
     # Standard error
     se_mad = deviations_array.std() / np.sqrt(len(deviations_array))
-    se_smad = 100 * se_mad / mean_theoretical
+    se_smad = 100 * se_mad / scaling_factor
 
     # 95% CI
     ci_lower = smad - 1.96 * se_smad
     ci_upper = smad + 1.96 * se_smad
+
+    # Calculate mean theoretical profit for informational purposes (not used for scaling)
+    mean_theoretical = np.abs(theoretical_profits).mean()
 
     return {
         'smad': smad,
@@ -113,7 +113,7 @@ def calculate_cv_deviation(auction_path, auction_type='first_price'):
     }
 
 # Calculate for both CV auctions
-base_dir = Path('/Users/kehangzh/Desktop/llm-auction/experiment_logs_with_explanation/V10')
+base_dir = Path('/Users/kehangzh/Desktop/llm-auction/experiment_logs/V10')
 
 print("="*80)
 print("RECALCULATING COMMON VALUE AUCTION DEVIATIONS")

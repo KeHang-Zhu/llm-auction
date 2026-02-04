@@ -10,7 +10,7 @@ sns.set_theme(style="whitegrid", context="talk")
 plt.rcParams['font.size'] = 11
 
 # Base directory
-base_dir = Path('/Users/kehangzh/Desktop/llm-auction/experiment_logs_with_explanation/V10')
+base_dir = Path('/Users/kehangzh/Desktop/llm-auction/experiment_logs/V10')
 
 # Define auction types and their parameters
 auction_configs = {
@@ -97,18 +97,15 @@ def calculate_deviation(df, config):
         profit_deviations = np.abs(df['profit'] - theoretical_profit)
         mad_profit = profit_deviations.mean()
 
-        # For scaling, use a reasonable baseline
-        # We'll use the mean absolute profit as the baseline
-        baseline = np.abs(df['profit']).mean()
-        if baseline == 0:
-            baseline = 1  # Avoid division by zero
+        # Fixed scaling factor for CV auctions
+        scaling_factor = 20
 
-        smad = 100 * mad_profit / baseline
+        smad = 100 * mad_profit / scaling_factor
 
         # Calculate standard error using bootstrap
         n = len(df)
         se_mad = profit_deviations.std() / np.sqrt(n)
-        se_smad = 100 * se_mad / baseline
+        se_smad = 100 * se_mad / scaling_factor
 
     else:
         # For IPV/APV auctions, use bid-based deviation
@@ -122,16 +119,16 @@ def calculate_deviation(df, config):
         # Calculate MAD (Mean Absolute Deviation)
         mad = df['deviation'].mean()
 
-        # Calculate mean theoretical bid (μ*_m)
-        mean_theoretical = df['theoretical_bid'].mean()
+        # Fixed scaling factor for IPV/APV auctions
+        scaling_factor = 25
 
         # Calculate SMAD (Scaled Mean Absolute Deviation)
-        smad = 100 * mad / mean_theoretical
+        smad = 100 * mad / scaling_factor
 
         # Calculate standard error
         n = len(df)
         se_mad = df['deviation'].std() / np.sqrt(n)
-        se_smad = 100 * se_mad / mean_theoretical
+        se_smad = 100 * se_mad / scaling_factor
 
     # Calculate 95% confidence interval
     ci_lower = smad - 1.96 * se_smad
@@ -179,6 +176,17 @@ for auction_key, config in auction_configs.items():
     df = pd.read_csv(csv_file)
 
     print(f"  Total observations: {len(df)}")
+
+    # For ascending clock auctions, only include non-winners
+    if config['type'] == 'apv' and 'seal_clock' in df.columns:
+        # Check if this is an ascending clock auction
+        is_clock = df['seal_clock'] == 'clock'
+        if is_clock.any():
+            # Filter to only non-winners
+            original_count = len(df)
+            df = df[~df['is_winner']].copy()
+            filtered_count = len(df)
+            print(f"  Filtered ascending clock: {original_count} → {filtered_count} observations (non-winners only)")
 
     # Calculate deviation
     deviation_stats = calculate_deviation(df, config)
