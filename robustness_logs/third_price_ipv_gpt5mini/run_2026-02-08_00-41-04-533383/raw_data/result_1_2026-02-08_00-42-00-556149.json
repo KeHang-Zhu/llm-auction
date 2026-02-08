@@ -1,0 +1,55 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            23,
+            18,
+            25,
+            0,
+            42
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 23.0
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 24.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 33.3
+                },
+                {
+                    "agent": "Bidder David",
+                    "bid": 0.0
+                },
+                {
+                    "agent": "Bidder Ethel",
+                    "bid": 42.0
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Ethel",
+                "price": 24.0
+            }
+        },
+        "profit": [
+            0,
+            0,
+            0,
+            0,
+            18.0
+        ],
+        "common": 0,
+        "plan": [
+            "[With five bidders and a third-price rule, the winner pays the third-highest opponent bid. Without history and given independent private values, overbidding risks winning when the third-price exceeds my value. A conservative, robust approach is to bid my true value ($23), which avoids deliberate overbidding losses while still winning when the third-price is below my value. This is a safe baseline given no prior rounds to learn opponent behavior.]",
+            "[Assume other bidders bid their true values. If I bid b and win, that means all four others \u2264 b; then expected third-highest equals the second-highest among four draws = (3/5)b. Win probability = (b/49)^4. Expected profit = (b/49)^4*(18 - 0.6b). Maximize w.r.t b \u2192 b = (4/3)*18 = 24. So overbidding to $24 maximizes expected payoff under this model.]",
+            "[Assume other bidders bid their private values (uniform on [0,49]). If I bid B and win (probability (B/49)^4), I pay the second-highest of the four others, whose expected value conditional on all <B is 0.6B. Expected payoff (B/49)^4*(25-0.6B) is maximized at B=100/3\u224833.33. Choose nearest $0.1 increment: $33.3.]",
+            "[My value is $0, so winning can only reduce profit (I\u2019d pay the third-highest bid and gain nothing). To maximize expected payoff, I should minimize my chance of winning by submitting the lowest allowed bid. No past rounds to learn from, and values redraw each round, so bid the minimum (0) to avoid winning and potential negative payoff.]",
+            "[This is a third-price sealed-bid with 5 bidders and my private value v = 42. I will bid my true value. Bidding 42 is safe: if I win I pay the third-highest bid which cannot exceed my winning bid, so I will not pay more than my value. Overbidding risks negative payoff; underbidding reduces chances to capture positive surplus. With no informative history and independent draws, truthful bidding maximizes expected long-run profit as a prudent strategy.]"
+        ]
+    }
+}

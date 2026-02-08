@@ -168,7 +168,7 @@ ax.text(0.98, -0.02, '* indicates no confidence interval available',
 plt.tight_layout()
 
 # Save figure
-output_path = Path('./human_llm_comparison.png')
+output_path = Path('./figure1.png')
 plt.savefig(output_path, dpi=300, bbox_inches='tight')
 print(f"\nPlot saved to: {output_path}")
 

@@ -150,7 +150,7 @@ print("COMPARISON WITH PREVIOUS RESULTS")
 print("="*80)
 
 # Load previous results
-prev_results = pd.read_csv('plots/theoretical_deviation_results.csv')
+prev_results = pd.read_csv('./theoretical_deviation_results.csv')
 prev_fp_cv = prev_results[prev_results['auction'] == 'First-Price CV'].iloc[0]
 prev_sp_cv = prev_results[prev_results['auction'] == 'Second-Price CV'].iloc[0]
 
@@ -190,7 +190,7 @@ if fp_cv_results and sp_cv_results:
     ]
 
     # Save updated results
-    prev_results.to_csv('plots/theoretical_deviation_results_updated.csv', index=False)
+    prev_results.to_csv('./theoretical_deviation_results_updated.csv', index=False)
     print("Updated results saved to: plots/theoretical_deviation_results_updated.csv")
 
     print("\nUpdated Results Summary:")

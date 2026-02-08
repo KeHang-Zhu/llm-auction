@@ -50,7 +50,7 @@ auction_configs = {
         'name': 'Third-Price IPV',
         'path': 'third_price_ipv',
         'type': 'ipv',
-        'theoretical_bid': lambda v, N=3: (N-1)/(N-2) * v,  # (N-1)/(N-2) * v
+        'theoretical_bid': lambda v, N=5: (N-1)/(N-2) * v,  # (N-1)/(N-2) * v
     },
     'all_pay_ipv': {
         'name': 'All-Pay IPV',

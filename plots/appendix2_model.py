@@ -44,7 +44,7 @@ auction_configs = {
     },
     'third_price_ipv': {
         'name': 'Third-Price IPV',
-        'theoretical_bid': lambda v, N=3: (N-1)/(N-2) * v,
+        'theoretical_bid': lambda v, N=5: (N-1)/(N-2) * v,
         'type': 'ipv',
     },
     'common_value_first': {
