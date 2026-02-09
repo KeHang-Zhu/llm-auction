@@ -43,11 +43,6 @@ auction_configs = {
         'type': 'apv',
         'is_clock': True,
     },
-    'third_price_ipv': {
-        'name': 'Third-Price IPV',
-        'theoretical_bid': lambda v, N=5: (N-1)/(N-2) * v,
-        'type': 'ipv',
-    },
     'common_value_first': {
         'name': 'First-Price CV',
         'type': 'cv',
@@ -66,21 +61,17 @@ model_configs = {
         'display_name': 'Human',
         'color': '#2E86AB',  # Blue for human
     },
-    'claude_sonnet': {
-        'display_name': 'Claude Sonnet',
-        'color': '#A23B72',
+    'gpt4o_temp01': {
+        'display_name': 'GPT-4o (temp=0.1)',
+        'color': '#C44569',  # Red-pink for low temperature
     },
-    'gemini': {
-        'display_name': 'Gemini',
-        'color': '#F18F01',
+    'gpt4o': {
+        'display_name': 'GPT-4o (temp=0.5)',
+        'color': '#F18F01',  # Orange for medium temperature
     },
-    'gpt5mini': {
-        'display_name': 'GPT-5-mini',
-        'color': '#2ECC71',
-    },
-    'llama': {
-        'display_name': 'Llama',
-        'color': '#C73E1D',
+    'gpt4o_temp10': {
+        'display_name': 'GPT-4o (temp=1.0)',
+        'color': '#6C5CE7',  # Purple for high temperature
     },
 }
 
@@ -316,6 +307,32 @@ def load_model_data(auction_key, model_key):
     return df
 
 
+def load_gpt4o_base_data():
+    """
+    Load GPT-4o (temp=0.5) data from theoretical_deviation_results_updated.csv.
+
+    Returns:
+        DataFrame with columns: auction, model, smad, ci_lower, ci_upper, n
+    """
+    df = pd.read_csv('./theoretical_deviation_results_updated.csv')
+
+    gpt4o_data = []
+    for _, row in df.iterrows():
+        gpt4o_data.append({
+            'auction': row['auction'],
+            'model': 'GPT-4o (temp=0.5)',
+            'model_key': 'gpt4o',
+            'smad': row['smad'],
+            'se': row['se'],
+            'ci_lower': row['ci_lower'],
+            'ci_upper': row['ci_upper'],
+            'has_ci': True,
+            'n': row['n']
+        })
+
+    return pd.DataFrame(gpt4o_data)
+
+
 def process_all_models():
     """
     Process all auction types and models, calculate SMAD.
@@ -333,7 +350,15 @@ def process_all_models():
     results.extend(human_df.to_dict('records'))
     print(f"Loaded {len(human_df)} human auction results")
 
-    # Then process LLM models
+    # Load GPT-4o (temp=0.5) data from CSV
+    print(f"\n{'='*80}")
+    print("Loading GPT-4o (temp=0.5) Data from CSV")
+    print('='*80)
+    gpt4o_df = load_gpt4o_base_data()
+    results.extend(gpt4o_df.to_dict('records'))
+    print(f"Loaded {len(gpt4o_df)} GPT-4o (temp=0.5) auction results")
+
+    # Then process other temperature LLM models from robustness_logs
     for auction_key, auction_config in auction_configs.items():
         print(f"\n{'='*80}")
         print(f"Processing {auction_config['name']}")
@@ -342,6 +367,10 @@ def process_all_models():
         for model_key, model_config in model_configs.items():
             # Skip human (already processed)
             if model_key == 'human':
+                continue
+
+            # Skip gpt4o base (already loaded from CSV)
+            if model_key == 'gpt4o':
                 continue
 
             print(f"  {model_config['display_name']}...", end=" ")
@@ -404,188 +433,6 @@ def process_all_models():
     return pd.DataFrame(results)
 
 
-def perform_statistical_tests(results_df):
-    """
-    Perform statistical tests comparing different models.
-
-    Returns:
-        DataFrame with test results
-    """
-    # Filter out Third-Price IPV
-    results_df = results_df[results_df['auction'] != 'Third-Price IPV'].copy()
-
-    # Get unique auctions
-    auctions = results_df['auction'].unique()
-
-    test_results = []
-
-    # Models to test (excluding human)
-    model_keys = ['claude_sonnet', 'gemini', 'gpt5mini', 'llama']
-    model_names = {
-        'claude_sonnet': 'Claude Sonnet',
-        'gemini': 'Gemini',
-        'gpt5mini': 'GPT-5-mini',
-        'llama': 'Llama'
-    }
-
-    for auction in auctions:
-        auction_data = results_df[results_df['auction'] == auction].copy()
-
-        result = {'auction': auction}
-
-        # Get human data
-        human_data = auction_data[auction_data['model_key'] == 'human']
-        human_smad = human_data['smad'].values[0] if len(human_data) > 0 else None
-        human_se = human_data['se'].values[0] if len(human_data) > 0 else None
-
-        result['human_smad'] = human_smad
-
-        # For each model, get SMAD and p-value vs human
-        for model_key in model_keys:
-            model_data = auction_data[auction_data['model_key'] == model_key]
-
-            if len(model_data) > 0:
-                model_smad = model_data['smad'].values[0]
-                model_se = model_data['se'].values[0]
-                model_n = model_data['n'].values[0]
-
-                result[f'{model_key}_smad'] = model_smad
-                result[f'{model_key}_n'] = model_n
-
-                # Calculate z-test vs human (if human data available)
-                if human_smad is not None and human_se is not None and model_se > 0:
-                    z_stat = (model_smad - human_smad) / np.sqrt(human_se**2 + model_se**2)
-                    p_value = 2 * (1 - stats.norm.cdf(abs(z_stat)))
-                    result[f'{model_key}_p'] = p_value
-                else:
-                    result[f'{model_key}_p'] = None
-            else:
-                result[f'{model_key}_smad'] = None
-                result[f'{model_key}_n'] = 0
-                result[f'{model_key}_p'] = None
-
-        test_results.append(result)
-
-    return pd.DataFrame(test_results)
-
-
-def generate_latex_table(test_df):
-    """Generate LaTeX table for model comparison results."""
-
-    latex = []
-    latex.append("\\begin{table}[htbp]")
-    latex.append("\\centering")
-    latex.append("\\caption{Model Comparison: Bidding Behavior across Auction Formats}")
-    latex.append("\\label{tab:model_comparison}")
-    latex.append("\\begin{tabular}{l|c|cccc}")
-    latex.append("\\hline")
-    latex.append("\\multirow{2}{*}{Auction Format} & Human & Claude & Gemini & GPT-5 & Llama \\\\")
-    latex.append(" & SMAD & SMAD (p) & SMAD (p) & SMAD (p) & SMAD (p) \\\\")
-    latex.append("\\hline")
-
-    for _, row in test_df.iterrows():
-        auction_name = row['auction']
-
-        # Human SMAD
-        human_str = f"{row['human_smad']:.2f}" if pd.notna(row['human_smad']) else "0"
-
-        # Format model SMAD and p-values
-        def format_model(model_key):
-            smad = row.get(f'{model_key}_smad')
-            p = row.get(f'{model_key}_p')
-
-            if pd.isna(smad):
-                return "0"
-
-            smad_str = f"{smad:.2f}"
-
-            if pd.isna(p):
-                return smad_str
-
-            # Add significance stars
-            if p < 0.001:
-                return f"{smad_str}***"
-            elif p < 0.01:
-                return f"{smad_str}**"
-            elif p < 0.05:
-                return f"{smad_str}*"
-            else:
-                return smad_str
-
-        claude_str = format_model('claude_sonnet')
-        gemini_str = format_model('gemini')
-        gpt5mini_str = format_model('gpt5mini')
-        llama_str = format_model('llama')
-
-        latex.append(f"{auction_name} & {human_str} & {claude_str} & {gemini_str} & "
-                    f"{gpt5mini_str} & {llama_str} \\\\")
-
-    latex.append("\\hline")
-    latex.append("\\end{tabular}")
-    latex.append("\\begin{tablenotes}")
-    latex.append("\\small")
-    latex.append("\\item Note: SMAD = Scaled Mean Absolute Deviation from theoretical equilibrium. ")
-    latex.append("All LLMs tested at temperature=0.5. ")
-    latex.append("Significance stars indicate difference from human baseline: * p<0.05, ** p<0.01, *** p<0.001. ")
-    latex.append("Missing data indicated by 0.")
-    latex.append("\\end{tablenotes}")
-    latex.append("\\end{table}")
-
-    return "\n".join(latex)
-
-
-def generate_model_description():
-    """Generate text description of model comparison results."""
-
-    text = []
-    text.append("\n" + "="*80)
-    text.append("MODEL COMPARISON ANALYSIS")
-    text.append("="*80 + "\n")
-
-    text.append("We compare the bidding behavior of four large language models (all at temperature=0.5)")
-    text.append("against human participants across seven auction formats. The models tested are:")
-    text.append("  • Claude Sonnet 4.5")
-    text.append("  • Gemini Pro 2.0")
-    text.append("  • GPT-5-mini (reasoning model)")
-    text.append("  • Llama 3.3 70B\n")
-
-    text.append("KEY FINDINGS:\n")
-
-    text.append("1. GPT-5-MINI PERFORMANCE:")
-    text.append("   GPT-5-mini, as a reasoning model, demonstrates remarkably low deviation from")
-    text.append("   theoretical equilibrium across most auction formats. The model's enhanced reasoning")
-    text.append("   capabilities enable it to approximate optimal bidding strategies with minimal")
-    text.append("   deviation, particularly excelling in strategically complex formats like ascending")
-    text.append("   clock auctions where SMAD approaches zero.\n")
-
-    text.append("2. LLAMA PERFORMANCE:")
-    text.append("   Llama 3.3 70B exhibits substantially poor performance across all auction formats,")
-    text.append("   with consistently high SMAD values that significantly exceed human baselines.")
-    text.append("   The model struggles particularly in common value auctions and first-price formats,")
-    text.append("   suggesting fundamental difficulties in strategic reasoning and equilibrium")
-    text.append("   approximation.\n")
-
-    text.append("3. CLAUDE AND GEMINI:")
-    text.append("   Both Claude Sonnet and Gemini Pro show moderate performance, generally falling")
-    text.append("   between the extremes of GPT-5-mini and Llama. Their performance varies across")
-    text.append("   auction formats, with some formats showing near-human performance and others")
-    text.append("   exhibiting substantial deviations.\n")
-
-    text.append("4. OVERALL RANKING:")
-    text.append("   Across all auction formats, the models rank as follows (by mean SMAD):")
-    text.append("   Human < GPT-5-mini ≈ Claude Sonnet < Gemini Pro << Llama 3.3\n")
-
-    text.append("INTERPRETATION:")
-    text.append("The superior performance of GPT-5-mini highlights the importance of reasoning")
-    text.append("capabilities for strategic decision-making in auction contexts. Meanwhile, Llama's")
-    text.append("poor performance suggests that raw model size alone is insufficient for complex")
-    text.append("game-theoretic reasoning without adequate training or architectural innovations.")
-    text.append("These results demonstrate substantial heterogeneity in LLM capabilities for")
-    text.append("economic decision-making tasks.")
-
-    return "\n".join(text)
-
-
 def create_comparison_plot(results_df):
     """
     Create horizontal bar plot comparing models across auction types.
@@ -601,13 +448,13 @@ def create_comparison_plot(results_df):
     auction_order = human_data.sort_values('smad')['auction'].tolist()
 
     # Create figure
-    fig, ax = plt.subplots(figsize=(14, 10))
+    fig, ax = plt.subplots(figsize=(14, 11))
 
     # Set up y positions
     n_auctions = len(auction_order)
     n_models = len(model_configs)
     y = np.arange(n_auctions)
-    bar_height = 0.12  # Thinner bars for multiple models
+    bar_height = 0.15  # Adjusted for 4 models
 
     # Plot bars for each model
     for i, (model_key, model_config) in enumerate(model_configs.items()):
@@ -653,15 +500,16 @@ def create_comparison_plot(results_df):
     ax.set_ylabel('Auction Format', fontsize=13, fontweight='bold')
     ax.set_xlabel('Scaled Mean Absolute Deviation (SMAD) from Theoretical Optimum (%)',
                   fontsize=13, fontweight='bold')
-    ax.set_title('Model Comparison: Bidding Deviation from Theoretical Equilibrium',
+    ax.set_title('Temperature Comparison: Human vs GPT-4o Bidding Behavior',
                  fontsize=15, fontweight='bold', pad=20)
 
     # Set y-axis
     ax.set_yticks(y)
     ax.set_yticklabels(auction_order)
 
-    # Add legend
-    ax.legend(loc='lower right', frameon=True, fontsize=10, ncol=2)
+    # Add legend (arranged in 2x2 grid for 4 models)
+    ax.legend(loc='lower right', frameon=True, fontsize=10.5, ncol=2,
+              columnspacing=1.0, handlelength=1.5)
 
     # Add vertical line at 0
     ax.axvline(x=0, color='red', linestyle='--', linewidth=2, alpha=0.5)
@@ -672,24 +520,253 @@ def create_comparison_plot(results_df):
     plt.tight_layout()
 
     # Save figure
-    output_path = Path('./appendix2_model_comparison.png')
+    output_path = Path('./appendix2_temperature_comparison.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"\n\nPlot saved to: {output_path}")
 
     plt.show()
 
 
+def perform_statistical_tests(results_df):
+    """
+    Perform statistical tests comparing different temperatures.
+
+    Returns:
+        DataFrame with test results and LaTeX table string
+    """
+    # Filter out Third-Price IPV
+    results_df = results_df[results_df['auction'] != 'Third-Price IPV'].copy()
+
+    # Get unique auctions
+    auctions = results_df[results_df['model_key'].str.startswith('gpt4o')]['auction'].unique()
+
+    test_results = []
+
+    for auction in auctions:
+        auction_data = results_df[results_df['auction'] == auction].copy()
+
+        # Get data for each temperature
+        temp01_data = auction_data[auction_data['model_key'] == 'gpt4o_temp01']
+        temp05_data = auction_data[auction_data['model_key'] == 'gpt4o']
+        temp10_data = auction_data[auction_data['model_key'] == 'gpt4o_temp10']
+
+        # Get SMAD values
+        smad_01 = temp01_data['smad'].values[0] if len(temp01_data) > 0 else None
+        smad_05 = temp05_data['smad'].values[0] if len(temp05_data) > 0 else None
+        smad_10 = temp10_data['smad'].values[0] if len(temp10_data) > 0 else None
+
+        # Get sample sizes
+        n_01 = temp01_data['n'].values[0] if len(temp01_data) > 0 else 0
+        n_05 = temp05_data['n'].values[0] if len(temp05_data) > 0 else 0
+        n_10 = temp10_data['n'].values[0] if len(temp10_data) > 0 else 0
+
+        # Get standard errors
+        se_01 = temp01_data['se'].values[0] if len(temp01_data) > 0 else None
+        se_05 = temp05_data['se'].values[0] if len(temp05_data) > 0 else None
+        se_10 = temp10_data['se'].values[0] if len(temp10_data) > 0 else None
+
+        # Calculate z-tests for comparing means
+        # Test 1: temp=0.1 vs temp=0.5
+        if smad_01 is not None and smad_05 is not None and se_01 is not None and se_05 is not None:
+            z_01_05 = (smad_01 - smad_05) / np.sqrt(se_01**2 + se_05**2)
+            p_01_05 = 2 * (1 - stats.norm.cdf(abs(z_01_05)))
+        else:
+            z_01_05, p_01_05 = None, None
+
+        # Test 2: temp=0.5 vs temp=1.0
+        if smad_05 is not None and smad_10 is not None and se_05 is not None and se_10 is not None:
+            z_05_10 = (smad_05 - smad_10) / np.sqrt(se_05**2 + se_10**2)
+            p_05_10 = 2 * (1 - stats.norm.cdf(abs(z_05_10)))
+        else:
+            z_05_10, p_05_10 = None, None
+
+        # Test 3: temp=0.1 vs temp=1.0
+        if smad_01 is not None and smad_10 is not None and se_01 is not None and se_10 is not None:
+            z_01_10 = (smad_01 - smad_10) / np.sqrt(se_01**2 + se_10**2)
+            p_01_10 = 2 * (1 - stats.norm.cdf(abs(z_01_10)))
+        else:
+            z_01_10, p_01_10 = None, None
+
+        test_results.append({
+            'auction': auction,
+            'smad_01': smad_01,
+            'smad_05': smad_05,
+            'smad_10': smad_10,
+            'n_01': n_01,
+            'n_05': n_05,
+            'n_10': n_10,
+            'p_01_vs_05': p_01_05,
+            'p_05_vs_10': p_05_10,
+            'p_01_vs_10': p_01_10,
+        })
+
+    test_df = pd.DataFrame(test_results)
+    return test_df
+
+
+def generate_latex_table(test_df):
+    """Generate LaTeX table for statistical test results."""
+
+    latex = []
+    latex.append("\\begin{table}[htbp]")
+    latex.append("\\centering")
+    latex.append("\\caption{Temperature Effects on Bidding Behavior: Statistical Comparison}")
+    latex.append("\\label{tab:temperature_comparison}")
+    latex.append("\\begin{tabular}{l|ccc|ccc}")
+    latex.append("\\hline")
+    latex.append("\\multirow{2}{*}{Auction Format} & \\multicolumn{3}{c|}{SMAD (\\%)} & \\multicolumn{3}{c}{P-values} \\\\")
+    latex.append(" & $T=0.1$ & $T=0.5$ & $T=1.0$ & 0.1 vs 0.5 & 0.5 vs 1.0 & 0.1 vs 1.0 \\\\")
+    latex.append("\\hline")
+
+    for _, row in test_df.iterrows():
+        auction_name = row['auction']
+        # Format SMAD values (use 0 for missing data instead of --)
+        smad_01_str = f"{row['smad_01']:.2f}" if pd.notna(row['smad_01']) else "0"
+        smad_05_str = f"{row['smad_05']:.2f}" if pd.notna(row['smad_05']) else "0"
+        smad_10_str = f"{row['smad_10']:.2f}" if pd.notna(row['smad_10']) else "0"
+
+        # Format p-values with significance stars
+        def format_pvalue(p):
+            if pd.isna(p):
+                return "--"
+            if p < 0.001:
+                return f"{p:.2f}***"
+            elif p < 0.01:
+                return f"{p:.2f}**"
+            elif p < 0.05:
+                return f"{p:.2f}*"
+            else:
+                return f"{p:.2f}"
+
+        p_01_05_str = format_pvalue(row['p_01_vs_05'])
+        p_05_10_str = format_pvalue(row['p_05_vs_10'])
+        p_01_10_str = format_pvalue(row['p_01_vs_10'])
+
+        latex.append(f"{auction_name} & {smad_01_str} & {smad_05_str} & {smad_10_str} & "
+                    f"{p_01_05_str} & {p_05_10_str} & {p_01_10_str} \\\\")
+
+    latex.append("\\hline")
+    latex.append("\\end{tabular}")
+    latex.append("\\begin{tablenotes}")
+    latex.append("\\small")
+    latex.append("\\item Note: SMAD = Scaled Mean Absolute Deviation from theoretical equilibrium. ")
+    latex.append("P-values from two-sided z-tests comparing temperature effects. ")
+    latex.append("Significance levels: * p<0.05, ** p<0.01, *** p<0.001.")
+    latex.append("\\end{tablenotes}")
+    latex.append("\\end{table}")
+
+    return "\n".join(latex)
+
+
+def generate_text_description(test_df):
+    """Generate text description of statistical results."""
+
+    text = []
+    text.append("\n" + "="*80)
+    text.append("STATISTICAL ANALYSIS: TEMPERATURE EFFECTS")
+    text.append("="*80 + "\n")
+
+    text.append("We examined the effect of temperature parameter (T ∈ {0.1, 0.5, 1.0}) on GPT-4o's")
+    text.append("bidding behavior across seven auction formats. The temperature parameter controls")
+    text.append("the randomness of the model's outputs, with lower values producing more deterministic")
+    text.append("responses and higher values introducing more variability.\n")
+
+    # Overall findings
+    overall_01 = test_df['smad_01'].mean()
+    overall_05 = test_df['smad_05'].mean()
+    overall_10 = test_df['smad_10'].mean()
+
+    text.append(f"Overall Performance (Mean SMAD across all auction formats):")
+    text.append(f"  • Temperature 0.1: {overall_01:.2f}%")
+    text.append(f"  • Temperature 0.5: {overall_05:.2f}%")
+    text.append(f"  • Temperature 1.0: {overall_10:.2f}%\n")
+
+    text.append("Key Findings:\n")
+
+    # Count significant differences
+    sig_01_05 = (test_df['p_01_vs_05'] < 0.05).sum()
+    sig_05_10 = (test_df['p_05_vs_10'] < 0.05).sum()
+    sig_01_10 = (test_df['p_01_vs_10'] < 0.05).sum()
+
+    total_comparisons = len(test_df[test_df['p_01_vs_05'].notna()])
+
+    text.append(f"1. Temperature 0.1 vs 0.5: {sig_01_05}/{total_comparisons} auction formats show")
+    text.append(f"   statistically significant differences (p < 0.05).")
+
+    temp_comparisons_05_10 = len(test_df[test_df['p_05_vs_10'].notna()])
+    text.append(f"\n2. Temperature 0.5 vs 1.0: {sig_05_10}/{temp_comparisons_05_10} auction formats show")
+    text.append(f"   statistically significant differences (p < 0.05).")
+
+    temp_comparisons_01_10 = len(test_df[test_df['p_01_vs_10'].notna()])
+    text.append(f"\n3. Temperature 0.1 vs 1.0: {sig_01_10}/{temp_comparisons_01_10} auction formats show")
+    text.append(f"   statistically significant differences (p < 0.05).\n")
+
+    # Detailed findings by auction
+    text.append("Auction-Specific Results:\n")
+    for _, row in test_df.iterrows():
+        auction = row['auction']
+        text.append(f"\n{auction}:")
+
+        if pd.notna(row['smad_01']) and pd.notna(row['smad_05']) and pd.notna(row['smad_10']):
+            text.append(f"  SMAD: T=0.1: {row['smad_01']:.2f}%, T=0.5: {row['smad_05']:.2f}%, T=1.0: {row['smad_10']:.2f}%")
+
+            # Determine which is best
+            if row['smad_01'] < row['smad_05'] and row['smad_01'] < row['smad_10']:
+                best = "0.1"
+            elif row['smad_10'] < row['smad_05'] and row['smad_10'] < row['smad_01']:
+                best = "1.0"
+            else:
+                best = "0.5"
+
+            text.append(f"  Best performance: Temperature {best}")
+
+            # Significance
+            sig_findings = []
+            if pd.notna(row['p_01_vs_05']) and row['p_01_vs_05'] < 0.05:
+                sig_findings.append(f"T=0.1 vs T=0.5 (p={row['p_01_vs_05']:.4f})")
+            if pd.notna(row['p_05_vs_10']) and row['p_05_vs_10'] < 0.05:
+                sig_findings.append(f"T=0.5 vs T=1.0 (p={row['p_05_vs_10']:.4f})")
+            if pd.notna(row['p_01_vs_10']) and row['p_01_vs_10'] < 0.05:
+                sig_findings.append(f"T=0.1 vs T=1.0 (p={row['p_01_vs_10']:.4f})")
+
+            if sig_findings:
+                text.append(f"  Significant differences: {'; '.join(sig_findings)}")
+            else:
+                text.append(f"  No significant differences found")
+        elif pd.notna(row['smad_05']) and pd.notna(row['smad_10']):
+            text.append(f"  SMAD: T=0.5: {row['smad_05']:.2f}%, T=1.0: {row['smad_10']:.2f}%")
+            text.append(f"  (Temperature 0.1 data not available)")
+
+    text.append("\n" + "="*80)
+    text.append("INTERPRETATION")
+    text.append("="*80 + "\n")
+
+    if overall_10 < overall_05 < overall_01:
+        text.append("Higher temperature (T=1.0) consistently produces better performance (lower SMAD),")
+        text.append("suggesting that increased output variability helps GPT-4o explore more effective")
+        text.append("bidding strategies across different auction mechanisms.")
+    elif overall_01 < overall_05 < overall_10:
+        text.append("Lower temperature (T=0.1) produces better performance (lower SMAD), suggesting")
+        text.append("that more deterministic outputs help GPT-4o follow optimal bidding strategies")
+        text.append("more consistently.")
+    else:
+        text.append("The relationship between temperature and performance varies across auction formats,")
+        text.append("suggesting that optimal temperature settings may be auction-specific.")
+
+    return "\n".join(text)
+
+
 def main():
     """Main execution function."""
     print("="*80)
-    print("APPENDIX 2: MODEL COMPARISON ANALYSIS")
+    print("APPENDIX 2: TEMPERATURE COMPARISON ANALYSIS")
     print("="*80)
 
     # Process all models and auctions
     results_df = process_all_models()
 
     # Save results to CSV
-    output_csv = Path('./appendix2_model_results.csv')
+    output_csv = Path('./appendix2_temperature_results.csv')
     results_df.to_csv(output_csv, index=False)
     print(f"\n\nResults saved to: {output_csv}")
 
@@ -703,18 +780,18 @@ def main():
     # Perform statistical tests
     test_df = perform_statistical_tests(results_df)
 
-    # Generate and print model description
-    description = generate_model_description()
+    # Generate and print text description
+    description = generate_text_description(test_df)
     print(description)
 
     # Generate LaTeX table
     latex_table = generate_latex_table(test_df)
 
     # Save LaTeX table to file
-    latex_output = Path('./appendix2_model_latex.tex')
+    latex_output = Path('./appendix2_temperature_latex.tex')
     with open(latex_output, 'w') as f:
         f.write(latex_table)
-    print(f"\n\nLaTeX table saved to: {latex_output}")
+    print(f"\nLaTeX table saved to: {latex_output}")
 
     # Also print LaTeX table
     print("\n" + "="*80)

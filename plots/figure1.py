@@ -41,8 +41,6 @@ for _, row in human_df.iterrows():
     format_mapping = {
         'First-Price IPV': 'First-Price IPV',
         'Second-Price IPV': 'Second-Price IPV',
-        'Third-Price IPV': 'Third-Price IPV',
-        'All-Pay IPV': 'All-Pay IPV',
         'AC-B (Breitmoser2022)': 'AC-Closed (AC-B) APV',
         'SPSB (Li 2017)': 'Second-Price APV',
         'Ascending Clock (Li 2017)': 'Ascending Clock APV',
@@ -143,8 +141,8 @@ for i, auction in enumerate(auction_order):
 ax.set_ylabel('Auction Format', fontsize=13, fontweight='bold')
 ax.set_xlabel('Scaled Mean Absolute Deviation (SMAD) from Theoretical Optimum (%)',
               fontsize=13, fontweight='bold')
-ax.set_title('Human vs LLM Bidding Behavior: Deviation from Theoretical Equilibrium',
-             fontsize=15, fontweight='bold', pad=20)
+# ax.set_title('Human vs LLM Bidding Behavior: Deviation from Theoretical Equilibrium',
+#              fontsize=15, fontweight='bold', pad=20)
 
 # Set y-axis
 ax.set_yticks(y)
