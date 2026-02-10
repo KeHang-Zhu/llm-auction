@@ -133,11 +133,12 @@ def classify_bids(df, config):
     # Calculate theoretical optimal bid for each observation
     df['theoretical_bid'] = df['player_value'].apply(config['theoretical_bid'])
 
-    # Calculate deviation
-    df['deviation'] = df['bid'] - df['theoretical_bid']
-    tolerance = config['tolerance']
+    # Calculate RELATIVE deviation (percentage of theoretical bid)
+    # This fixes the bug where absolute deviation was compared to relative threshold
+    df['deviation'] = (df['bid'] - df['theoretical_bid']) / df['theoretical_bid']
+    tolerance = config['tolerance']  # e.g., 0.1 = 10% threshold
 
-    # Classify
+    # Classify based on relative deviation
     def classify_row(deviation):
         if deviation < -tolerance:
             return 'Underbid'
