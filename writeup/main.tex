@@ -1,0 +1,240 @@
+
+\documentclass{article} % For LaTeX2e
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{times}
+ \newcommand{\RNum}[1]{\uppercase\expandafter{\romannumeral #1\relax}}
+
+% Optional math commands from https://github.com/goodfeli/dlbook_notation.
+\input{math_commands.tex}
+
+\usepackage{hyperref}
+\usepackage{url}
+\usepackage{bbm}  %For indicator
+\usepackage{subcaption}
+\usepackage{xcolor}
+% profo environment
+% \renewcommand{\qedsymbol}{$\blacksquare$}
+\usepackage{amsthm}
+
+
+% Define the \TK command
+\newcommand{\TK}[1]{\textcolor{red}{TK: #1}}
+
+\usepackage{comment}
+\newcount\Comments  % 0 suppresses notes to selves in text
+\Comments = 1
+\newcommand{\kibitz}[2]{\ifnum\Comments=1{\color{#1}{#2}}\fi}
+\definecolor{english}{rgb}{0.0, 0.5, 0.0}
+\newcommand{\dcpadd}[1]{\kibitz{english}{#1}}
+\newcommand{\dcp}[1]{\kibitz{teal}{[DCP: #1]}}
+\newcommand{\khz}[1]{\kibitz{red}{[Kehang: #1]}}
+\newcommand{\kerem}[1]{\kibitz{cyan}{[kerem: #1]}}
+\newcommand{\jeff}[1]{\kibitz{brown}{[jeff: #1]}}
+\newcommand{\avs}[1]{\kibitz{purple}{[avs: #1]}}
+
+
+% Authors must not appear in the submitted version. They should be hidden
+% as long as the \iclrfinalcopy macro remains commented out below.
+% Non-anonymous submissions will be rejected without review.
+
+% \documentclass[12pt]{article}
+\usepackage{amsmath} 
+\usepackage{graphicx}
+\usepackage{cite} 
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{pgfplots}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{enumitem}
+\usepackage{lipsum}
+\usepackage{subcaption}
+\usepackage[most]{tcolorbox}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{multirow}
+\usetikzlibrary{arrows,positioning, automata,arrows.meta, shapes.geometric, decorations.pathreplacing}
+\usepackage{booktabs} % For intervention table offset
+% \input{parameters/params.tex}
+\captionsetup{justification=raggedright,singlelinecheck=false}
+
+% 3 -- WORDING & STYLING
+\newcommand{\COMMENT}[1]{\textbf{\textcolor{red}{#1}}}
+\title{\vspace*{-1cm} Benchmarking LLM Bidding Against Human Experimental Data \thanks{
+  \footnotesize
+This research was made possible by a generous grant from Dropbox Inc. Thanks to Parker Whitfill and Kobi Gal for their helpful feedback. Author's contact information, code, and data will be available at https://github.com/KeHang-Zhu/llm-auction. Both Anand V. Shah and Kehang Zhu contributed equally to this work. John J. Horton is a co-founder of Expected Parrot Inc., which develops generative AI models for market research applications. The views expressed herein are those of the authors and do not necessarily reflect the views of the National Bureau of Economic Research.
+}
+}
+
+  
+\author{
+  Anand Shah$^{*}$\\
+  MIT \\
+  \and
+  Kehang Zhu$^{*}$\\
+  Harvard  \\
+  \and
+  Yanchen Jiang \\
+  Harvard \\
+  \and
+  Jeffrey G. Wang \\
+  Harvard \\
+  \and
+  Arif K. Dayi \\
+  Harvard \\
+  \and
+  John J. Horton \\
+  MIT \& NBER \\
+  \and
+  David C. Parkes \\
+  Harvard \\
+}
+\date{
+Initial draft: May 30, 2024 \\
+Current version: Feb 14, 2026
+}
+
+
+% \author{Anand, Kehang \& Yancheng Jiang\thanks{ Use footnote for providing further information
+% about author (webpage, alternative address) -- \emph{not} for acknowledging
+% funding agencies.  Funding acknowledgements go at the end of the paper.} \\
+% Department of Computer Science\\
+% Cranberry-Lemon University\\
+% Pittsburgh, PA 15213, USA \\
+% \texttt{\{hippo,brain,jen\}@cs.cranberry-lemon.edu} \\
+% \And
+% Ji Q. Ren \& Yevgeny LeNet \\
+% Department of Computational Neuroscience \\
+% University of the Witwatersrand \\
+% Joburg, South Africa \\
+% \texttt{\{robot,net\}@wits.ac.za} \\
+% \AND
+% Coauthor \\
+% Affiliation \\
+% Address \\
+% \texttt{email}
+% }
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to \LaTeX{} to determine where to break
+% the lines. Using \AND forces a linebreak at that point. So, if \LaTeX{}
+% puts 3 of 4 authors names on the first line, and the last on the second
+% line, try using \AND instead of \And before the third author name.
+
+\newcommand{\fix}{\marginpar{FIX}}
+\newcommand{\new}{\marginpar{NEW}}
+
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{hyperref}
+\usepackage{natbib}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{pgfplots}
+\usepackage[framemethod=TikZ]{mdframed}
+\usepackage{enumitem}
+\usepackage{subcaption}
+\usepackage[most]{tcolorbox}
+\usepackage{setspace}
+\usepackage{textcomp}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{tikz}
+\usepackage{multirow}
+\usetikzlibrary{arrows,positioning, automata,arrows.meta, shapes.geometric, decorations.pathreplacing}
+\captionsetup{justification=raggedright,singlelinecheck=false}
+
+\usepackage{color-edits}
+\addauthor{ma}{blue}
+\usepackage{soul}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  columns=fullflexible
+}
+\usepackage[table]{xcolor}
+\usepackage{colortbl} % for \arrayrulecolor
+
+
+% Choose a citation style by commenting/uncommenting the appropriate line:
+%\setcitestyle{acmnumeric}
+% \setcitestyle{authoryear}
+
+% Title. Note the optional short title for running heads. In the interest of anonymization, please do not include any acknowledgements.
+\title{Benchmarking LLM Bidding Against Human Experimental Data}
+
+% % Anonymized submission.
+% \author{Submission 230}
+
+% Abstract. Note that this must come before \maketitle.
+
+\begin{document}
+
+\maketitle
+\begin{abstract}
+This paper investigates the behavior of large language models (LLMs) in auctions, introducing a novel synthetic data-generating process to help facilitate the study and design of auctions. We use the method of moments to estimate human bidding strategies in the results of different experiments reported in the economics literature,  for first-price and second-price auction formats and different value environments. We also consider empirical benchmarks from field studies of eBay-style proxy-bidding auctions. In comparing LLMs and humans, we find that LLMs reproduce several qualitative regularities emphasized in the auctions literature---systematic departures from equilibrium in IPV sealed-bid auctions, susceptibility to the winner's curse in common-value settings, and bid sniping under hard-close rules in eBay-style environments---and that LLM behavior is highly responsive to how the  incentive mechanisms are presented: describing a strategy-proof sealed-bid auction via an ascending-clock threshold process makes bidding substantially more truthful. We further find that seemingly small design changes---such as moving from sealed-bid to clock-style implementations or modifying the closing rule---induce large and systematic shifts in LLM behavior (as with humans). However, even while summary statistics of LLM bids are  similar to those of human bids, the bid distributions diverge in salient ways, revealing where human-likeness breaks down. In this way, we identify regimes in which LLM behavior resembles human behavior and where it does not—offering a methodological template for future work using LLMs as proxies for human behavior in auctions. We release the framework as a reproducible, open-source standard for evaluating economic reasoning in  LLMs, flexible enough to run auction experiments with many different models and across a wide range of auction designs.
+\end{abstract}
+
+
+% Title page for title and abstract only.
+% \begin{titlepage}
+
+% \maketitle
+
+% Optionally include a table of contents
+% \vspace{1cm}
+% \setcounter{tocdepth}{2} % adjust to 1 if desired
+% \tableofcontents
+
+% \end{titlepage}
+
+
+% Paper body
+\newpage
+\input{contents/intro}
+\input{contents/related_work}
+\input{contents/methods}
+\input{contents/results}
+\input{contents/discussion}
+\input{contents/limitation}
+\input{contents/conclusion}
+\paragraph{Disclosure.} Claude (Anthropic, Opus 4.6) was used to assist with plotting code, manuscript formatting to style guide requirements, and final compliance review with EC submission requirements.
+% \input{contents/acknowledgments}
+
+
+% In the interest of anonymization, please do not include acknowledgements in your submission.
+%
+%\begin{acks}
+%
+%	The authors would like to thank Dr. Maura Turolla of Telecom
+%	Italia for providing specifications about the application scenario.
+%
+%	The work is supported by the \grantsponsor{GS501100001809}{National
+%		Natural Science Foundation of
+%		China}{http://dx.doi.org/10.13039/501100001809} under Grant
+%	No.:~\grantnum{GS501100001809}{61273304\_a}
+%	and~\grantnum[http://www.nnsf.cn/youngscientsts]{GS501100001809}{Young
+%		Scientsts' Support Program}.
+%
+%
+%\end{acks}
+
+% Bibliography
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{llm_auction}
+\newpage
+% Appendix
+\appendix
+\input{contents/appendix}
+
+\end{document}

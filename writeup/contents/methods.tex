@@ -1,0 +1,201 @@
+
+\section{Methods}\label{sec:general_method}
+\subsection{Human Experiment Data Collection}
+
+\paragraph{Reconstructing human bid distributions via moment matching.}
+Because micro-level bid data are rarely available from published experiments, we reconstruct synthetic human bid distributions by calibrating a mixture model to aggregate statistics
+reported in each source. We model bids as:
+\[
+b = b^\star_m(v) \cdot r
+\]
+where $b^\star_m(v)$ is the equilibrium bid and $r$ is a bid-to-equilibrium ratio drawn from a three-component mixture:
+\begin{align*}
+\text{With probability } p_{\text{eq}}: \quad & r \sim \mathcal{N}(1, \sigma^2) \\
+\text{With probability } p_{\text{over}}: \quad & r \sim 1 + \text{Exp}(\lambda) \\
+\text{With probability } p_{\text{under}}: \quad & r \sim \text{Uniform}(1-\delta, 1)
+\end{align*}
+This structure maps directly to how experimental papers categorize behavior: equilibrium bidders ($r \approx 1$), overbidders ($r > 1$), and underbidders ($r < 1$).
+
+\paragraph{Source papers and equilibrium benchmarks.}
+We draw on four sources: \citet{li2017obviously} and \citet{breitmoser2022obviousness} for second-price and ascending clock auctions; \citet{kagel1993independent} for first-price,
+second-price, and third-price sealed-bid auctions with $n \in \{5, 10\}$ bidders; and \citet{gonczarowski2023strategyproofness} for second-price auctions comparing mechanism
+descriptions. For each format, we use the risk-neutral Bayes-Nash equilibrium:
+\begin{align*}
+b^\star_{\text{SPSB}}(v) &= v & &\text{(second-price, ascending clock)} \\
+b^\star_{\text{FPSB}}(v) &= \tfrac{n-1}{n} v & &\text{(first-price)} \\
+b^\star_{\text{TPSB}}(v) &= \tfrac{n-1}{n-2} v & &\text{(third-price)}
+\end{align*}
+
+\paragraph{Parameter identification.}
+Mixture weights $(p_{\text{eq}}, p_{\text{over}}, p_{\text{under}})$ are set directly from reported rates. For example, \citet{li2017obviously} reports ${\sim}50\%$ dominant-strategy
+play and ${\sim}40\%$ overbidding, yielding $p_{\text{eq}} = 0.50$, $p_{\text{over}} = 0.40$, $p_{\text{under}} = 0.10$.
+
+The overbid scale $\lambda$ is calibrated to match a secondary moment:
+\begin{itemize}
+  \item For \citet{li2017obviously} and \citet{breitmoser2022obviousness}: the mean bid-to-value ratio (e.g., $\mathbb{E}[b/v] \approx 1.08$).
+  \item For \citet{kagel1993independent}: the regression coefficient $\beta$ from bid regressions.
+  \item For \citet{gonczarowski2023strategyproofness}: mean absolute deviation (MAD $\approx$ \$0.51--0.55).
+\end{itemize}
+The equilibrium noise $\sigma$ is derived from regression $R^2$ where reported, via $\sigma^2 = \beta^2 \text{Var}(v)(1-R^2)/R^2$. The underbid bound $\delta$ is set consistently across
+papers; this is a parsimony choice as papers do not report underbid tail shapes separately.
+
+\paragraph{Why mixture model over QRE.}
+Quantal Response Equilibrium predicts symmetric deviations around equilibrium, contradicting the well-documented asymmetric overbidding in second-price auctions
+\citep{kagel1993independent}. The mixture model directly maps to how experimental papers categorize and report behavior.
+
+\paragraph{Limitations.}
+Some reported statistics are difficult to reconcile within any parametric model---for instance, the regression coefficients and bidding frequencies in \citet{kagel1993independent}
+cannot both be matched under Gaussian noise, suggesting heteroskedasticity in the original data. Our approach matches key aggregate patterns while acknowledging this limitation.
+Comparisons between LLM and human bidding should be interpreted qualitatively. Full parameter values appear in Appendix~\ref{app:mixture}.
+
+
+\subsection{Unified Metric for all Auctions}\label{sec:method}
+
+\paragraph{Unified deviation metric (applied to all bids).}
+Consider an auction \emph{environment} and \emph{format} indexed by $m$.
+The index $m$ collects all primitives needed to define the theoretical benchmark, including the number of bidders $N$, the value (or signal) distribution, the information structure (independent private value/common value), and the mechanism rules (e.g., first-price vs.\ second-price, sealed-bid vs.\ clock).
+Let $\mathcal I_i$ denote bidder $i$'s information at the moment of bidding under environment $m$ (e.g., $\mathcal I_i=v_i$ in private values, or $\mathcal I_i=s_i$ in common values).
+Let $b_{i}$ denote an \emph{observed submitted bid} by bidder $i$ (we apply the definition to \emph{all bids}, not only winning bids), and let $b_m^\star(\mathcal I_i)$ denote the \emph{theoretical benchmark bid} under $m$ given information $\mathcal I_i$ (Bayes--Nash equilibrium in non-strategy-proof formats; truthful/value bidding in strategy-proof formats).
+
+\noindent We define the absolute bid error for a bid with information $\mathcal I_i$ as
+\[
+d_m(\mathcal I_i)\;\equiv\;\bigl|b_i - b_m^\star(\mathcal I_i)\bigr|.
+\]
+To compare deviations across formats on a common scale, we normalize by the expected benchmark bid level,
+\[
+\mu_m^\star \;\equiv\; \mathbb E_m\!\left[b_m^\star(\mathcal I)\right],
+\]
+where $\mathbb E_m[\cdot]$ denotes expectation with respect to the distribution of the information object $\mathcal I$ induced by environment $m$ (i.e., the value/signal distribution and any randomization in the experimental design).
+We then define the \emph{scaled mean absolute deviation} (SMAD) for auction format $m$ as
+\[
+\Delta_m \;\equiv\; 100 \cdot \frac{\mathbb E_m\!\left[d_m(\mathcal I)\right]}{\mu_m^\star}
+\;=\; 100 \cdot \frac{\mathbb E_m\!\left[\left|b-b_m^\star(\mathcal I)\right|\right]}{\mathbb E_m\!\left[b_m^\star(\mathcal I)\right]}.
+\]
+This metric is interpretable as a percentage of the expected benchmark bid: $\Delta_m=10$ means that, on average, bids deviate from the benchmark by an amount equal to $10\%$ of the expected benchmark bid.
+
+
+Given a sample of bids $\{(b_k,\mathcal I_k)\}_{k=1}^n$ from format $m$, the plug-in estimator is
+\[
+\widehat{\Delta}_m
+\;=\;
+100 \cdot
+\frac{\frac{1}{n}\sum_{k=1}^{n}\left|b_k-b_m^\star(\mathcal I_k)\right|}
+{\widehat{\mu}_m^\star},
+\qquad
+\widehat{\mu}_m^\star \equiv \frac{1}{n}\sum_{k=1}^{n} b_m^\star(\mathcal I_k).
+\]
+When we report a standard error for the (unscaled) mean absolute deviation $\frac{1}{n}\sum_k |b_k-b_m^\star(\mathcal I_k)|$, we propagate it to $\widehat{\Delta}_m$ by scaling with $\widehat{\mu}_m^\star$. We construct $95\%$ confidence intervals using a normal approximation when an analytic standard error is available.
+
+
+\paragraph{Deterministic benchmarks.}
+SMAD requires a single-valued benchmark mapping $\mathcal I \mapsto b_m^\star(\mathcal I)$.
+Accordingly, we restrict attention to auction formats where the theoretical prediction is deterministic given the bidder’s information.
+
+
+\subsection{LLM Data Generation}
+\label{sec:data_generation}
+
+We generate synthetic auction data by simulating auctions in which $n$ large language model (LLM) agents bid against one another under fully specified information structures and auction rules. Each experimental \emph{setting} is defined by (i) a \emph{value model} (how bidder values/signals are drawn), (ii) a \emph{mechanism environment} (the action space, allocation and payment rules, and the information revealed during play), and (iii) a \emph{prompt framing} (how the mechanism is described to the bidder). For each setting, we repeat the simulation $K$ times with independent random seeds, producing a dataset of realized values (or signals), bidder actions, allocations, prices, profits, and free-text plans. Here, ``actions'' refers to: a numeric bid in sealed-bid formats, a \texttt{stay}/\texttt{exit} decision at each clock tick in ascending auctions, and an \texttt{increase}/\texttt{hold} decision over a bidder's maximum bid in the eBay proxy-bidding environment.
+
+\paragraph{Single-auction baseline and learning ablation.}
+Our main benchmark experiments use \emph{single-auction} simulations: each repetition $k$ is an independent auction instance with freshly drawn values/signals, and bidders do not receive feedback across instances. We adopt this design to minimize reliance on cross-instance learning and long-term adaptation, which remains unreliable for language models \citet{dong2024survey}. Importantly, this choice is distinct from whether a mechanism is \emph{iterative} within an auction (e.g., clock auctions): iterative mechanisms still unfold over multiple within-auction steps (clock ticks), but we do not run repeated auctions with feedback by default. In Appendix~\ref{app:learning}, we run a repeated-auction ablation for sealed-bid auctions in which bidders observe outcomes from prior auction instances; consistent with the motivation above, we find no meaningful learning effects across repetitions.
+
+\paragraph{Value models and numerical calibration.}
+We implement three canonical information structures. All parameters (support ranges, bidder count $n$, and bid/price increments) are specified in configuration files and held fixed within a setting. In sealed-bid auctions, bids are restricted to a discrete grid with increment $0.1$; in ascending clock auctions, the clock price increases by increment $0.5$ per tick.
+
+\begin{itemize}
+    \item \textbf{Independent Private Values (IPV).} Each bidder's value is the sum of an independent private component and (optionally) a common component. In our baseline IPV calibration, the private component from $[0,49]$, yielding
+    \[
+          \epsilon_{it} \sim \mathrm{Unif}[0,49], \qquad v_{it}=\epsilon_{it}.
+    \]
+    We discretize bids with increment $0.1$.
+
+    \item \textbf{Affiliated Private Values (APV).} Values share a common component plus an idiosyncratic private shock. Our APV calibration sets
+    \[
+        c_t \sim \mathrm{Unif}[0,29], \qquad \epsilon_{it} \sim \mathrm{Unif}[0,20], \qquad v_{it}=c_t+\epsilon_{it},
+    \]
+    again with bid increment $0.1$. This induces affiliation: higher realized values for one bidder make higher values for others more likely.
+
+    \item \textbf{Common Value (CV).} The item has an underlying common value $V_t$ shared by all bidders, while each bidder observes a noisy private signal. In our CV calibration, the common value is drawn from $[20,29]$ and each bidder observes an idiosyncratically perturbed signal,
+    \[
+        V_t \sim \mathrm{Unif}[20,29], \qquad \eta_{it} \sim \mathrm{Unif}[-20,20], \qquad s_{it}=V_t+\eta_{it},
+    \]
+    with bid increment $0.1$. Bidder $i$ conditions on $s_{it}$ when bidding, while realized payoffs depend on $V_t$, generating the winner's-curse selection effect.
+\end{itemize}
+In our baseline benchmark, $T=1$ so each repetition corresponds to a single auction instance.
+
+\subsubsection{Canonical laboratory mechanisms.}
+To mirror standard laboratory benchmarks, we implement \textit{sealed-bid} auctions and \textit{ascending clock} auctions under the value models above.
+
+\paragraph{Sealed-bid auctions.}
+In sealed-bid auctions, each bidder submits a single bid $b_{it}$ simultaneously. Let $b_{(1)t}\ge b_{(2)t}\ge b_{(3)t}$ denote the order statistics and let $i^\star_t$ be the highest bidder. The winner pays a price $p_t$ determined by the mechanism:
+\begin{itemize}
+    \item \textbf{First-price sealed-bid (FP).} $i^\star_t$ wins and pays $p_t=b_{(1)t}$.
+    \item \textbf{Second-price sealed-bid (SP).} $i^\star_t$ wins and pays $p_t=b_{(2)t}$.
+\end{itemize}
+Profits are computed as $\pi_{it}=v_{it}-p_t$ for winners (or $\pi_{it}=V_t-p_t$ in CV) and $0$ for losers.
+
+\paragraph{Ascending clock auctions.}
+In an ascending clock auction, the price starts at 0 and increases by a fixed increment $\Delta_{\text{clock}}=0.5$ at each clock tick. At each tick, each bidder chooses \emph{stay} or \emph{exit}. The last remaining bidder wins. We implement the standard second-price logic in the dynamic interface: the winner pays the exit price of the second-to-last bidder.
+
+\paragraph{Framing interventions (mechanism held fixed).}
+To isolate the effect of description while holding auction design constant, we implement two alternative framings of the second-price sealed-bid auction:
+\begin{itemize}
+    \item \textbf{Menu framing.} Bidders are instructed to choose a ``maximum acceptable price.'' They win if the highest rival bid (the market price) is below their chosen maximum, and if they win they pay that market price.
+    \item \textbf{Clock framing.} Bidders are told to treat their sealed bid as an automatic exit threshold in a simulated ascending clock: conceptually, the clock rises until bidders ``drop out'' at their thresholds, and the winner pays the second-highest threshold.
+\end{itemize}
+Both framings implement the same allocation and payment rule as the second-price sealed-bid auction; only the prompt language differs. The precise prompts are listed in Appendix~\ref{app:prompt}.
+
+\subsubsection{Stylized eBay proxy-bidding environment (separate from lab benchmarks).}
+Because our eBay-style results section studies a richer, marketplace-inspired microstructure rather than canonical lab mechanisms, we treat eBay simulations as a separate environment. We implement a stylized eBay auction with \emph{proxy bidding} and an optional auction-extension closing rule. Proxy bidding means each bidder maintains a \emph{maximum bid} (their willingness-to-pay cap), and the platform automatically raises the standing bid only as needed to keep the current leader ahead. In each eBay simulation, there are $n=3$ bidders and (unless modified by the closing rule) the auction lasts for $T_{\text{eBay}}=10$ discrete bidding periods. Unless otherwise noted, the eBay environment uses IPV with $v_i \sim \mathrm{Unif}[0,99]$.
+
+\emph{Treatments (reserve price $\times$ closing rule).}
+We vary the eBay environment along two design dimensions: whether the auction has a \emph{hidden reserve price} and whether it uses a modified closing rule (auction extension), yielding four treatments:
+\begin{itemize}
+    \item[\textbf{T1}] Standard eBay auction with proxy bidding.
+    \item[\textbf{T2}] eBay auction with a modified (auction extension) closing rule.
+    \item[\textbf{T3}] Standard eBay auction with a hidden reserve price.
+    \item[\textbf{T4}] eBay with a modified (auction extension) closing rule and a hidden reserve price.
+\end{itemize}
+A hidden reserve price is a seller-chosen minimum acceptable sale price that is \emph{not disclosed} to bidders; if the highest maximum bid fails to meet the reserve, the item does not sell. For hidden-reserve designs, we consider $r \in \{40, 50, 60\}$.
+
+\emph{Discrete-time implementation of bidding.}
+Because LLM interactions are necessarily discrete, we approximate continuous-time bidding using period-based actions. In each period, bidders move in a common-knowledge, randomly permuted order. When it is a bidder's turn, they observe the current auction state (including updates induced by earlier movers in that period) and decide whether to \emph{increase their maximum bid} or \emph{hold}. In the final period, bidding is simultaneous: bidders submit their final decisions without observing others' last-period actions, capturing the idea that, in continuous time, a bidder cannot know whether another bid will arrive just before closing.
+
+\emph{Modified closing rule (auction extension).}
+Under the modified closing rule, if a higher maximum bid is placed in the final period such that a new bidder becomes the winner, the auction is extended by one additional period. This process repeats until a final period occurs in which no further bids are made.
+
+\emph{Abstraction and prompting.}
+This stylized eBay framework abstracts away from additional platform features such as shipping fees and Buy-It-Now options. Moreover, unlike the explicit framing interventions in Section~\ref{sec:Intervention}, we keep the eBay prompts deliberately \emph{minimal} and descriptive: the goal is to study how LLMs behave under richer market microstructure without steering them toward any particular strategy through didactic instruction. The complete simulation process is described in Appendix~\ref{app:ebay}, and the corresponding prompts are listed in Appendix~\ref{app:prompt}.
+
+\subsubsection{Simulation protocol.}
+Each experiment proceeds as follows, repeated for $K$ independent repetitions:
+\begin{enumerate}
+    \item \textbf{Value realization.} For each repetition $k$, we draw values (IPV/APV) or signals (CV) for all bidders under a fixed random seed. In our baseline benchmark experiments, each repetition corresponds to a single auction instance.
+    \item \textbf{Prompted action.} We construct an individualized prompt for each bidder containing (i) the mechanism rules (and framing, if applicable), (ii) the bidder's current value (or signal), and (iii) when applicable, a feedback transcript summarizing prior auction instances (only in the learning ablation). We request a structured response with explicit tags:
+\begin{quote}\small
+\verb|<PLAN> ... </PLAN>| \\
+\verb|<ACTION> ... </ACTION>|
+\end{quote}
+where \verb|<ACTION>| contains a numeric bid (sealed-bid), a stay/exit decision (clock), or an increase/hold decision over the bidder's maximum bid (eBay).
+    \item \textbf{Parallel elicitation and parsing.} We query the LLM for each bidder using separate API calls in parallel, and parse the action from the \verb|<ACTION>| tag using a deterministic regex-based extractor.
+    \item \textbf{Outcome computation.} Given the submitted actions, we determine the winner and payments according to the mechanism rules and compute bidder profits.
+\end{enumerate}
+
+Unless otherwise noted, our baseline settings use $n=3$ bidders and we repeat each configuration $K$ times with independent seeds to ensure stable distributional estimates.
+
+
+\subsection{Model Selection}
+
+To run the simulation, we evaluate the following five LLMs under identical prompts:  we choose 3 most popular foundation models from different providers: OpenAI’s gpt-4o (2024-08-06),  Anthropic's claude-3-5-haiku (2024-10-22) and Google's gemini-2.0-flash (2025-0205), one reasoner from the canonical LLM: gpt-5-mini (2025-08-07) ; and one widelyused open-sourced model: Meta-Llama-3-8B-Instruct.
+All models are prompted with the survey instrument described in the previous section.
+For non-reasoning models (e.g., gpt-4o, Llama), we set the temperature to $temp = 0.5$,  which is the most common setting in LLM simulation\citep{horton2023large, Horton2024EDSL}. For reasoning models (GPT-5-mini), temperature is ignored by the API.
+For our baseline gpt-4o, we also ablate set the temperature to  $ temp\in \{ 0.1, 1.0\}$.
+
+
+
+
+
+
+
+
