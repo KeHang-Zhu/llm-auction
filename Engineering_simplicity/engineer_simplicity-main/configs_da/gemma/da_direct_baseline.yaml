@@ -1,0 +1,36 @@
+# DA Direct Revelation - Baseline Configuration
+
+experiment:
+  name: "da_direct_baseline"
+  version: "V1"
+  description: "Direct revelation DA with traditional mechanics explanation"
+
+da:
+  number_students: 4
+  number_schools: 4
+
+mechanism:
+  mechanism_type: "direct"  # "direct" or "osp"
+  intervention_type: "baseline"  # "baseline", "axis1_enumerate", "axis2_onestep", etc.
+  special_name: "da_direct_traditional.txt"
+
+value:
+  common_range: [40, 70]
+  private_range: 20
+  seed_base: 3000
+
+llm:
+  model: "google/gemma-3-27b-it"
+  temperature: 0.5
+
+prompt:
+  templates_dir: "rule_template/DA/"
+
+global_ranking:
+  strategy: "fixed"  # "average", "fixed", "random", "misleading"
+
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 4
+  output_dir: "experiment_logs/da/gemma/direct_baseline"

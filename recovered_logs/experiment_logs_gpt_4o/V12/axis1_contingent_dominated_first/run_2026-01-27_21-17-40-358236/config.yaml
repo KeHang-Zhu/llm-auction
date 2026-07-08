@@ -1,0 +1,36 @@
+experiment:
+  name: axis1_contingent_dominated_first
+  version: V12
+  description: Axis1 Contingent Dominated - First Price Auction
+auction:
+  number_agents: 3
+  rounds: 1
+rule:
+  seal_clock: seal
+  ascend_descend: ascend
+  price_order: first
+  private_value: private
+  open_blind: open
+  closing: false
+  reserve_price: 0
+  special_name: first_price_interventions/axis1_contingent_dominated.txt
+value:
+  common_range:
+  - 20
+  - 49
+  private_range: 49
+  increment: 0.1
+  seed_base: 1299
+llm:
+  model: gpt-4o
+  temperature: 0.5
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/V12/
+  include_payment_example: true
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 4
+  output_dir: experiment_logs/V12/axis1_contingent_dominated_first

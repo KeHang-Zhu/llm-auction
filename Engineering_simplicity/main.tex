@@ -1,0 +1,439 @@
+\PassOptionsToPackage{table}{xcolor}
+\documentclass[format=acmsmall, review=false]{acmart}
+\usepackage{acm-ec-26}
+\usepackage{booktabs}
+\usepackage{enumitem}
+
+% Author comment macros
+\newcount\Comments  % 0 suppresses notes to selves in text
+\Comments = 1
+\newcommand{\kibitz}[2]{\ifnum\Comments=1{\color{#1}{#2}}\fi}
+\newcommand{\dcp}[1]{\kibitz{teal}{[DCP: #1]}}
+\newcommand{\avs}[1]{\kibitz{purple}{[avs: #1]}}
+\newcommand{\kz}[1]{\kibitz{blue}{[kz: #1]}}
+\newcommand{\TK}[1]{\textcolor{red}{TK: #1}}
+
+\newcount\CommentsAdd  % 0 suppresses notes to selves in text
+\CommentsAdd = 1
+\newcommand{\kibitzAdd}[2]{\ifnum\CommentsAdd=1{\color{#1}{#2}}\fi}
+\definecolor{english}{rgb}{0.0, 0.5, 0.0}
+\definecolor{tw}{rgb}{0.0, 0.0, 0.5}
+\newcommand{\dcpadd}[1]{\kibitzAdd{english}{#1}}
+
+\usepackage{color-edits}
+\addauthor{ma}{blue}
+\usepackage{soul}
+\usepackage{listings}
+\usepackage{subcaption}
+
+\usepackage{multirow}
+\usepackage{float}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\scriptsize,
+  breaklines=true,
+  columns=fullflexible,
+  aboveskip=4pt,
+  belowskip=4pt,
+  xleftmargin=6pt,
+  framexleftmargin=4pt
+}
+\usepackage{array}
+\setcitestyle{authoryear}
+
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\title[Engineering Simplicity for LLM Agents]{Engineering Simplicity for LLM Agents}
+\author{Submission \#2577}
+% v1: weakly preferred but verbose abstract
+\begin{abstract}
+The theory of simplicity in economic design makes a claim about minds: that certain strategic problems are intrinsically hard to reason about, and that simple design can improve reasoning and recover good outcomes. Large language models (LLMs) represent a new kind of intelligence---neither human nor superhuman---and offer a rare opportunity: to test whether the cognitive constraints that drive simplicity in economic design are specific to humans or reflect something deeper. Existing results establish that LLM agents make mistakes participating in strategy-proof auctions such as the second-price sealed-bid auction, but improve play in simpler, obviously strategy-proof designs; we extend these findings across model families and to two-sided matching, and take this as evidence that the representation of a mechanism---how a game is presented, not just what it implements---shapes LLM reasoning in the same direction it shapes human reasoning. To understand where these cognitive constraints bind, we systematically test prompt-based interventions along three axes from this theory---contingent reasoning, forward planning, and belief formation---as well as descriptions of the mechanisms themselves to make their incentive properties transparent. We find that scaffolding for contingent reasoning, and making incentive properties transparent, substantially improve play, while prompting models to plan forward or to reason about others' beliefs consistently worsens it. The conceptual vocabulary of simple mechanism design, it appears, also describes the limits of an intelligence we did not build the theory for. Understanding why will matter as artificial agents enter economic life.
+\end{abstract}
+% v2: more concise abstract
+% \begin{abstract}
+% The theory of simplicity in economic design makes a claim about minds: that certain strategic problems are intrinsically hard to reason about, and that simple design can improve reasoning and recover good outcomes. Large language models (LLMs) represent a new kind of intelligence---neither human nor superhuman---and offer a rare opportunity: to test whether the cognitive constraints that drive simplicity in economic design are specific to humans or reflect something deeper. Existing results establish that LLM agents make mistakes participating in strategy-proof auctions such as the second-price sealed-bid auction, but improve play in simpler, obviously strategy-proof designs. In this paper, we extend these findings across model families and to two-sided matching, and systematically test prompt-based interventions along three cognitive axes---contingent reasoning, forward planning, and belief formation---as well as descriptions of the mechanisms themselves to make their incentive properties transparent. Scaffolding contingent reasoning and making incentive properties transparent substantially improve play; prompting models to plan forward or to reason about others' beliefs consistently worsens it. The conceptual vocabulary of simple mechanism design, it appears, also describes the limits of an intelligence we did not build the theory for. Understanding why will matter as artificial agents enter economic life.
+% \end{abstract}
+
+\begin{document}
+
+\begin{titlepage}
+\maketitle
+\vspace{1cm}
+\setcounter{tocdepth}{2}
+\tableofcontents
+\end{titlepage}
+
+\section{Introduction} \label{sec:introduction}
+
+Large language models can write sonnets, prove mathematical theorems, and pass the bar exam to practice law. Yet, LLMs cannot reliably bid their true value in a second-price sealed-bid auction \citep{zhu2024evidence}. This pattern of failure is puzzling: frontier models demonstrate capabilities that seem to require sophisticated reasoning, while struggling with problems that seem, at least to humans, less demanding \citep{chollet2019measure}.
+
+In particular, it is well understood that truthful bidding is the dominant strategy in the second-price sealed-bid (SPSB) auction \citep{vickrey1961counterspeculation}, and the conclusion follows from straightforward reasoning: your bid determines only \textit{whether} you win, not \textit{what} you pay; overbidding risks paying more than your value; underbidding risks losing auctions you would have profitably won. Simple as this logic is, the failure is not unique to LLMs---humans have also routinely failed truthful bidding in the laboratory \citep{kagel1993independent, kagel1995individual}. This has motivated a theory of simple mechanisms \citep{li2017obviously}, which helped to identify what makes the SPSB auction hard to play---and in doing so, helped articulate the cognitive constraints that may bind on human reasoners. And while frontier models will likely master such auctions before long---the dominant strategy is textbook material, after all---the failure of current models offers us an opportunity: to apply this burgeoning theory, built to characterize bounded rationality in humans, to a new kind of bounded reasoner. We also introduce a novel methodology of cognitive scaffolds---prompt-based interventions along different dimensions---to identify those cognitive constraints that bind.
+
+Our experiments span two canonical mechanism design settings: auctions and matching. Previous work has demonstrated that {\em obvious strategy-proofness} (OSP) helps LLMs reason in second-price auctions, changing the format from a sealed-bid to an ascending clock to simplify reasoning \citep{zhu2024evidence}. We replicate these results across four model families---Claude, Gemini, GPT, and Gemma (open-source). Turning to two-sided matching, we consider the {\em deferred acceptance} (DA) algorithm, and compare the standard DA---which demands the entire rank-order list up front---to an iterative implementation.\footnote{Henceforth, DA will refer to the standard implementation in which participants submit complete preference rankings simultaneously, analogous to the SPSB auction. {\em Iterative} DA will refer to an OSP, sequential-query implementation, analogous to the ascending clock auction.} DA does not generally admit an OSP implementation \citep{ashlagi2018stable}, but does under acyclic priority structures \citep{ergin2002efficient}, so we restrict to this environment. We find that LLMs deviate substantially from truthful play in standard DA, but achieve near-perfect play under iterative DA---to our knowledge, the first experimental test of an OSP implementation of DA with any kind of agent.
+
+Having established that LLMs exhibit bounded rationality in DA---extending existing results on second-price auctions---we probe deeper to characterize where cognitive constraints bind. The literature offers many notions of what makes a mechanism simple---e.g., OSP \citep{li2017obviously}, strategic simplicity \citep{borgers2019strategically}, one-step simplicity \citep{pycia2023theory}---and many of these concepts are interrelated. We broadly follow \citet{li2024designing}, who identifies three cognitive dimensions along which mechanisms may challenge reasoning: {\em contingent reasoning} (tracing through hypothetical scenarios about opponents' actions), {\em forward planning} (reasoning about one's own future decision points), and {\em belief formation} (modeling what others believe). For each axis, we design interventions---prompt modifications that scaffold reasoning along that dimension without disclosing the dominant strategy. Not all axes apply equally to both mechanisms. Both SPSB and DA are static mechanisms---the agent makes a single decision---but DA is implemented via a dynamic algorithm that processes rankings through rounds of proposals and rejections. This may give agents something to mistakenly reason forward about. We therefore test forward planning interventions only in DA. Separately, we also test {\em mechanism descriptions} that surface incentive properties without scaffolding any particular mode of reasoning.
+
+Our findings, probing by axis:
+\begin{itemize}[noitemsep]
+    \item \textit{Contingent reasoning}: Scaffolding the payoff structure of the mechanism---making explicit what happens under each outcome the agent may face---substantially improves play across both mechanisms and all models.
+    \item \textit{Forward planning}: Prompting models to reason about their own future decision points within DA's rejection dynamics worsens play, particularly for weaker models. The scaffold gives models material to strategize with, but not the ability to strategize well.
+    \item \textit{Belief formation}: Prompting models to form beliefs about opponents' strategies---and about opponents' beliefs about theirs---consistently worsens play across both mechanisms, amplifying mistakes from strategizing.
+    \item \textit{Mechanism descriptions}: Describing the logic of why truth-telling is safe in both mechanisms---that your bid determines whether you win, not what you pay (auctions), or that being rejected from a top-ranked school cannot hurt your chances at lower-ranked schools (DA)---produces dramatic improvements, even nearly matching the full OSP benchmark in DA.
+\end{itemize}
+
+LLMs will be increasingly called upon to perform economically important tasks. As that happens, it will be all the more important to understand how they reason. If the cognitive constraints that the theory of simplicity was built to address also bind on artificial agents, then the case for engineering simplicity no longer rests on human psychology alone---it becomes a design principle for markets that must work for any kind of reasoning agent. Moreover, interventions as a method generate behaviorally distinct populations of LLM agents. This makes them useful as a way to target particular populations or particular regions of strategy space under a given mechanism, and we are optimistic that this approach may help run more useful, targeted experiments over artificial agents in the future.
+
+The paper proceeds as follows. Following a literature review, Section~\ref{sec:methods} describes our experimental design and intervention scaffolds. Section~\ref{sec:osp-results} presents results comparing OSP and non-OSP mechanisms, replicating prior findings in auctions and extending to matching. Section~\ref{sec:intervention-results} presents the intervention probes, showing that different axes bind differently across mechanisms and models. Section~\ref{sec:conclusion} concludes. The Appendix contains the full text of all prompts for each mechanism in the static, dynamic, and intervention settings, as well as additional results probing prospect-theoretic departures from expected utility theory, including loss aversion and the endowment effect.
+
+\subsection{Related Work} \label{sec:related}
+
+\paragraph{Simple Mechanism Design}
+
+ \citet{li2017obviously} formalized obvious strategy-proofness and showed that ascending clock auctions satisfy it while  SPSB auctions do not. Related notions include \textit{strategic simplicity} \citep{borgers2019strategically}, which requires that optimal play not depend on higher-order beliefs, and \textit{one-step simplicity} \citep{pycia2023theory}, which requires that optimal play emerge from considering only the immediate next step rather than full backward induction. The SPSB auction satisfies strategic simplicity---truthful bidding is dominant regardless of beliefs about others---but is not OSP. Ascending clock auctions satisfy both. \citet{li2024designing} decomposes mechanism complexity into three cognitive dimensions: contingent reasoning, forward planning, and belief formation. We use this decomposition to structure our interventions.
+
+Recent work emphasizes the connection between strategic complexity and apparent irrationality. \citet{oprea2024decisions} argues that many anomalies attributed to non-standard preferences are better explained by computational complexity: subjects make mistakes not because their preferences are irrational but because the problem is hard. This framing aligns with our approach. We do not assume LLMs have ``biases'' in the behavioral economics sense (though we explore interventions probing this in the Appendix); rather, our primary question is whether the computational structure of strategic problems creates cognitive challenges and failure modes for LLMs.
+
+\paragraph{Deferred Acceptance}
+
+There is a deep literature in market design for both auctions and two-sided matching. %\citet{vickrey1961counterspeculation} established that bidding one's value is the dominant strategy in a second-price auction. 
+For two-sided matching, \citet{gale1962college} introduced the DA algorithm, which produces stable matchings, and \citet{roth1982economics} showed that DA is strategy-proof for the proposing side.
+
+The question of simplicity in DA was addressed first by \citet{ashlagi2018stable}, who show that DA is generally not OSP-implementable. However, under \textit{acyclic} priority structures---a condition introduced by \citet{ergin2002efficient}---the proposer-optimal stable matching rule can be implemented in an OSP manner (for the proposer). Acyclicity rules out configurations where student $a$ has priority over $b$ at school $s$, while $b$ has priority over $c$ at school $s'$, and $c$ has priority over $a$ at school $s''$. Under acyclic priorities, rejection chains remain local, enabling an iterative query protocol that is OSP.
+
+\citet{gonczarowski2023strategyproofness} study descriptions of strategy-proof mechanisms that aim to make incentive properties transparent. They give a menu-based description for DA: the set of schools a student can obtain as it depends on others' reports, where the student's ranking is used to select within this menu. Such descriptions may help participants understand strategy-proofness without changing the extensive form---a complementary approach to OSP implementation. In an incentivized lab experiment, \citet{gonczarowski2024describing} find that a menu-based explanation significantly improved participants' measured understanding of DA's strategyproofness relative to standard descriptions, though average behavioral effects were modest.
+
+\paragraph{LLMs as Economic Agents}
+
+An emerging literature studies LLMs as simulated economic agents. \citet{horton2023large} introduces the ``homo silicus'' framework, showing that LLMs can replicate qualitative patterns from classic experiments in labor economics, bargaining, and social preferences. \citet{aher2023using} demonstrate that LLMs can reproduce human subject study results across a range of paradigms. \citet{brand2023using} use LLMs for market research, finding that they approximate human consumer behavior. \citet{zhu2024evidence} study LLMs in auction settings and find that OSP mechanisms improve play, a finding we replicate and extend in this paper.
+
+In auction settings specifically, \citet{chen2023put} study LLMs in a multi-round auction environment and find substantial deviations from optimal play. \citet{fish2024algorithmic} examine whether LLMs can sustain collusive outcomes in repeated auctions. Our contribution differs in focus: we use the conceptual vocabulary of simple mechanism design---contingent reasoning, forward planning, belief formation---to probe and characterize the cognitive constraints that bind on LLM agents, and to ask whether the same theory that describes bounded rationality in humans can also help describe theirs.
+
+\section{Experimental Design} \label{sec:methods}
+
+
+\subsection{Mechanisms}
+
+We study two canonical strategy-proof mechanisms, each paired with an OSP counterpart.
+
+\paragraph{Auctions.} We implement a second-price sealed-bid (SPSB) auction with $N=3$ bidders and independent private values, alongside an ascending clock auction that implements the same allocation and payment rule. Human subjects have historically deviated from truthful bidding in SPSB auctions \citep{kagel1993independent, kagel1995individual}, while ascending clock formats improve play \citep{li2017obviously, breitmoser2022obviousness}. Details of the auction environment appear in Section~\ref{sec:auction-data}.
+
+\paragraph{Matching.} We implement student-proposing deferred acceptance (DA) in a school choice setting with four students and four schools, alongside an iterative DA protocol. We construct priority structures that are Ergin-acyclic---ensuring the iterative protocol is OSP---but with non-aligned preferences, so the matching problem is non-trivial. Details of the matching environment appear in Section~\ref{sec:da-data}.
+
+
+\subsection{Data Generation for Deferred Acceptance} \label{sec:da-data}
+\paragraph{Overview.}
+We generate data from a school choice environment in which LLMs play the role of students. Each experimental repetition instantiates a complete matching market (student preference rankings, and school priorities), elicits student reports under a specified mechanism, and  executes student-proposing Deferred Acceptance (DA) to produce a
+matching outcome. 
+
+
+\paragraph{Market instances.}
+Each instance contains four students $i\in\{A,B,C,D\}$ and four schools $s\in\{w,x,y,z\}$, with unit capacity (one seat per school). This $4\times 4$ set-up is large enough to admit meaningful strategic considerations (competition for popular schools and priority asymmetries) while remaining small enough that we can log the full DA trace and audit every outcome.
+
+\paragraph{Student valuations.}
+To induce correlated demand across students while preserving idiosyncratic tastes, we use an affiliated value model with a school-level common component and a student--school private shock:
+\[
+v_{i,s} \;=\; c_s \;+\; \varepsilon_{i,s},
+\]
+%
+for school $s$ and student $i$.
+%
+For each school $s$, we draw a common value $c_s \sim \mathrm{Unif}[40,70]$. For each pair $(i,s)$, we draw an independent private shock $\varepsilon_{i,s}\sim \mathrm{Unif}[0,20]$ and set $v_{i,s}=c_s+\varepsilon_{i,s}$. Each student's \emph{true preference ranking} $\pi_i^{\star}$ is then defined as the descending sort of $\{v_{i,s}\}_{s\in\{w,x,y,z\}}$ (ties broken deterministically) \citep{klijn2019static}.
+
+\paragraph{School priorities.}
+Schools rank students by fixed, Ergin-acyclic priority orders (held constant across repetitions). Concretely, we use:
+\begin{align*}
+w:&\; A \succ B \succ C \succ D \\
+x:&\; B \succ A \succ C \succ D \\
+y:&\; A \succ B \succ D \succ C \\
+z:&\; B \succ A \succ D \succ C,
+\end{align*}
+where $\succ$ denotes higher priority. This structure creates a ``top tier'' $\{A,B\}$ and ``bottom tier'' $\{C,D\}$, and rules out priority cycles that would otherwise create long rejection chains. 
+This acyclicity is the condition under which a sequential-query implementation can make DA's incentives more transparent (OSP).
+
+\paragraph{Social information (common signal).}
+In addition to their school priorities, all students observe a fixed ``global popularity'' ranking intended to proxy common beliefs about demand:
+\[
+\text{Global ranking: } y \succ x \succ w \succ z.
+\]
+This signal is held fixed across repetitions to keep the information treatment constant; depending on the realized $v_{i,s}$, it may be aligned or misaligned with the instance's true preference. 
+
+\paragraph{Mechanisms.}
+For each market instance we run two elicitation protocols.
+
+\emph{(i) Direct revelation (static DA).} Each student submits a complete rank-order list over $\{w,x,y,z\}$ in a single shot. We then run student-proposing DA on the submitted rankings and with the true school priorities.
+
+\emph{(ii) Iterative DA (sequential queries).} Students do not submit a full ranking upfront. Instead, the mechanism queries students sequentially, following the tree construction of \citet{ashlagi2018stable} for OSP implementation of DA under acyclic priorities. At each node, the mechanism identifies students who hold top priority at some remaining school and asks them a yes/no question: ``Among the remaining schools $\{w, x, y, z\}$, is school $s$ your most preferred?'' If the student answers YES, they are immediately matched to that school and both are removed from consideration. If NO, the school remains available and the mechanism continues to the next query. When only one top-priority student remains, the protocol reduces to serial dictatorship: the student simply picks their most preferred school from the remaining set. The protocol terminates when all students are matched.
+
+\paragraph{LLM elicitation as scenario prompts.}
+Within each repetition, we query one LLM instance per student. Each query is a self-contained prompt that bundles: (a) the student's identity,  (b) their priority  at each school, (c) the global ranking signal, (d) the mechanism rules, and (e) a treatment-specific instruction cognitive scaffold (if applicable). We implement chain-of-thought \citep{wei2022chain} by requiring structured output with explicit tags for reasoning and decision.
+
+\vspace{.5cm}
+\noindent\textbf{Prompt skeleton (Direct Revelation).}
+\begin{quote}\small
+You are Student A. There are 4 schools: w, x, y, z. You will be matched to at most one school.
+
+HOW THE MATCHING WORKS (Deferred Acceptance):
+(1) All students submit a ranking of schools.
+(2) Each student proposes to their top-ranked school.
+(3) Each school tentatively accepts the proposer it ranks highest (by priority), rejecting others.
+(4) Rejected students propose to their next choice; schools keep the highest-priority student so far.
+(5) The algorithm ends when no rejections occur.
+
+Your priority rank (1=highest): \; w:1,\; x:2,\; y:1,\; z:2.\\
+Most applicants seem to favor: \; y \textgreater x \textgreater w \textgreater z.\\
+(TREATMENT INSTRUCTIONS)
+
+Return:
+\texttt{<REASON> ... </REASON>}
+
+\texttt{<DECISION> Ranking: ... </DECISION>}
+\end{quote}
+
+\noindent\textbf{Prompt skeleton (Iterative DA, yes/no query).}
+\begin{quote}\small
+You are Student A. The remaining schools are: w, y, z.
+
+Your preference ordering (most to least preferred): y, w, z.\\
+Your priority rank at each school (1=highest): w:1, y:1, z:2.\\
+Most applicants seem to favor: y \textgreater{} x \textgreater{} w \textgreater{} z.
+
+Among the remaining schools \{w, y, z\}, is \textbf{y} your most preferred?\\
+If YES: you will be matched to y immediately.\\
+If NO: y remains available and you will be asked again.
+
+Return:
+\texttt{<REASON> ... </REASON>}
+
+\texttt{<DECISION> Answer: YES / NO </DECISION>}
+\end{quote}
+
+\paragraph{Repetitions and logging.}
+For each treatment condition and each mechanism, we run $N=50$ independent repetitions (distinct random seeds for value draws; priorities and global ranking fixed). For every repetition we log: true rankings, the full set of LLM responses (raw text), parsed decisions, DA traces (proposals/holds/rejections by round), final matches. This produces a complete JSON record per instance, allowing exact replay and audit of every step from value generation to matching outcome.
+
+\subsection{Data Generation for Auctions} \label{sec:auction-data}
+
+\paragraph{Overview.}
+We generate auction data from an in-silico laboratory in which large language models (LLMs) act as bidders. 
+Each experimental repetition instantiates a complete one-shot \footnote{\citet{zhu2024evidence} showed that LLM agents rarely learn from repeated plays in auctions.} auction environment (values, mechanism, and intervention), elicits a sequence of actions from each bidder (a sealed bid or a sequence of stay/exit decisions), and then computes allocations and payments mechanically from the submitted actions. 
+The unit of observation is an \emph{auction instance}: a fully specified scenario that is reproducible given a random seed and a prompt template.
+
+\paragraph{Environment: Independent Private Values (IPV).}
+We study symmetric IPV auctions with $N=3$ bidders. In each auction instance, each bidder $i\in\{1,2,3\}$ receives an independent private value
+\[
+v_i \sim \mathrm{Unif}\{0,1,\dots,V_{\max}\},
+\]
+with $V_{\max}=49$ in the baseline configuration. Values are drawn independently across bidders. All monetary amounts lie on a discrete grid with increment $\Delta=\$0.01$ for Sealed-bid and $\Delta=\$0.5$ for clock auctions.
+
+\paragraph{Mechanisms.}
+We implement two canonical one-shot mechanisms that differ in their strategic interface.
+
+\emph{(i) Second-Price Sealed-Bid (SPSB).}
+Each bidder simultaneously submits a bid $b_i \in \{0,\Delta,2\Delta,\dots\}$. The highest bidder wins the item and pays the second-highest bid. Let $b_{(1)} \ge b_{(2)} \ge b_{(3)}$ denote the order statistics of bids. The winner is the argmax bidder and the price is $p=b_{(2)}$. The winner’s payoff is $v_i-p$, and losers receive $0$.
+
+\emph{(ii) Ascending Clock Auction (closed).}
+The auction starts at price $p_0=0$ and increases by $\Delta$ each tick. At each posted price, each active bidder is asked whether they want to \emph{stay} in the auction or \emph{exit}. Exit decisions are private: bidders are not informed when others leave. The auction ends when only one bidder remains. We record each bidder’s \emph{dropout price} $d_i$ as the first posted price at which they choose to exit. The winner is the bidder with the highest dropout price, and the transaction price is the \emph{second-highest} dropout price (equivalently, the price at which the second-to-last bidder exits). The winner’s payoff is $v_i-\max_{j\neq i} d_j$, and losers receive $0$.
+
+\paragraph{LLM elicitation as scenario prompts.}
+In both mechanisms, each bidder’s decision is elicited via a self-contained prompt that includes: (a) bidder identity and opponent list, (b) a mechanism description (which varies by intervention), (c) the bidder’s private value $v_i$, and (d) a structured response format.
+
+\vspace{.5cm}
+\noindent\textbf{Prompt skeleton (SPSB).}
+\begin{quote}\small
+You are Bidder \{Name\}. You are bidding against two other bidders.\\
+MECHANISM DESCRIPTION + TREATMENT TEXT\\
+Your private value for the item is \${$v_i$}.\\
+Return:
+\texttt{<PLAN> ... </PLAN>}\\
+\texttt{<ACTION> [your bid] </ACTION>}
+\end{quote}
+
+\noindent\textbf{Prompt skeleton (Clock, at posted price $p$).}
+\begin{quote}\small
+You are Bidder \{Name\}. The current posted price is \${$p$}.\\
+If you stay, you remain in the auction at this price. If you exit, you leave permanently.
+You will not be told when other bidders exit.\\
+MECHANISM DESCRIPTION + TREATMENT TEXT\\
+Your private value for the item is \${$v_i$}.\\
+Return:
+\texttt{<PLAN> ... </PLAN>}\\
+\texttt{<ACTION> Stay / Exit </ACTION>}
+\end{quote}
+
+
+\paragraph{Treatments (prompt interventions).}
+Treatments modify only the rule-explanation block of the prompt while holding the value distribution, bidder identities, and payment rules fixed. We use this to test how different reasoning scaffolds change bidding behavior under the same underlying gaTme (e.g., contingent-reasoning prompts, decision-tree framing, backward-induction analogies, direct strategy revelation, and risk-preference framings).
+
+
+\subsection{Models}
+
+We test four models spanning three commercial API providers and one open-weight family: GPT-4o \citep{openai2024gpt4o}, Claude 3.5 Haiku \citep{anthropic2024claude}, Gemini 2.0 Flash \citep{google2024gemini}, and Gemma 27B \citep{google2024gemma}. All experiments use temperature $T=.5$.
+
+Our goal is to study the interaction between cognitive constraints and mechanism design, which requires models that are capable enough to parse the rules of a mechanism yet still susceptible to the reasoning failures that mechanism design aims to remedy. We therefore deliberately select well-established, widely-deployed model families rather than the most powerful frontier reasoning models (e.g., o3, GPT-5). At the frontier, raw reasoning ability may mask the very cognitive bottlenecks our interventions target, collapsing our ability to identify which design features matter and why.
+
+
+\section{OSP Results} \label{sec:osp-results}
+
+A strategy-proof mechanism and its OSP counterpart implement the same outcome rule---the same mapping from preferences to allocations---but differ in extensive form. The non-OSP version requires {\em contingent reasoning}: to see that truth-telling is dominant, an agent must trace through hypothetical scenarios about others' behavior and verify that no deviation improves payoffs in any case. The OSP version restructures the game so that the dominant strategy is {\em obviously} optimal: at every information set, the best outcome from following the strategy weakly dominates the worst outcome from any deviation, without requiring any reasoning about what others might do \citep{li2017obviously}. \citet{zhu2024evidence} showed empirically that LLMs deviate from truthful bidding in SPSB auctions for GPT-4o; we replicate this finding for GPT-4o and extend it across three additional model families and to deferred acceptance. In both domains, OSP mechanisms substantially improve play.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width= \textwidth]{plots/fig1_osp_comparison.pdf}
+    \caption{Comparing base (non-OSP) and OSP mechanisms across four model families. {\em Left column:} Distribution of bid deviations from value ($\text{bid} - \text{value}$) in second-price sealed-bid (gray) and ascending clock (colored) auctions. {\em Right column:} Normalized Kendall $\tau$ distance (fraction of pairwise ranking swaps) in direct-revelation DA (gray) and iterative, OSP DA (colored). In particular, in OSP DA, applicants may not be asked to reveal their entire rank-order lists, so we count misreports as from the smaller set of revealed preferences, looking for deviations which are either Type 1 misreports (false rejection, or saying NO when $x$ is the most preferred available school) or Type 2 misreports (false acceptance, or saying YES when a more preferred school is still available). Dashed lines indicate means. All models deviate from truthful play in non-OSP mechanisms; OSP mechanisms correct toward truth-telling, with iterative DA achieving perfect truthfulness ($\mu = 0\%$) across all models.}
+    \label{fig:osp-comparison}
+\end{figure}
+
+\subsection{Auctions: SPSB vs.\ Ascending Clock} \label{sec:osp-auctions}
+
+It is well known that truthful bidding is the dominant strategy in the SPSB auction \citep{vickrey1961counterspeculation}, yet human subjects systematically deviate from this in laboratory experiments \citep{kagel1993independent, kagel1995individual}. With regards to OSP mechanisms, \citet{li2017obviously} and \citet{breitmoser2022obviousness} have empirically showed that clock formats improve human bidding in the second-price auction by increasing distributional mass on value bidding. In the case of \citet{breitmoser2022obviousness}, this is achieved by merely providing an OSP description of the SPSB, without changing the mechanism itself.
+
+The left column of Figure~\ref{fig:osp-comparison} shows the distribution of bid deviations from value in SPSB auctions. All four models deviate from truthful bidding, with mean deviations of $\mu = -0.5$ (Claude), $-1.6$ (Gemini), $-3.3$ (GPT-4o), and $-5.3$ (Gemma). The negative sign indicates systematic {\em underbidding}---models bid below their values. This contrasts with the primary finding in human experiments, where subjects tend to {\em overbid} in second-price auctions \citep{kagel1993independent}. The distributions also exhibit long tails, which are evidence of very large errors: some bids deviate by \$10--20 from value, representing cases where the model substantially misplays the auction.
+
+Yet, our results also show the ascending clock format corrects deviations toward truthful play across all models.\footnote{The GPT-4o result replicates a finding in \citet{zhu2024evidence}; we extend it to Claude, Gemini, and Gemma.}
+Mean deviations compress to $\mu = -0.1$ (Claude), $-1.2$ (Gemini), $-0.5$ (GPT-4o), and $-0.3$ (Gemma). The improvement is most dramatic for the models with the worst SPSB performance: Gemma's mean deviation falls from $-5.3$ to $-0.3$, a near-complete correction. Beyond the mean shifts towards value bidding, the ascending clock eliminates the long tails visible in the SPSB distributions. These catastrophic deviations effectively disappear. This variance reduction may be as practically important as the mean correction: OSP does not merely improve average play, it also eliminates the worst-case failures.
+
+Experiments are run in an independent, private values setting, so the ascending clock format does not provide new information to bidders.\footnote{In a common- or affiliated-values setting, the clock format could improve play by revealing information about others' values through their dropout decisions. Under IPV, no such information exists, so the improvement must be purely cognitive.} This raises a natural question: OSP simultaneously simplifies play along multiple cognitive dimensions---it eliminates the need for contingent reasoning, reduces each decision to a simple binary choice (stay or exit at each price), and makes the connection between action and outcome immediate. Which of these simplifications actually drives the observed improvement in play? We return to this question in Section~\ref{sec:intervention-results}.
+
+\subsection{Matching: Direct DA vs.\ Iterative DA} \label{sec:osp-da}
+
+Student-proposing deferred acceptance is strategy-proof for the proposing side: truthful reporting of preferences is a dominant strategy \citep{roth1982economics}. Yet human subjects routinely misreport in practice. For example, \citet{rees2018suboptimal} documents suboptimal play in the National Resident Matching Program, finding that a nontrivial fraction of applicants submit rankings that are inconsistent with revealed preferences---despite the mechanism being well-known and the stakes substantial. DA is generally not OSP-implementable \citep{ashlagi2018stable}, but under Ergin-acyclic priorities \citep{ergin2002efficient}, an iterative query protocol can implement the proposer-optimal stable matching in an OSP manner. To our knowledge, no prior work has experimentally tested an OSP implementation of DA with either human or LLM subjects.
+
+In particular, if agents fail to appreciate that DA is strategy-proof, they may mistakenly misreport their rank-order list of preferences in seeking to improve their outcome given the reports of others. This misreport, then, is a function also of their beliefs of other agents' choice of what reports to make, and thus also their beliefs. To probe this, and also for realism, our implementation also reports to applicants that ``most other applicants seem to favor ${{global\_ranking}}$.'' Such beliefs, of course, should not change an applicant's report in DA if they understand the mechanism is strategy-proof. A probe of this particular question is also made in the next section. Full prompts can be found in the Appendix.
+
+The right column of Figure~\ref{fig:osp-comparison} shows the distribution of normalized Kendall $\tau$ distance---the fraction of pairwise ranking swaps relative to the true preference order---in direct-revelation DA. All models exhibit nontrivial error rates: $\mu = 6\%$ (Claude), $8\%$ (Gemini), $1\%$ (GPT-4o), and $3\%$ (Gemma). Though these error rates are not directly comparable to the auction deviations (which are measured in dollars), they can be consequential: under deferred acceptance,  even small misreports can cascade through rejection chains and alter the final matching for $\Theta(n)$ participants \citep{dubins1981machiavelli}.
+
+By contrast, the iterative DA protocol achieves perfect truthfulness: $\mu = 0\%$ for all four models, with zero variance. We found this to be a very surprising empirical result. Unlike the ascending clock in auctions---which substantially improves but does not perfectly correct bidding---the iterative DA format completely eliminates errors. We see two possible explanations. First, the decision space in DA is much smaller than in auctions: in our setting, $4! = 24$ possible rank-order lists versus any $\$0.01$ tick in $[0, 50]$. The smaller action space does not eliminate the need for contingent reasoning---models still err in standard DA---but once the iterative format simplifies the reasoning problem, the coarse action space may make it easier for models to land on the correct answer.
+Second, and relatedly, the coarse decision space also admits a coarse space for error detection. It may indeed be true that LLMs are making cognitive errors in the iterative format, but we cannot observe them as long as they accurately choose their most preferred school from a set.
+
+In summary, LLMs deviate from rational play in both SPSB and DA, and benefit from OSP implementations of the same mechanisms---evidence of bounded rationality that the theory of simple mechanisms can speak to. In the next section, we decompose the cognitive dimensions along which OSP simplifies play through targeted interventions in the non-OSP formats.
+
+\section{Intervention Results} \label{sec:intervention-results}
+
+OSP mechanisms improve play, but they simplify the strategic problem along multiple dimensions at once. To identify which simplifications actually matter, we turn to prompt-based interventions to probe particular aspects of the studied mechanisms. 
+
+First, and inspired by \citet{li2024designing}, we broadly categorize these interventions into three families---thinking \textbf{contingently} about unobserved moves by other players, \textbf{planning} for their own future moves, and reasoning about other players' \textbf{beliefs}. For each intervention, we write prompts that scaffold reasoning without revealing the dominant strategy; concisely, each modifies only the rule-explanation block of the prompt while the mechanism, value distributions, and response format are left unchanged. 
+
+Second, an interesting direction in the simplicity literature concerns how to describe and explain mechanisms so as to improve participant comprehension~\citep{gonczarowski2023strategyproofness}. For each mechanism, we also test one intervention of this kind---an \emph{outcome safety} description that surfaces a well-studied property of the mechanism without scaffolding any particular mode of reasoning. We report all results in the model order Claude, Gemini, GPT-4o, Gemma, which is in decreasing order of their success in playing the non-OSP mechanisms.
+
+Separately, prospect-theory-inspired interventions (loss aversion, the endowment effect) and interventions along rule-following are also a related and interesting direction for probing cognitive constraints. We run interventions along these lines but omit them from the main discussion. These interventions, their complete prompt texts, and the full prompts for all main-body interventions appear in the Appendix.
+
+Across the interventions, three findings emerge. First, the interventions that help the most are contingent reasoning interventions that make the mechanism's payoff structure transparent; scaffolds that direct attention toward opponents are ineffective or actively harmful. Second, the outcome safety descriptions---articulating that your bid determines whether you win but not what you pay (auctions) and that being rejected from top-ranked schools does not hurt your chances at lower-ranked schools (DA)---produce large improvements. Third, belief scaffolds consistently worsen play, suggesting that models are already strategizing along beliefs and that this misguided reasoning is itself a cause for poor play.
+
+\subsection{Contingent Reasoning} \label{sec:contingent}
+
+\citet{li2024designing} identifies contingent reasoning as the core cognitive demand of non-OSP mechanisms. To see that truth-telling is dominant in SPSB, a bidder must consider each possible profile of opponent bids and check that no deviation improves payoffs in any case---a ``case-by-case comparison, calculating payoffs for each profile of opponent bids'' \citep{li2024designing}. The ascending clock eliminates it: at each price, the worst case from following the dominant strategy weakly dominates the best case from any deviation, without reference to opponents. The question, then, is whether scaffolding for contingent reasoning---without changing the extensive form---can partially recover these gains.
+
+In undergraduate economics classes across the world, this is formalized with a payoff tree; our \emph{Payoff Tree} intervention presents the agent with the explicit decision tree of outcomes to simulate exactly this logic. 
+\begin{itemize}
+    \item In auctions: ``PATH A: your bid exceeds others $\to$ you WIN, and pay the second-highest bid. PATH B: your bid falls below $\to$ you LOSE, and pay nothing. Key insight: your bid determines which path you are on, not the payment in Path A.''
+    \item In DA: ``Think of DA as a tree of possibilities. ROOT: You propose to your 1st
+      choice. If ACCEPTED: you are matched. If REJECTED: you propose to your 2nd choice.
+      If ACCEPTED: you are matched. If REJECTED: you propose to your 3rd choice. And so on. At each branch, acceptance or rejection depends on the school's priorities and who else proposed there.''
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{plots/fig2_contingent.pdf}
+    \caption{Contingent reasoning: \textit{Payoff Tree} intervention. {\em Top row:} Second-price auction bid deviations ($\text{bid} - \text{value}$); baseline SPSB in gray, intervention in color. {\em Bottom row:} Deferred acceptance Kendall $\tau$ errors; baseline direct DA in gray, intervention in color. The payoff tree scaffold consistently improves play across all models in both domains, roughly halving the distance from truthful.}
+    \label{fig:contingent}
+\end{figure}
+
+In auctions, \textit{Payoff Tree} reduces the mean deviation from $\mu = -2.67$ to $\mu = -1.13$ across models, roughly halving the distance from truthful. The improvement is consistent across models: GPT-4o moves from $-3.28$ to $-0.86$, Gemma from $-5.27$ to $-2.34$, Gemini from $-1.63$ to $-0.53$. Claude, already close to truthful ($-0.49$), is the one model that shows null improvement. For comparison, the ascending clock achieves $\mu = -0.5$ across models (Section~\ref{sec:osp-auctions}); the \textit{Payoff Tree} closes roughly half the gap between SPSB and OSP without changing the extensive form.
+
+In DA, \textit{Payoff Tree} reduces mean error from $\mu = 4.2\%$ to $\mu = 1.7\%$ across models, again less than half the baseline error. Here the improvement is unanimous across all four models: Claude from $5.8\%$ to $2.0\%$, Gemini from $7.6\%$ to $2.8\%$, GPT-4o from $1.0\%$ to $0.6\%$, Gemma from $2.6\%$ to $1.4\%$. The iterative OSP DA achieves $\mu = 0\%$ (Section~\ref{sec:osp-da}); here the scaffold captures much of the improvement but does not fully close the gap.
+
+Laying out the payoff tree does not tell models \textit{what} to do; rather, it tells them \textit{what happens} under each action. This is precisely the cognitive gap between OSP and non-OSP mechanisms: in OSP mechanisms, the extensive form makes these contingencies visible at each decision point; however in non-OSP mechanisms, the agent must construct them herself. The \textit{Payoff Tree} scaffold does this construction for the agent, and the result---consistent improvement across models and mechanisms---suggests that the difficulty of constructing the payoff-relevant contingencies is a real constraint that binds on LLM agents.
+
+\subsection{Forward Planning}
+The next axis we consider is that of forward planning. \citet{pycia2023theory} formalize a notion of limited forward planning that has become central to the theory of simple mechanisms. A mechanism is \emph{one-step simple} if the dominant strategy emerges from considering only the immediate next step, without full backward induction. The ascending clock is one-step simple: comparing ``stay one more tick'' to ``exit now'' suffices at each price, without reasoning about the full trajectory of future prices. 
+
+Both SPSB and DA are static mechanisms, with only a single decision node for each agent. But DA's underlying algorithm processes the submitted ranking dynamically, through multiple rounds of proposals and rejections, giving forward planning a natural place to bind: models may attempt to reason through the algorithm's rounds when deciding what ranking to submit. The sealed-bid auction has no analogous internal dynamics---a bid is submitted and the outcome is determined. In this sense, we think of DA as a dynamic \textit{algorithm}, and so test the forward planning interventions only on it. We test two `lookahead' scaffolds that prompt models to simulate the algorithm forward.
+
+\begin{itemize}
+    \item \emph{One-Step Lookahead}: ``If you are rejected from your first choice, which school would you propose to next? Does this affect how you should rank schools?''
+    \item \emph{Two-Step Lookahead}: ``Consider the first two potential rejections. If rejected from your first choice, you go to your second. If rejected again, you go to your third. Plan your ranking with these steps in mind.''
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{plots/fig3_forward_da.pdf}
+    \caption{Forward planning: lookahead interventions in deferred acceptance. {\em Top row:} One-step lookahead; {\em bottom row:} two-step lookahead. Each cell overlays the direct DA baseline (gray) with the intervention (colored). Lookahead scaffolds worsen play overall, with the damage concentrated in GPT-4o and Gemma; Claude and Gemini are largely unaffected.}
+    \label{fig:forward}
+\end{figure}
+
+While contingent reasoning was quite successful across models and mechanisms, it appears that forward planning scaffolds are less effective in improving play. The \textit{One-Step} intervention worsens play in DA from $\mu = 4.2\%$ to $7.8\%$ across models; \textit{Two-Step} worsens it to $5.1\%$. The damage is concentrated in the last two rows of GPT-4o and Gemma: \textit{One-Step} moves GPT-4o from $1.0\%$ to $4.8\%$ and Gemma from $2.6\%$ to $12.7\%$ error, whereas Claude and Gemini are largely unaffected. 
+
+Why does prompting forward planning hurt? Our hypothesis is that it activates strategic thinking about the algorithm without resolving it. If models recognized DA is strategy-proof, forward planning would be irrelevant---the dominant strategy does not depend on what happens after a rejection. But because models do not fully appreciate strategy-proofness, prompting them to simulate rejection dynamics gives them material to strategize with, second-guessing their truthful preferences. The weaker models, with less ability to resolve the reasoning they have been prompted to undertake, suffer the most.
+
+\subsection{Belief Formation}
+The third axis is belief formation. One canonical story here is from \citet{borgers2019strategically}, who introduce strategic simplicity: a mechanism is said to be \textit{strategically simple} if optimal play does not depend on higher-order beliefs about what opponents believe. Both SPSB and DA are strategy-proof, and hence trivially strategically simple: the dominant strategy is independent of beliefs entirely. Scaffolding belief formation in these settings should therefore be irrelevant at best. But if models are already treating these mechanisms as Bayesian games, and attempting to best-respond to perceived competition rather than playing the dominant strategy, then making beliefs more salient could amplify mistakes.
+
+We test two levels of belief scaffolding, applied to both mechanisms.
+
+\begin{itemize}
+    \item \emph{First-Order Beliefs}: ``What do you expect the other players to do? Given their values are drawn randomly and they want to maximize their earnings, how do you think they will behave? Does this affect what you should do?''
+    \item \emph{Second-Order Beliefs}: ``What do the other players think YOU will do? They know you are rational. They might try to anticipate your strategy. Does their belief about your behavior affect what they will do? And does that, in turn, affect what you should do?''
+\end{itemize}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{plots/fig4_beliefs.pdf}
+    \caption{Belief formation interventions across both mechanisms. {\em Top two rows:} Second-price auction bid deviations under first-order and second-order belief scaffolds. {\em Bottom two rows:} Deferred acceptance Kendall $\tau$ errors under the same scaffolds. Baseline distributions in gray, interventions in color. Belief scaffolds almost uniformly worsen play, with second-order beliefs causing the most damage. Gemini is the notable exception, showing near-immunity to belief scaffolding.}
+    \label{fig:beliefs}
+\end{figure}
+
+Indeed, we find that belief scaffolding almost uniformly worsens play across both mechanisms, and considering second-order beliefs hurts play marginally more. In auctions, \textit{Second-Order Beliefs} worsens the mean bid across models from $\mu = -2.67$ to $-3.47$; \textit{First-Order Beliefs} worsens it to $-3.04$. This effect is consistent for three of four models---only Gemini is unaffected. Models prompted to think about opponents shade further below value, undercutting perceived competition. 
+
+In DA, both interventions worsen play: \textit{First-Order Beliefs }moves from $\mu = 4.2\%$ to $5.1\%$, \textit{Second-Order Beliefs }to $9.1\%$. Again, three of four models get worse---Gemini is the exception, showing small improvements. The damage is particularly severe for Gemma, which moves from $2.6\%$ to $14.3\%$ under \textit{Second-Order Beliefs}.
+
+Interestingly, Gemini is almost completely immune to belief scaffolding while the other tested models are hurt. In contrast, Gemma---which suffers the most severe damage under Second-Order Beliefs ($2.6\%$ to $14.3\%$ in DA)---appears most susceptible to this
+failure mode. These results suggest that LLM reasoning styles are not monolithic; the heterogeneity across model families in susceptibility to belief-based reasoning may itself be relevant to mechanism design when markets serve diverse artificial agents.
+
+\subsection{Mechanism Description} \label{sec:mech-description}
+
+Separate from the three axes discussed above, but important to the implementation of mechanisms across experimental domains, is the question of how to exposit mechanisms to help participants see for themselves that a mechanism is incentive-compatible. For example, \citet{gonczarowski2023strategyproofness} formalize such an idea through ``strategyproofness-exposing'' mechanism descriptions, which aim to make incentive properties transparent without changing the extensive form. Inspired by this approach, we also test one intervention for each mechanism---an \emph{outcome safety} description that surfaces a key structural property of the mechanism.
+
+The key step in \citet{vickrey1961counterspeculation}'s original argument for the strategy-proofness of the second-price auction comes from an argument about being `pivotal'. Namely, that your bid only determines \textit{that }you win, not \textit{what} you win. This inspires our \emph{Payoff Safety} intervention for the auction setting: ``Think of your bid as setting your maximum price. Your bid determines IF you win, not WHAT you pay. If you win, you pay what others bid, not what you bid.''
+
+Similarly, a key difference between two famous school choice mechanisms---the Boston mechanism \citep{abdulkadirouglu2003school} and the DA mechanism---is that under DA, rejections are safe. A rejection from a school does not hurt a student's chances at their next-ranked school under DA, whereas under the Boston mechanism, seats at other schools may fill while a student's application is being considered, making rejection costly. In practice, this difference was a key argument for replacing the Boston mechanism with DA in Boston Public Schools. Similarly, our \emph{Rejection Safety} intervention states: ``Rejections only redirect, never eliminate. Your ranking determines the \emph{order} in which you are considered, not \emph{whether} you are considered.''
+
+Neither intervention scaffolds a particular mode of reasoning. They do not ask the agent to trace through contingencies, simulate the algorithm, or reason about opponents. They simply state the key property of the mechanism that makes it strategy-proof.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{plots/fig5_mechanism_description.pdf}
+    \caption{Mechanism description: outcome safety interventions. {\em Top row:} \textit{Payoff Safety} in second-price auctions (``your bid determines IF you win, not WHAT you pay''). {\em Bottom row:} \textit{Rejection Safety} in deferred acceptance (``rejections only redirect, never eliminate''). Baseline in gray, intervention in color. Both interventions improve play dramatically. Rejection safety in DA nearly matches the full OSP result from Figure~\ref{fig:osp-comparison}, reducing mean error from $4.2\%$ to $0.2\%$.}
+    \label{fig:mechanism-description}
+\end{figure}
+
+Across both mechanisms and across models, these interventions improve play dramatically toward the OSP benchmark. In auctions, \textit{Payoff Safety} reduces the mean deviation from $\mu = -2.67$ to $\mu = -1.53$, with improvement across all four models: Claude from $-0.49$ to $-0.30$, Gemini from $-1.63$ to $-0.38$, GPT-4o from $-3.28$ to $-1.88$, Gemma from $-5.27$ to $-4.17$. For comparison, the ascending clock achieves $\mu = -0.5$ (Section~\ref{sec:osp-auctions}); \textit{Payoff Safety} closes roughly half the gap.
+
+In DA, the results are even more striking. \textit{Rejection Safety} nearly eliminates error, reducing it from $\mu = 4.2\%$ to $0.2\%$ across all models---comparable to the full OSP implementation from Section~\ref{sec:osp-da}, which achieved $0.0\%$.
+
+That a brief description of a mechanism's incentive properties can nearly replicate OSP's effect---without changing the extensive form---is a surprising result. It suggests that the cognitive barrier for LLMs in non-OSP mechanisms is not in \textit{computing} the dominant strategy given the game tree, but in understanding the mechanism well enough to see that truth-telling is safe. OSP mechanisms resolve both problems simultaneously: they simplify the game tree and make the safety guarantee transparent. Our results suggest it is the latter that does most of the work, at least for LLMs.
+
+As LLMs become more prevalent as economic agents, this suggests that the vast theoretical literature on incentive-compatible mechanisms may have direct operational value---not just as theoretical constructs, but as explanations of how mechanisms work that make their incentive properties actionable.
+
+\section{Conclusion} \label{sec:conclusion}
+
+The theory of simple mechanisms was built to characterize bounded rationality in humans. We find that the theory of simplicity also informs our thinking about bounded rationality in LLMs. Across two canonical mechanism design settings---auctions and matching---and across four model families, LLMs deviate from dominant-strategy play in strategy-proof mechanisms, and obviously strategy-proof implementations substantially correct these deviations.
+
+The intervention methodology developed here allows us to go further: to identify which cognitive constraints bind, and which do not. Scaffolding for contingent reasoning---making the payoff structure of the mechanism transparent---consistently improves play. Mechanism descriptions that surface incentive properties produce even larger improvements, nearly matching the full OSP benchmark in DA. In contrast, prompting forward planning or belief formation consistently worsens play, suggesting that these are dimensions along which models are already (unproductively) strategizing. The pattern that emerges is not that todays' LLMs lack reasoning ability, but that they misapply it: they strategize about opponents and algorithm dynamics when they should be recognizing that the mechanism makes such reasoning unnecessary.
+
+These findings have both theoretical and practical implications. On the theoretical side, the fact that some of the cognitive constraints identified in the human simplicity literature also bind on LLMs---despite fundamentally different architectures---suggests that these constraints may be inherent to reasoning about the strategic problems, not idiosyncrasies of human cognition. On the practical side, as LLMs increasingly participate in markets, the design of the mechanisms they interact with will matter. Our results suggest that simple mechanisms, and clear (and honest) descriptions of mechanism properties, can serve as a form of alignment: channeling artificial agents toward the outcomes the mechanism was designed to produce, without requiring that they fully understand why.
+
+Several directions remain open. Our experiments test a specific set of models at a particular capability level; whether frontier reasoning models eventually overcome these constraints, and what that implies for mechanism design, is an important question to track in future work. The heterogeneity we observe across model families---particularly in susceptibility to belief-based reasoning---suggests that mechanism design for heterogeneous populations of artificial agents may raise new challenges; steering vectors and fine-tuning offer a path toward constructing such populations deliberately, enabling controlled study of how mechanism performance varies across diverse populations of directed agents. Our interventions also operate along single cognitive axes in isolation; combining complementary scaffolds---for instance, pairing contingent reasoning with mechanism descriptions---could reveal the minimal intervention needed to close a  gap between LLM play and the rational benchmark. Finally, the methodology of cognitive scaffolds as diagnostic probes may prove useful beyond mechanism design, in any setting where one seeks to understand the structure of an agent's reasoning failures.
+
+
+\paragraph{Disclosure.} Claude (Anthropic, Opus 4.6) was used to assist with plotting code, manuscript formatting to style guide requirements, and final compliance review with EC submission requirements.
+
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{es_bib}
+
+\appendix
+
+\include{contents/appendix}
+\end{document}

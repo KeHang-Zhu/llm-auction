@@ -1,0 +1,853 @@
+% ============================================================================
+% 06_ranking.tex — Section 6: The Simplicity-Preservation Ranking
+% Rewrite pass (2026-07): auctions are the main domain; DA is the robustness/
+% generalization domain (Appendix app:da; landing owned by the appendix
+% writer). All numbers wired to the merged seed-1299 datasets:
+% results/merged_ranking/{auction_cells.csv,da_cells.csv,concordance.md} and
+% results/traces/{traces_summary.md,traces_subsection.tex}. E3 menu and
+% clock-framing cells are four-model; tab:ranking carries pooled rho medians
+% with double-bootstrap 95% CIs; fig:ranking = ranking_forest.pdf (real);
+% fig:ranking-framing = figure3_intervention_comparison.png (real, 2x4);
+% new subsection sec:ranking-traces (+ tab:trace-dissociation).
+% NOTE for integrator: clock-framing (B3) = the intervention_proxy_breitmoser
+% sealed-bid cells (SMAD 6.3-13.8%, pooled rho +0.29); the SMAD 1.4-5.2%,
+% p<0.001-all-four, d-up-to-1.00 cells are the TRUE closed clock
+% (ascending_clock_closed, family A), per concordance.md and the R6 audit in
+% appendix_prompts. The two rungs are reported separately below.
+% ============================================================================
+
+\section{The Simplicity-Preservation Ranking}\label{sec:ranking}
+
+This section delivers the paper's central product: an empirical ranking of the
+design levers of Section~\ref{sec:framework} by how well each preserves
+dominant-strategy play. Auctions are the main domain throughout. Every lever
+family is additionally replicated in a school-choice matching domain
+(deferred acceptance) as a robustness and generalization check; that
+replication is reported in Appendix~\ref{app:da} and enters the main text
+only through summary statistics and the pooled ranking of
+Section~\ref{sec:ranking-synthesis}. We proceed in three passes over the
+lever taxonomy. Section~\ref{sec:ranking-extensive} evaluates the
+extensive-form lever (family~A): replacing the sealed-bid auction with an
+ascending clock. This is the lever for which simplicity theory makes its
+sharpest predictions, and it sits at the top of the ranking---but it bundles
+several simplifications at once. Sections~\ref{sec:ranking-descriptions}
+and~\ref{sec:ranking-scaffolds} therefore decompose the bundle with
+presentation-only levers that hold the extensive form fixed: descriptions of
+the mechanism (family~B) and reasoning scaffolds appended to it (family~C).
+Section~\ref{sec:ranking-synthesis} assembles the cells into the ranking
+itself (Table~\ref{tab:ranking} and Figure~\ref{fig:ranking}), and
+Section~\ref{sec:ranking-traces} closes the section by reading the agents'
+own stated reasoning against their realized bids.
+
+Throughout, $D(L,d,m)$ denotes the deviation of model $m$ from
+dominant-strategy play in domain $d$ under lever $L$: for auctions, the mean
+bid deviation from value (bid $-$ value, in dollars), with the scaled mean
+absolute deviation (SMAD; normalizer $E[b^{*}] = \$24.5$,
+Section~\ref{sec:metrics}) reported in parallel; for the matching domain, the
+normalized Kendall-$\tau$ error in percent. Every cell-level statistic
+below---bootstrap confidence intervals (2{,}000 draws, seed 1299),
+Mann--Whitney and Welch tests, Cohen's $d$---is computed from the merged
+run-level dataset in the replication package
+(\path{results/merged_ranking/auction_cells.csv},
+\path{results/merged_ranking/da_cells.csv}). Two auction baseline conventions
+appear in what follows, and we fix them here once. \emph{Format-level}
+comparisons (sealed bid vs.\ clock) use the dedicated SPSB cells, with
+per-model mean deviations of $-0.49$ (Claude), $-1.63$ (Gemini), $-3.28$
+(GPT-4o), and $-5.27$ (Gemma)---cross-model mean $-\$2.67$.
+\emph{Presentation and scaffold} contrasts are tested against the
+axis-specific baselines run in the same grid as each treatment; their pooled
+per-model means are $+0.48$, $-2.88$, $-2.78$, and $-4.54$ (cross-model
+$-\$2.43$). The two conventions differ materially for Claude and Gemini, and
+both are recorded cell by cell in the replication file. The direct-revelation
+DA baseline is a $4.2\%$ Kendall-$\tau$ error (unweighted cross-model mean;
+Appendix~\ref{app:da}). The comparative statistic is the preservation index
+$\rho$ of Section~\ref{sec:metrics}, computed within model $\times$ domain on
+the absolute-deviation scale and pooled as the median across cells:
+$\rho = 1$ is perfect preservation of dominant-strategy play, $\rho = 0$ no
+effect, and $\rho < 0$ a lever that \emph{backfires}. Because $\rho$ is
+computed within model, the ranking is invariant to cross-model differences in
+baseline levels.
+
+\subsection{Extensive-Form Levers: The Ascending Clock}
+\label{sec:ranking-extensive}
+
+A strategy-proof mechanism and its OSP counterpart implement the same outcome
+rule---the same mapping from reports to allocations and payments---but differ
+in extensive form. The non-OSP version requires \emph{contingent reasoning}:
+to see that truth-telling is dominant, an agent must trace through
+hypothetical scenarios about others' behavior and verify that no deviation
+improves payoffs in any case. The OSP version restructures the game so that
+the dominant strategy is \emph{obviously} optimal: at every information set,
+the best outcome from following the strategy weakly dominates the worst
+outcome from any deviation, without requiring any reasoning about what others
+might do \citep{li2017obviously}. Section~\ref{sec:validation} established
+that LLM agents deviate from truthful play in sealed-bid strategy-proof
+formats. Here we ask how much of that deviation the extensive form itself
+removes, across all four model families.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{fig1_osp_comparison.pdf}
+    \caption{Comparing base (non-OSP) and OSP mechanisms across four model
+    families. \emph{Left column (main domain):} distribution of bid
+    deviations from value ($\text{bid} - \text{value}$) in second-price
+    sealed-bid (gray) and ascending clock (colored) auctions. \emph{Right
+    column (robustness domain):} normalized Kendall $\tau$ distance (fraction
+    of pairwise ranking swaps) in direct-revelation DA (gray) and iterative,
+    OSP DA (colored); the matching domain is analyzed in
+    Appendix~\ref{app:da} and appears here only because the two domains share
+    the figure. Dashed lines indicate means. All models deviate from truthful
+    play in the non-OSP formats; OSP implementations correct toward
+    truth-telling. The iterative-DA $0.0\%$ is exact at the Kendall-$\tau$
+    level for all four models, but decision-level accounting shows it is
+    protocol-specific: zero observable misreports for three of four models in
+    the pick-based protocol, with model-specific failures appearing in a
+    yes/no implementation (Appendix~\ref{app:da}).}
+    \label{fig:osp-comparison}
+\end{figure}
+
+\paragraph{The human-anchored APV cell.}
+Clock auctions are dynamic formats in which the price rises incrementally and
+bidders decide whether to stay in or drop out at each price point. Although
+the sealed-bid second-price format and the ascending clock share the same
+dominant strategy, human participants behave quite differently across them: a
+robust pattern in the experimental literature is that bidders do much better
+in clock-style auctions than in sealed-bid auctions. \citet{li2017obviously}
+provides an argument for why clock auctions are easier to recognize as
+strategy-proof, formalized as obvious strategy-proofness, and
+\citet{breitmoser2022obviousness} provide additional evidence that clock
+auctions improve truthful play, with behavior under the open clock (AC, where
+dropouts are observed) slightly better than under the closed clock (AC-B).
+
+We evaluate the clock lever in two purpose-labeled cells
+(Table~\ref{tab:calibration-master}). The first is an affiliated private
+values (APV) environment chosen for comparability with the human evidence of
+\citet{li2017obviously} and \citet{breitmoser2022obviousness}. While
+affiliation could in principle change incentives through correlation in
+values, the three formats we consider are strategically equivalent: in the
+second-price sealed-bid (SP), the open ascending clock (AC), and the closed
+clock (AC-B), it remains a dominant strategy to bid---or drop out at---one's
+value. Reconstructed human bidders deviate substantially less from truthful
+bidding in the clock formats than in sealed-bid SP: SMAD is $3.54\%$ in AC and
+$5.83\%$ in AC-B, compared to $9.31\%$ in SP
+(Figure~\ref{fig:smad-comparison}). For GPT-4o the clock advantage is even
+more pronounced. In the APV clock auctions GPT-4o achieves near-truthful play,
+with SMAD falling to $0.81\%$ in AC and $0.47\%$ in AC-B (a $77\%$--$92\%$
+reduction relative to the human clock baselines), whereas in sealed-bid SP it
+remains at $10.73\%$---close to the human level of $9.31\%$. Breaking the
+decision into a sequence of simple threshold choices (``stay iff the price is
+below value'') yields an order-of-magnitude improvement over the one-shot
+sealed-bid interface, even though the dominant-strategy benchmark is
+identical.
+
+The direction of the residual mistakes matters as much as their size.
+Figure~\ref{fig:direction} decomposes bidding errors by direction using a
+$\pm 2\%$ tolerance band around value (dropping near-equal bids and
+classifying the remainder as under- vs.\ over-bids). Despite comparable
+aggregate deviations in sealed-bid SP-APV ($9.31\%$ vs.\ $10.73\%$ SMAD), the
+nature of the deviations differs strikingly: human bids are predominantly
+\emph{above} value ($64.7\%$ overbidding vs.\ $35.3\%$ underbidding), while
+GPT-4o bids are predominantly \emph{below} value ($92.4\%$ underbidding vs.\
+$7.6\%$ overbidding)---humans exhibit competitive overbidding even under an
+incentive-compatible rule, while GPT-4o is overly conservative in the
+sealed-bid interface. The clock aligns not only the magnitude but the
+\emph{shape} of behavior: in AC, humans and GPT-4o display an almost perfectly
+symmetric under/over split ($49.2/50.8$ vs.\ $50/50$), with GPT-4o
+concentrating far more mass near truthful bidding ($71.7\%$ within $\pm 2\%$
+vs.\ $26.8\%$ for humans). We return to what this direction reversal does---%
+and does not---imply for the ranking in Section~\ref{sec:humans}.
+
+\paragraph{The four-model IPV cell.}
+The second cell runs the same lever in the independent private values (IPV)
+environment of Table~\ref{tab:calibration-master}, across all four model
+families; its purpose is identification rather than human comparability.
+In the SPSB baseline (Figure~\ref{fig:osp-comparison}, left column, gray), all
+four models deviate from truthful bidding, with mean deviations of
+$\mu = -0.49$ (Claude), $-1.63$ (Gemini), $-3.28$ (GPT-4o), and $-5.27$
+(Gemma), for a cross-model mean of $-\$2.67$; these are the dedicated SPSB
+cells of the baseline declaration above. The negative sign indicates
+systematic \emph{underbidding}---the mirror image of the human overbidding
+documented in Section~\ref{sec:validation}. The distributions also exhibit
+long tails: some bids deviate by \$10--20 from value, cases in which the
+model substantially misplays the auction.
+
+The closed ascending clock corrects deviations toward truthful play in every
+model. Mean deviations compress to $\mu = -0.05$ (Claude), $-1.24$ (Gemini),
+$-0.45$ (GPT-4o), and $-0.33$ (Gemma)---a cross-model mean of roughly
+$-\$0.5$---and SMAD falls to $1.4\%$, $5.2\%$, $1.9\%$, and $1.9\%$ against
+pooled-axis baselines of $9.5\%$, $11.7\%$, $11.4\%$, and $20.7\%$. The shift
+is significant for every model (Welch $p < 0.001$ in all four cells), with
+effect sizes up to Cohen's $d = 1.00$ (Gemma). The improvement is most
+dramatic for the models with the worst SPSB performance: Gemma's mean
+deviation falls from $-5.27$ to $-0.33$, a near-complete correction. Beyond
+the mean shifts, the clock \emph{eliminates the long tails} visible in the
+SPSB distributions: the catastrophic deviations effectively disappear. This
+variance reduction may be as practically important as the mean
+correction---OSP does not merely improve average play, it also removes the
+worst-case failures. Because this cell is run under IPV, the improvement
+cannot be informational.\footnote{In a common- or affiliated-values setting,
+the clock format could improve play by revealing information about others'
+values through their dropout decisions. Under IPV, no such information
+exists, so the improvement must be purely cognitive.}
+\TODO{Environment audit (plan E2): the four-model clock cells above are the
+pipeline's \path{ascending_clock_closed} runs, whose configurations are APV
+(common component on $[0,29]$) rather than the IPV clock described in
+Table~\ref{tab:calibration-master}; a dedicated IPV clock re-run would close
+this labeling gap. The cells' statistics are final (seed 1299, merged
+dataset); only the environment label is at issue.}
+
+\paragraph{Robustness domain: school-choice matching.}
+The same extensive-form lever replicates in the matching domain.
+Student-proposing deferred acceptance is strategy-proof for the proposing
+side \citep{roth1982economics}, yet all four models misreport their
+rank-order lists in the direct-revelation format (cross-model mean
+Kendall-$\tau$ error $4.2\%$); an iterative query protocol that implements
+the same matching in an OSP manner \citep{ashlagi2018stable}---to our
+knowledge the first experimental test of an OSP implementation of DA with any
+kind of agent---drives the observed error to $0.0\%$ for all four models,
+with decision-level accounting showing zero misreports for three of the four
+in the pick-based protocol (rule-of-three $95\%$ upper bounds below $1\%$)
+and model-specific failures emerging only in a yes/no tree implementation.
+The full design, error accounting, observability caveats, and all treatment
+cells for the matching domain appear in Appendix~\ref{app:da}.
+
+\paragraph{The bridge: which margin does the work?}
+In summary, LLMs deviate from dominant-strategy play in the sealed-bid
+strategy-proof auction---and, in the robustness domain, in direct DA---and
+OSP implementations of the same mechanisms substantially correct these
+deviations. As a design lesson, however, the extensive-form result is coarse,
+because OSP changes several things at once: it changes the game tree, it
+coarsens the action space to simple binary or menu choices, and it makes the
+safety property of truth-telling salient at every decision point. The clock
+eliminates the need for contingent reasoning, reduces each decision to a
+stay/exit choice, and makes the connection between action and outcome
+immediate. Which of these simplifications actually drives the improvement?
+The theory does not need to answer this question---any OSP implementation
+bundles them---but a designer does, because the margins have very different
+costs: re-engineering the extensive form of a deployed mechanism is
+expensive, while changing its description, or the reasoning it invites, is
+nearly free. The next two subsections decompose the bundle with
+presentation-only levers that hold the sealed-bid extensive form fixed:
+descriptions of the mechanism (family~B,
+Section~\ref{sec:ranking-descriptions}) and reasoning scaffolds appended to
+it (family~C, Section~\ref{sec:ranking-scaffolds}).
+
+\subsection{Descriptions: Restating the Rules versus Exposing the Safety
+Invariant}\label{sec:ranking-descriptions}
+
+Family~B holds the mechanism fixed and varies only how it is described.
+Recent studies ask whether behavior in strategy-proof mechanisms depends on
+how the mechanism is \emph{presented}, holding the underlying incentives
+fixed. \citet{gonczarowski2023strategyproofness} propose
+strategyproofness-exposing descriptions, including an extensive-form
+\emph{menu} description that compresses the dominant-strategy logic of a
+second-price auction into a short menu statement intended to make
+strategy-proofness salient; in their laboratory experiments, however, this
+menu framing does not meaningfully change human bidding relative to the
+traditional SPSB description, and \citet{gonczarowski2024describing} likewise
+find that menu-based explanations of DA improve measured \emph{understanding}
+while average behavioral effects remain modest. In contrast,
+\citet{breitmoser2022obviousness} show that \emph{reframing} SPSB as a
+dynamic ascending clock substantially increases truthful play by human
+subjects. The taxonomy of Section~\ref{sec:framework} accordingly splits the
+family into three sub-levers---menu restatement (B1), safety-exposing
+descriptions (B2), and clock-framing (B3)---and they turn out to behave very
+differently.
+
+\paragraph{Menu restatement (B1): null on average, sign-mixed underneath.}
+The menu restatement has no consistent effect on bidding. Across the four
+models, its effects are small and sign-mixed relative to each model's pooled
+axis baseline (Figure~\ref{fig:ranking-framing}, top row): Gemma is a clean
+null (mean deviation $-4.50$ vs.\ baseline $-4.54$; Welch $p = 0.94$), Claude
+moves slightly \emph{away} from truthful play ($+0.48$ to $+1.37$,
+$\Delta = +0.88$ above value, $p = 0.042$, $d = 0.24$), GPT-4o moves
+\emph{away} as well ($-2.78$ to $-4.10$, $\Delta = -1.32$, $p = 0.003$,
+$d = -0.37$), and Gemini alone moves \emph{toward} truthful bidding ($-2.88$
+to $-1.13$, $\Delta = +1.75$, $p < 0.001$, $d = 0.50$). Pooling across cells,
+the restatement is a null on average: a two-sided sign test of the B1 cells
+against their baselines cannot reject no effect ($p = 0.73$;
+Section~\ref{sec:ranking-synthesis}). The pattern also survives payment-rule
+variation: in GPT-4o's first- and third-price variants of the same grid, the
+menu cells are indistinguishable from their baselines ($p = 0.63$ and
+$0.51$). We therefore read the menu cell as consistent with the human
+null \emph{on average} \citep{gonczarowski2023strategyproofness,
+gonczarowski2024describing}, with the caveat that the average conceals
+genuine model-level heterogeneity---a point the human experiments, run on a
+single population, cannot speak to. The menu family turns out to be more
+interesting in the matching domain, where it splits into two sub-variants
+with opposite effects; we return to this in
+Section~\ref{sec:ranking-synthesis}.
+
+\paragraph{Clock-framing (B3): describing the bid as a clock exit.}
+The clock-framing description keeps the one-shot sealed-bid elicitation---the
+agent still submits a single number---but describes that number as the
+threshold at which an automatic proxy would exit an ascending clock on the
+bidder's behalf. This is a description, not a mechanism change: no prices are
+posted, no dropouts occur, and no information is revealed; it should not be
+conflated with the AC/AC-B formats of Section~\ref{sec:ranking-extensive}.
+The two rungs are empirically distinct cells in the merged dataset: the
+clock-framing cells record exactly one sealed bid per bidder per auction,
+while the true clock cells record per-tick stay/exit decisions
+(Appendix~\ref{app:prompts}). Across all four models, clock-framing improves
+play in the same direction (Figure~\ref{fig:ranking-framing}, bottom row):
+SMAD falls from $9.5\%$ to $7.2\%$ (Claude), $11.7\%$ to $9.5\%$ (Gemini),
+$11.4\%$ to $6.3\%$ (GPT-4o), and $20.7\%$ to $13.8\%$ (Gemma), with the
+shift significant for Claude, GPT-4o, and Gemma (Welch $p < 0.001$) and
+marginal for Gemini ($p = 0.097$). The lever is thus universal in sign and
+consistent with the human evidence that clock reframing increases truthful
+play \citep{breitmoser2022obviousness}---but it is a \emph{modest} rung:
+pooled $\rho = +0.29$ ($95\%$ CI $[+0.17, +0.45]$), recovering roughly a
+third of the gap to truthful play, where the true extensive-form clock
+recovers nearly all of it (SMAD $1.4$--$5.2\%$;
+Section~\ref{sec:ranking-extensive}). Words that borrow the clock's framing
+help; the clock itself helps far more.
+
+\paragraph{Safety-exposing descriptions (B2): stating the invariant.}
+The safety-exposing sub-family does not restate the rules at all; it states
+the structural property of the mechanism that makes truth-telling safe. The
+key step in \citet{vickrey1961counterspeculation}'s original argument for the
+strategy-proofness of the second-price auction concerns being
+\emph{pivotal}: your bid determines only \emph{that} you win, not \emph{what}
+you pay. This inspires our \emph{Payoff Safety} intervention for the auction
+setting: ``Think of your bid as setting your maximum price. Your bid
+determines IF you win, not WHAT you pay. If you win, you pay what others bid,
+not what you bid.'' Its analogue in the matching domain, \emph{Rejection
+Safety}, states the property that made deferred acceptance preferable to the
+Boston mechanism in practice \citep{abdulkadirouglu2003school}: ``Rejections
+only redirect, never eliminate. Your ranking determines the \emph{order} in
+which you are considered, not \emph{whether} you are considered.'' Neither
+intervention scaffolds a particular mode of reasoning: they do not ask the
+agent to trace through contingencies, simulate the algorithm, or reason about
+opponents. They simply state the key property of the mechanism that makes it
+strategy-proof.
+
+In auctions, \emph{Payoff Safety} reduces the mean deviation from
+$\mu = -2.67$ to $-1.53$ (Figure~\ref{fig:descriptions}), with the deviation
+shrinking in magnitude for every model: Claude from $-0.49$ to $+0.30$,
+Gemini from $-1.63$ to $-0.38$, GPT-4o from $-3.28$ to $-1.88$, and Gemma
+from $-5.27$ to $-4.17$.\footnote{The Claude endpoint is $+0.30$
+(overbidding) in the raw logs; the ES manuscript reported it as $-0.30$. The
+magnitude is identical and the qualitative claim---Claude ends closest to
+truthful---is unchanged, but the sign correction means Claude's residual
+error flips from under- to over-bidding under this description.} Against the
+axis-specific baselines the improvement is significant for Gemini
+($p < 10^{-30}$, $d = 1.85$) and GPT-4o (Mann--Whitney $p < 10^{-5}$); for
+Claude the mean effect is null while dispersion halves (SMAD $12.0\%$ to
+$4.8\%$); Gemma is the one negative mark, moving away from its axis-2
+baseline---though that baseline is anomalously low relative to Gemma's other
+baselines, a caveat we quantify in Section~\ref{sec:ranking-synthesis}. For
+comparison, the ascending clock achieves $\mu \approx -0.5$
+(Section~\ref{sec:ranking-extensive}); the description closes roughly half
+the gap. The matching-domain results are even more striking:
+\emph{Rejection Safety} cuts the direct-DA error from $4.2\%$ to $0.2\%$
+across models---comparable to the full OSP implementation's $0.0\%$---and a
+plain textbook statement of strategy-proofness achieves $0.0\%$ for all four
+models. At the decision level, the OSP protocol's $0.0\%$ is exact for three
+of four models with rule-of-three $95\%$ upper bounds below $1\%$, so the
+margin between the OSP form and the one-sentence description is real but
+thin; the full error accounting is in Appendix~\ref{app:da}.
+
+That a brief description of a mechanism's incentive properties can nearly
+replicate OSP's effect---without changing the extensive form---is a
+surprising result. It suggests that the cognitive barrier for LLMs in non-OSP
+mechanisms is not in \emph{computing} the dominant strategy given the game
+tree, but in understanding the mechanism well enough to \emph{see that
+truth-telling is safe}. OSP mechanisms resolve both problems simultaneously:
+they simplify the game tree and make the safety guarantee transparent. Our
+results suggest it is the latter that does most of the work, at least for
+LLMs.
+
+Descriptions, then, are two levers, not one---and the split is not between
+``more text'' and ``less text'' but between what the text \emph{asserts}.
+Restating the rules, even in the theoretically grounded menu form, is null on
+average and sign-mixed underneath; exposing the safety invariant recovers
+most of what full OSP implementation delivers, in every model whose baseline
+leaves room to improve. The menu cell still functions as a placebo in the
+aggregate---not every additional sentence about the mechanism moves behavior,
+so the large effects of B2 cannot be attributed to generic prompt
+sensitivity---but it is a noisier placebo than a single-population experiment
+would suggest. What the effective descriptions share, and the restatement
+lacks, is that they \emph{assert} the invariant that makes truth-telling safe
+rather than leaving the agent to derive it. The matching domain sharpens this
+reading to a within-family contrast, discussed in
+Section~\ref{sec:ranking-synthesis}: a menu description that adds the
+invariance statement behaves like a safety description, while a menu
+description that merely restates the computation backfires.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{fig5_mechanism_description.pdf}
+    \caption{Safety-exposing descriptions (B2). \emph{Top row (main
+    domain):} \emph{Payoff Safety} in second-price auctions (``your bid
+    determines IF you win, not WHAT you pay''). \emph{Bottom row (robustness
+    domain, Appendix~\ref{app:da}):} \emph{Rejection Safety} in deferred
+    acceptance (``rejections only redirect, never eliminate''). Baseline in
+    gray, intervention in color; dashed lines indicate means. Both
+    interventions improve play dramatically; Rejection Safety nearly matches
+    the full OSP result of Figure~\ref{fig:osp-comparison}, reducing mean
+    error from $4.2\%$ to $0.2\%$.}
+    \label{fig:descriptions}
+\end{figure}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.9\linewidth]{figure3_intervention_comparison.png}
+    \caption{Presentation-only descriptions of the same SPSB mechanism,
+    across all four model families ($2 \times 4$ panels; deviations in
+    dollars). \emph{Top row:} menu restatement (B1) vs.\ the pooled axis
+    baseline---small, sign-mixed shifts (Gemma null, Claude and GPT-4o
+    slightly away from truthful play, Gemini toward it). \emph{Bottom row:}
+    clock-framing (B3)---a same-signed improvement in every model,
+    significant in three of four. Only LLM simulation data are shown.}
+    \label{fig:ranking-framing}
+\end{figure}
+
+\subsection{Reasoning Scaffolds: Contingencies Help, Strategizing Hurts}
+\label{sec:ranking-scaffolds}
+
+Family~C holds both the mechanism and its rule description fixed and appends
+a reasoning scaffold. Following \citet{li2024designing}, who decomposes the
+cognitive demands of mechanisms into three dimensions, we scaffold thinking
+\emph{contingently} about unobserved moves by other players (C1),
+\emph{planning} for one's own future moves (C2), and reasoning about other
+players' \emph{beliefs} (C3). Each scaffold directs reasoning without
+revealing the dominant strategy; each modifies only the rule-explanation
+block of the prompt while the mechanism, value distributions, and response
+format are unchanged (full prompt texts in Appendix~\ref{app:prompts}).
+Prospect-theory-inspired preference framings (family~D) are reported in
+Appendix~\ref{app:prospect}; they form the ranking's bottom rungs.
+
+\subsubsection{Contingent reasoning (C1): the payoff tree}
+\label{sec:ranking-contingent}
+
+\citet{li2024designing} identifies contingent reasoning as the core cognitive
+demand of non-OSP mechanisms. To see that truth-telling is dominant in SPSB,
+a bidder must consider each possible profile of opponent bids and check that
+no deviation improves payoffs in any case---a ``case-by-case comparison,
+calculating payoffs for each profile of opponent bids''
+\citep{li2024designing}. The ascending clock eliminates this demand: at each
+price, the worst case from following the dominant strategy weakly dominates
+the best case from any deviation, without reference to opponents. The
+question is whether scaffolding contingent reasoning---without changing the
+extensive form---can partially recover these gains. Our \emph{Payoff Tree}
+intervention presents the agent with the explicit decision tree of outcomes:
+``PATH A: your bid exceeds others $\to$ you WIN, and pay the second-highest
+bid. PATH B: your bid falls below $\to$ you LOSE, and pay nothing. Key
+insight: your bid determines which path you are on, not the payment in Path
+A.'' (The matching-domain analogue walks the agent through DA's
+proposal-rejection tree; Appendix~\ref{app:da}.)
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{fig2_contingent.pdf}
+    \caption{Contingent reasoning: \emph{Payoff Tree} intervention (C1).
+    \emph{Top row (main domain):} second-price auction bid deviations
+    ($\text{bid}-\text{value}$); baseline SPSB in gray, intervention in
+    color. \emph{Bottom row (robustness domain, Appendix~\ref{app:da}):}
+    deferred acceptance Kendall $\tau$ errors; baseline direct DA in gray,
+    intervention in color. The payoff-tree scaffold consistently improves
+    play across models in both domains, roughly halving the distance from
+    truthful.}
+    \label{fig:contingent}
+\end{figure}
+
+In auctions, \emph{Payoff Tree} reduces the mean deviation from $\mu = -2.67$
+to $\mu = -1.13$, roughly halving the distance from truthful play
+(Figure~\ref{fig:contingent}). The improvement is consistent across models:
+GPT-4o moves from $-3.28$ to $-0.86$, Gemma from $-5.27$ to $-2.34$, and
+Gemini from $-1.63$ to $-0.53$; Claude, already close to truthful ($-0.49$),
+is the one model showing null improvement. The same scaffold replicates in
+the matching domain, where it cuts the direct-DA error from $4.2\%$ to
+$1.7\%$ with improvement in all four models (Appendix~\ref{app:da}). In both
+domains the scaffold closes roughly half the gap to the OSP benchmark (clock
+$\mu \approx -0.5$; iterative DA $0\%$) without changing the extensive form.
+
+Laying out the payoff tree does not tell models \emph{what} to do; it tells
+them \emph{what happens} under each action. This is precisely the cognitive
+gap between OSP and non-OSP mechanisms: in OSP mechanisms the extensive form
+makes the payoff-relevant contingencies visible at each decision point,
+whereas in non-OSP mechanisms the agent must construct them herself. The
+\emph{Payoff Tree} scaffold does this construction for the agent, and the
+consistent improvement across models and domains suggests that the
+difficulty of constructing payoff-relevant contingencies is a real constraint
+that binds on LLM agents.
+
+\subsubsection{Forward planning (C2): lookahead backfires}
+\label{sec:ranking-forward}
+
+\citet{pycia2023theory} formalize a notion of limited forward planning that
+has become central to the theory of simple mechanisms: a mechanism is
+\emph{one-step simple} if the dominant strategy emerges from considering only
+the immediate next step, without full backward induction. The sealed-bid
+auction is a static game with a single decision node, so forward planning has
+no natural axis there; the scaffold's native test bed is the matching domain,
+where DA's underlying algorithm processes the submitted ranking dynamically
+through rounds of proposals and rejections, and models may attempt to reason
+through those rounds when deciding what to submit. We therefore evaluate the
+forward-planning scaffolds---a \emph{One-Step Lookahead} prompt (``If you are
+rejected from your first choice, which school would you propose to next?
+Does this affect how you should rank schools?'') and a \emph{Two-Step}
+extension---primarily in the robustness domain, with a backward-induction
+framing of the static sealed bid included in the auction grid for
+completeness (Appendix~\ref{app:prompts}).
+
+Where contingent reasoning helped, forward planning hurts.
+\emph{One-Step Lookahead} worsens direct-DA play from $\mu = 4.2\%$ to
+$7.8\%$ across models; \emph{Two-Step} worsens it to $5.1\%$, with the damage
+concentrated in GPT-4o (from $1.0\%$ to $4.8\%$) and Gemma (from $2.6\%$ to
+$12.7\%$), while Claude and Gemini are largely unaffected (distributions and
+per-model cells in Appendix~\ref{app:da}). Our hypothesis is that the
+scaffold activates strategic thinking about the algorithm without resolving
+it. If models recognized that the mechanism is strategy-proof, forward
+planning would be irrelevant---the dominant strategy does not depend on what
+happens after a rejection. But because models do not fully appreciate
+strategy-proofness, prompting them to simulate rejection dynamics gives them
+\emph{material to strategize with}, not the ability to strategize well: they
+second-guess their truthful reports, and the weaker models, with less
+capacity to resolve the reasoning they have been prompted to undertake,
+suffer the most.
+
+\subsubsection{Belief formation (C3): making opponents salient}
+\label{sec:ranking-beliefs}
+
+The third axis is belief formation. \citet{borgers2019strategically}
+introduce \emph{strategic simplicity}: a mechanism is strategically simple if
+optimal play does not depend on higher-order beliefs about what opponents
+believe. Strategy-proof mechanisms are trivially strategically simple---the
+dominant strategy is independent of beliefs entirely. Scaffolding belief
+formation should therefore be irrelevant at best. But if models are already
+treating these mechanisms as Bayesian games, attempting to best-respond to
+perceived competition rather than playing the dominant strategy, then making
+beliefs more salient could amplify mistakes. We test two levels of belief
+scaffolding in both domains: \emph{First-Order Beliefs} (``What do you expect
+the other players to do? \ldots Does this affect what you should do?'') and
+\emph{Second-Order Beliefs} (``What do the other players think YOU will do?
+\ldots And does that, in turn, affect what you should do?'').
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{fig4_beliefs.pdf}
+    \caption{Belief-formation interventions (C3). \emph{Top two rows (main
+    domain):} second-price auction bid deviations under first-order and
+    second-order belief scaffolds. \emph{Bottom two rows (robustness domain,
+    Appendix~\ref{app:da}):} deferred acceptance Kendall $\tau$ errors under
+    the same scaffolds. Baseline distributions in gray, interventions in
+    color. Belief scaffolds almost uniformly worsen play, with second-order
+    beliefs causing the most damage. Gemini is the notable exception, showing
+    near-immunity to belief scaffolding.}
+    \label{fig:beliefs}
+\end{figure}
+
+Belief scaffolding almost uniformly worsens play
+(Figure~\ref{fig:beliefs}). In auctions, \emph{First-Order Beliefs} moves the
+cross-model mean deviation from $\mu = -2.67$ to $-3.04$ and
+\emph{Second-Order Beliefs} to $-3.47$: models prompted to think about
+opponents shade further below value, undercutting perceived competition. The
+matching domain replicates the pattern ($4.2\%$ to $5.1\%$ and $9.1\%$
+respectively; Appendix~\ref{app:da}). Interestingly, Gemini is almost
+completely immune to belief scaffolding in both domains---in DA it even shows
+small improvements---while Gemma, which moves from $2.6\%$ to $14.3\%$ error
+under \emph{Second-Order Beliefs} in DA, appears most susceptible to this
+failure mode. These results suggest that LLM reasoning styles are not
+monolithic; the heterogeneity across model families in susceptibility to
+belief-based reasoning may itself be relevant to mechanism design when
+markets serve diverse artificial agents.
+
+\subsection{The Ranking Assembled}\label{sec:ranking-synthesis}
+
+Table~\ref{tab:ranking} assembles the preceding cells into the paper's
+central object. For each lever we report the raw deviations---auctions in
+the main columns, the matching domain as the compact robustness column---and
+the preservation index $\rho$ (Section~\ref{sec:metrics}), computed within
+model $\times$ domain and pooled as the median across the available cells,
+with $95\%$ confidence intervals from a double bootstrap that resamples cells
+and propagates each cell's own bootstrap uncertainty (2{,}000 draws, seed
+1299). Because $\rho$ is computed against each model's own baseline, the
+ranking is invariant to disputes about cross-model levels; it asks only how
+much of each model's own deviation a lever removes.
+
+\paragraph{The tier structure, tested.}
+Our pre-committed reading of the data is a \emph{tier structure}---a partial
+order, not a strict total order:
+\begin{equation*}
+\underbrace{\text{A}}_{\substack{\text{extensive form:}\\ \text{clock, iterative DA}}}
+\;\succ\;
+\underbrace{\{\text{B2},\,\text{B3},\,\text{C1}\}}_{\substack{\text{safety descriptions,}\\ \text{clock-framing, payoff tree}}}
+\;\succ\;
+\underbrace{\text{baseline} \,\approx\, \text{B1}}_{\text{menu restatement}}
+\;\succ\;
+\underbrace{\{\text{C2},\,\text{C3}\}}_{\substack{\text{lookahead,}\\ \text{belief scaffolds}}}
+\;\succ\;
+\underbrace{\text{D-averse.}}_{\substack{\text{risk-averse}\\ \text{persona}}}
+\end{equation*}
+The concordance statistics now exist, and they support most---not all---of
+this structure. Treating each model $\times$ domain cell as a judge ranking
+the levers, Kendall's $W$ is $0.49$ in auctions ($p = 0.046$), $0.90$ in the
+matching domain ($p = 4 \times 10^{-4}$), and $0.69$ pooled over the eight
+cells and seven common levers ($p = 1.1 \times 10^{-5}$): the lever ordering
+is far from independent across models and domains, with the matching domain
+nearly unanimous and auctions noisier. Exact binomial sign tests on adjacent
+tiers confirm three of the four boundaries: the extensive form beats the
+strong presentation tier in $7/8$ cells ($p = 0.070$), the strong
+presentation tier beats the restatement tier in $7/8$ ($p = 0.070$), and the
+strategizing scaffolds beat the risk-averse persona in $8/8$ ($p = 0.008$).
+The boundary that \emph{fails} is baseline-vs-menu against the strategizing
+scaffolds: restatements beat lookahead and beliefs in only $4/8$ cells
+($p = 1.0$). The failure is informative rather than noise: the menu
+restatement is not a clean placebo tier but a sign-mixed family, null on
+average (two-sided placebo sign test against baseline: $3/8$ cells above
+zero, $p = 0.73$) yet with genuine model-level backfires (GPT-4o's auction
+menu cell, Welch $p = 0.003$) that land it below some strategizing cells.
+
+\paragraph{The sharpened story: invariance content is the active ingredient.}
+The matching-domain menu cells (new in this draft; Appendix~\ref{app:da})
+resolve what the sign-mixed auction menu leaves ambiguous, by splitting the
+restatement family in two. A menu description that \emph{includes the
+invariance statement}---``your ranking cannot change your obtainable set,
+only which school you get within it''---behaves like a safety-exposing
+description: pooled error falls from $4.2\%$ to $1.8\%$, with significant
+improvements for the two weak-baseline models (Claude $5.8\%$ to $2.1\%$,
+Mann--Whitney $p = 10^{-4}$; Gemini $7.6\%$ to $0.3\%$, $p < 10^{-4}$) and
+nulls for the strong ones. A menu description that restates the
+\emph{computation} without the invariance statement \emph{worsens} play
+(pooled $4.2\%$ to $6.9\%$; GPT-4o $1.0\%$ to $4.2\%$, Gemma $2.6\%$ to
+$13.7\%$). Together with the auction results, the pattern across all of
+family~B is consistent: safety-exposing text (B2, pooled $\rho = +0.90$) and
+the invariance-carrying menu variant ($+0.65$) help; mechanical restatement
+(auction menu $-0.22$, mechanics-only DA menu $-1.67$) is null-to-harmful.
+The active ingredient of an effective description is not restating the
+mechanism but asserting the invariant that makes truth-telling safe.
+
+\paragraph{Within-tier domain flips and honest caveats.}
+We deliberately do not order levers within the strong tier, because the
+internal order flips across domains: the payoff tree beats the safety
+description in $3/4$ auction cells, while the safety description beats the
+tree in $4/4$ matching cells. We present this as domain-dependence
+\emph{within} a stable tier rather than as noise: a natural reading is that
+which second-tier lever binds hardest depends on whether the local difficulty
+is constructing payoff-relevant contingencies (auctions, with a fine action
+space) or trusting that rejections are safe (DA, where the discrete misreport
+is a hedge against imagined rejection risk). Clock-framing, now estimated on
+all four models, is a reliable but modest member of the tier
+($\rho = +0.29$ $[+0.17, +0.45]$). Three caveats from the concordance
+analysis qualify individual cells without moving any rung. First, Gemma's
+auction axis-2 baseline is anomalously good (SMAD $8.6\%$ vs.\ $20.7\%$
+pooled across its axes), so Gemma's negative auction marks for the safety,
+tree, and lookahead levers all flip sign when computed against the pooled
+baseline; we treat them as baseline noise, not lever backfires. Second,
+GPT-4o's matching-domain $\rho$ magnitudes are ratio-unstable because its
+direct-DA baseline error is only $1.0\%$, so small treatment errors produce
+extreme negative ratios (clipped in Figure~\ref{fig:ranking}); ranks are
+unaffected. Third, the iterative-DA $\rho = 1.0$ is censored by construction
+at the Kendall-$\tau$ level; the decision-level accounting of
+Appendix~\ref{app:da} bounds, rather than proves, perfect play.
+\TODO{Frontier interventions: gpt-5-mini currently has baseline mechanism
+cells only (Appendix~\ref{app:ablations}); no frontier intervention cells
+exist, so the ranking carries no frontier row. Runbook prepared.}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llll cc l l}
+\toprule
+& & & & \multicolumn{2}{c}{Deviation $D$} & & \\
+\cmidrule(lr){5-6}
+Tier & Lever & Family & Theory tag & Auct.\ (\$) & DA (\%) & Pooled $\rho$ [95\% CI] & Human anchor \\
+\midrule
+1 & Extensive form (AC-B clock / iterative DA) & A & OSP \citep{li2017obviously,ashlagi2018stable} & $-0.5$ & 0.0 & $+0.95$ [$+0.84, +1.00$] & AC $+0.62$ [$+0.39,+0.79$]; AC-B $+0.37$ [$-0.12,+0.72$] \\
+\midrule
+2 & Safety description & B2 & SP-exposing \citep{gonczarowski2023strategyproofness} & $-1.53$ & 0.2 & $+0.90$ [$+0.34, +1.00$] & --- (lab prediction) \\
+3$^{*}$ & Menu, invariance property (DA) & B1 & menu + invariant & --- & 1.8 & $+0.65$ [$-0.52, +0.95$] & --- (lab prediction) \\
+2 & Payoff tree & C1 & contingent reasoning \citep{li2024designing} & $-1.13$ & 1.7 & $+0.63$ [$+0.23, +0.74$] & --- (lab prediction) \\
+2 & Clock-framing & B3 & OSP description \citep{breitmoser2022obviousness} & $-1.93^{\dagger}$ & --- & $+0.29$ [$+0.17, +0.45$] & $\surd$ agrees (sign) \\
+\midrule
+3 & Baseline (SPSB / direct DA) & --- & --- & $-2.67$ & 4.2 & 0 & $\surd$ agrees \\
+4 & Forward planning (lookahead) & C2 & one-step simplicity \citep{pycia2023theory} & $-1.65^{\dagger\S}$ & 7.8 / 5.1 & $-0.02$ [$-2.31, +0.27$] & --- (lab prediction) \\
+3 & Menu restatement (auction) & B1 & menu description \citep{gonczarowski2023strategyproofness} & $-2.09^{\dagger}$ & --- & $-0.22$ [$-0.77, +0.59$] & $\surd$ agrees on avg.\ ($-0.07$ [$-0.12,-0.02$]) \\
+4 & Second-order beliefs & C3 & strategic simplicity \citep{borgers2019strategically} & $-3.47$ & 9.1 & $-0.35$ [$-1.36, +0.03$] & --- (lab prediction) \\
+4 & First-order beliefs & C3 & strategic simplicity \citep{borgers2019strategically} & $-3.04$ & 5.1 & $-0.41$ [$-0.88, -0.04$] & --- (lab prediction) \\
+3$^{*}$ & Menu, mechanics only (DA) & B1 & menu, computation restated & --- & 6.9 & $-1.67$ [$-5.01, +0.57$] & --- (lab prediction) \\
+\midrule
+5 & Risk-averse persona & D & preference framing \citep{kahneman1979prospect} & App.~\ref{app:prospect} & App.~\ref{app:prospect} & $-1.82$ [$-5.73, -0.72$] & --- (lab prediction) \\
+\bottomrule
+\end{tabular}}
+\caption{The simplicity-preservation ranking, rows sorted by pooled $\rho$.
+$D$ = mean deviation from dominant-strategy play: bid $-$ value in dollars
+for auctions (cross-model mean over GPT-4o, Claude 3.5 Haiku, Gemini 2.0
+Flash, Gemma 27B), normalized Kendall-$\tau$ error in percent for the
+matching robustness domain (Appendix~\ref{app:da}; lookahead entries are
+one-/two-step). $\rho = 1 - D(\text{lever})/D(\text{baseline})$ on the
+absolute-deviation scale, computed within model $\times$ domain against the
+baseline conventions of Section~\ref{sec:ranking}; pooled value = median over
+available cells, with double-bootstrap $95\%$ CIs (2{,}000 draws, seed 1299).
+Tier = pre-committed partial order; within-tier order is not asserted.
+$^{*}$New matching-domain menu cells assigned ex ante to the restatement
+family (tier 3); their measured positions straddle the ranking---the
+invariance-property variant performs like a tier-2 safety description, the
+mechanics-only variant like a tier-4 backfire (see text).
+$^{\dagger}$Intervention-grid cells tested against pooled-axis baselines
+(cross-model mean $-2.43$) rather than the dedicated SPSB cells ($-2.67$).
+$^{\S}$The auction C2 cell is a backward-induction \emph{framing} of the
+static sealed bid (SPSB has no true planning axis); it enters the pooled
+$\rho$ alongside the DA lookahead cells. Human anchor: $\surd$ = a human
+experiment exists for this rung and its effect agrees in sign with the LLM
+effect (reconstructed human $\rho$ [CI] shown where computable); --- = no
+human experiment exists and the rung is issued as a lab prediction
+(Section~\ref{sec:humans}).}
+\label{tab:ranking}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{ranking_forest.pdf}
+    \caption{The simplicity-preservation ranking of design levers.
+    \emph{Panel A:} rows are levers sorted by pooled median
+    $\rho = 1 - D(\text{lever})/D(\text{baseline})$; individual marks show
+    each model $\times$ domain cell (color = model, shape = domain), with the
+    pooled median and double-bootstrap $95\%$ CI per row; the shaded region
+    $\rho < 0$ marks levers that backfire. Gold diamonds are human anchors
+    computed from the moment-matched reconstructions
+    (Section~\ref{sec:reconstruction}): AC $\rho = +0.62$, AC-B $+0.37$, menu
+    $-0.07$; rungs without a diamond have no human experiment and are issued
+    as lab predictions (Section~\ref{sec:humans}). Extreme negative
+    matching-domain cells are clipped for display (see text). \emph{Panel B
+    (inset):} cross-model rank-agreement (Kendall $\tau$) over the lever
+    ordering. See Table~\ref{tab:ranking} for the underlying cells.}
+    \label{fig:ranking}
+\end{figure}
+
+\paragraph{What the ranking localizes.}
+Read from the bottom up, the assembled ranking localizes the constraint that
+simple mechanism design relieves. Scaffolding strategizing---beliefs,
+lookahead---makes play strictly worse, so the problem is not too little
+strategic reasoning. Mechanically restating the rules is null on average and
+harmful where it displaces the safety-relevant content, so the problem is not
+raw comprehension bandwidth either. What works, wherever it appears and in
+whatever syntactic form---the safety one-liners, the invariance-carrying menu
+variant, the textbook strategy-proofness statement---is text that asserts the
+invariant that makes truth-telling safe; and full OSP implementation, which
+makes that invariant visible at every decision point, delivers the remainder.
+As Section~\ref{sec:ranking-descriptions} put it: the binding cognitive
+barrier in non-OSP mechanisms is not \emph{computing} the dominant strategy
+given the game tree, but understanding the mechanism well enough to \emph{see
+that truth-telling is safe}. The ordering, moreover, parallels the
+theoretical hierarchy from which the taxonomy was derived ex ante
+(Section~\ref{sec:framework}): the levers that theory says relax binding
+cognitive constraints sit at the top, and the levers that theory says should
+be irrelevant for strategy-proof mechanisms are, for agents who do not fully
+trust that irrelevance, actively harmful. Section~\ref{sec:ranking-traces}
+adds a final, mechanism-level piece of evidence: the effective descriptions
+move bids \emph{without} changing what the agents say they are doing.
+Section~\ref{sec:humans} then closes the loop, anchoring each rung to the
+human experimental record where one exists and issuing the unanchored rungs
+as predictions.
+
+\subsection{What the Traces Say: Stated Reasoning and Realized Bids}
+\label{sec:ranking-traces}
+
+Every bid in our experiments is accompanied by a short free-text plan in
+which the agent explains its choice (median 68 words). We analyze all
+21{,}990 plans from the sealed-bid and clock cells with a transparent
+dictionary of eighteen keyword features---stated intent to shade below or bid above
+value, rehearsal of the second-price payment rule, dominance language,
+worst-case and profit-margin rhetoric, and explicit mechanism confusion
+(calling the auction ``first-price''), among others (full regular expressions
+and per-cell prevalence in the replication package,
+\path{analysis/build_trace_features.py}).\footnote{The plans are stated
+strategies, not full chains of thought; all claims in this subsection concern
+what models \emph{say}, with Table~\ref{tab:trace-dissociation} showing that
+what they say tracks what they do.}
+
+Two facts establish what the traces are. First, the modal plan applies
+\emph{first-price} logic to the second-price auction: $53\%$ of sealed-bid
+second-price traces state an intent to bid below value, $55\%$ worry about
+``overpaying,'' and $31\%$ invoke a ``profit margin'' or ``buffer,'' while
+only $2\%$ use dominance language and only $4\%$ correctly rehearse that the
+winner pays the \emph{second}-highest bid; Claude explicitly mislabels the
+mechanism ``first-price'' in $10\%$ of its traces, a mistake no other model
+makes more than $0.1\%$ of the time. Second, the traces are not cheap talk:
+among traces stating an intent to shade, $97.1\%$ of bids fall below value
+(mean deviation $-\$1.84$); among traces stating an intent to bid above,
+$87.6\%$ fall above ($+\$1.88$); and the largest errors come from the
+4{,}541 traces that state no value-anchored intent at all (mean deviation
+$-\$4.84$), whose plans anchor on uninformative quantities such as
+``slightly above half my value.'' Stated direction almost always matches the
+realized bid; the failure is in which plan is chosen. A pooled regression of
+$|b - v|$ on the dictionary features nonetheless explains only a modest share
+of the error variance (incremental $R^{2} \approx 0.075$ over model and
+lever-family fixed effects); the regression table and robustness checks are
+in Appendix~\ref{app:traces}.
+
+Most important for interpreting the ranking, the levers of
+Sections~\ref{sec:ranking-descriptions}--\ref{sec:ranking-scaffolds} produce
+a \emph{double dissociation} between stated reasoning and behavior
+(Table~\ref{tab:trace-dissociation}). \emph{Payoff Safety} (B2) moves bids
+substantially while leaving stated reasoning untouched: the invariant it
+asserts (``your bid determines \emph{if} you win, not \emph{what} you pay'')
+is echoed in zero of its 600 treated traces, and payment-rule rehearsal is
+flat relative to baseline ($3.5\%$ vs.\ $2.8\%$, $p = 0.66$); the plans keep
+the same shading rhetoric and simply shrink the shade to pennies (``I will
+bid \$31.9 to avoid overbidding,'' value \$32). The \emph{worst-case}
+scaffold (C1) does the opposite: it massively shifts stated reasoning
+(worst-case language rises from $2\%$ to $43\%$) while bids barely move. The
+\emph{Payoff Tree} moves both, and the \emph{menu} restatement moves
+neither, serving as the placebo row. A classical mediation analysis
+therefore fails at the first stage: whatever Payoff Safety does, it does not
+work by making agents verbalize why truth-telling is safe. Stated
+comprehension and behavioral improvement are separable outcomes, and our
+effective descriptions improve the latter without the former---which is why
+we describe them as changing behavior, not stated understanding, and why the
+traces should not be read as faithful mediators of the lever effects.
+\TODO{LLM-judge strategy taxonomy (trace option 1): validate the keyword
+dictionary against a judged taxonomy on a 100-trace human-labeled set before
+the ``2\% dominance recognition'' figure is made load-bearing.}
+
+Finally, the traces speak to \emph{why} comprehension fails. In the GPT-4o
+first-price and third-price variants of the same grid, the model deploys a
+nearly identical shading script---shading language in $70\%/79\%/72\%$ of
+second-/first-/third-price traces and mean bids of $0.88/0.87/0.84$ of
+value---even though the optimum differs sharply across formats (truthful in
+second-price; roughly $\tfrac{2}{3}v$ in our three-bidder first-price cell;
+above value in third-price). The same words justify underbidding where
+shading is optimal and where it is an error: the reasoning script is a
+property of the model, not of the mechanism it faces.
+\TODO{The cross-mechanism script-invariance result is currently
+GPT-4o--only (recovered V12 logs); run FPSB/TPSB cells for Claude, Gemini,
+and Gemma with the frozen dictionary before claiming generality.}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Stated reasoning} & \multicolumn{2}{c}{Behavior} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Lever (family) & target language & $\Delta$ vs.\ baseline &
+mean $|b-v|$ & baseline \\
+\midrule
+Payoff Safety (B2) & payment-rule rehearsal & $3.5\%\to 2.8\%$ &
+$1.95$ & $3.27$ \\
+Worst-case scaffold (C1) & worst-case rhetoric & $2\%\to 43\%$ &
+$3.07$ & $3.24$ \\
+Payoff Tree (C1) & rule rehearsal & $7.5\%\to 26.7\%$ &
+$1.29$ & $3.41$ \\
+Menu restatement (B1) & --- & --- &
+$3.55$ & $3.11$ \\
+\bottomrule
+\end{tabular}
+\caption{Double dissociation between stated reasoning and bidding behavior
+(pooled over four models, sealed-bid second-price cells; cluster-robust tests
+in \texttt{results/traces/ols\_results.txt}). Payoff Safety improves bids
+without changing what agents say; the worst-case scaffold changes what agents
+say without improving bids. Baselines are the axis-specific baseline cells of
+each lever's own grid, per the convention of Section~\ref{sec:ranking}
+(hence the small variation across rows); under the dedicated-SPSB convention
+the Payoff Safety contrast is the $-2.67 \to -1.53$ of
+Section~\ref{sec:ranking-descriptions}. No language entry is reported for the
+menu row because the menu prompt replaces the ``second-highest'' vocabulary
+wholesale, so rule-rehearsal prevalence is zero by construction (prompt echo,
+not comprehension).}
+\label{tab:trace-dissociation}
+\end{table}

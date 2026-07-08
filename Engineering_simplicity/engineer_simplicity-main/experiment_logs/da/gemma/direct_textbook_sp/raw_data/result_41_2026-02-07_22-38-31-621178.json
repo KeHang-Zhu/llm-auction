@@ -1,0 +1,212 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 89,
+            "x": 51,
+            "y": 60,
+            "z": 49
+        },
+        "Student B": {
+            "w": 77,
+            "x": 50,
+            "y": 76,
+            "z": 69
+        },
+        "Student C": {
+            "w": 71,
+            "x": 48,
+            "y": 72,
+            "z": 69
+        },
+        "Student D": {
+            "w": 76,
+            "x": 49,
+            "y": 67,
+            "z": 68
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "y",
+        "Student C": "x",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 89,
+        "Student B": 76,
+        "Student C": 48,
+        "Student D": 68
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "y",
+            "x",
+            "z"
+        ],
+        "Student B": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student C": [
+            "y",
+            "w",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "w",
+            "z",
+            "y",
+            "x"
+        ]
+    },
+    "reasoning": {
+        "Student A": "The problem states this is a strategy-proof mechanism. This means that truthfully revealing my preferences is the optimal strategy, regardless of what others do. Trying to game the system by misrepresenting my preferences won't lead to a better outcome. Since my true preference is w > y > x > z, and strategy-proofness guarantees truthfulness is optimal, I should submit this ranking. The information about other applicants favoring y > x > w > z is irrelevant because of the strategy-proof nature of the mechanism. My priority ranks at each school are also irrelevant, as the mechanism only asks for a ranking of preferences, not priorities.",
+        "Student B": "The problem states this mechanism is strategy-proof. This means I should submit my true preference ranking, as any attempt to manipulate the ranking will not improve my outcome and could potentially worsen it. My true preferences are w > y > z > x. While I know most other students prefer y > x > w > z, this information doesn't change my optimal strategy *because* the mechanism is strategy-proof. Trying to rank y higher to match the crowd won't help me get into w, my top choice, and could hurt my chances of getting into y or z. My priority numbers are also relevant, but only in how schools will evaluate *my* application if I am considered. They don't change my fundamental preference order. Therefore, I should submit my honest ranking.",
+        "Student C": "Given the strategic property that this mechanism is strategy-proof, I should submit my true preferences. Attempting to manipulate the ranking will not improve my outcome and could potentially worsen it. My true preference ordering is y > w > z > x. My priority ranks are w:3, x:3, y:4, z:4.\n\nThe information that most applicants favor y > x > w > z is relevant for understanding the competitive landscape, but doesn't change my optimal strategy. Since the mechanism is strategy-proof, I don't need to consider what others are doing to try and \"game\" the system. I simply state my true preferences. Submitting anything else would be suboptimal.",
+        "Student D": "Given the strategic property of the mechanism (strategy-proofness), I know that truthfully revealing my preferences is the optimal strategy. Misrepresenting my preferences will *not* lead to a better outcome, regardless of what others do. Therefore, I should rank the schools according to my true preference ordering: w > z > y > x.\n\nThe information about other students favoring y > x > w > z is relevant for understanding the overall applicant pool, but it *doesn't* change my optimal strategy. Because the mechanism is strategy-proof, attempting to game the system by ranking a less-preferred school higher won't help me, and could potentially hurt me. My low priority ranks at w and x, combined with the likely high number of applicants preferring those schools, mean I'm unlikely to get into them anyway. My best chance is to be honest about my preference for w, and hope my priority rank is sufficient. Similarly, z is my second choice, and my priority rank there is reasonable. Trying to rank y or x higher would be a mistake."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student D",
+                    "Student B",
+                    "Student A"
+                ],
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "y": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ],
+                [
+                    "Student B",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student B"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "y": "Student B",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "y": "Student B",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "y": "Student B",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 4,
+            "proposals": {
+                "x": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "y": "Student B",
+                "z": "Student D",
+                "x": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

@@ -1,0 +1,159 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 72,
+            "x": 55,
+            "y": 61,
+            "z": 54
+        },
+        "Student B": {
+            "w": 62,
+            "x": 55,
+            "y": 55,
+            "z": 50
+        },
+        "Student C": {
+            "w": 63,
+            "x": 50,
+            "y": 59,
+            "z": 61
+        },
+        "Student D": {
+            "w": 66,
+            "x": 49,
+            "y": 62,
+            "z": 61
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 72,
+        "Student B": 55,
+        "Student C": 61,
+        "Student D": 62
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "y",
+            "x",
+            "z"
+        ],
+        "Student B": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ],
+        "Student C": [
+            "w",
+            "z",
+            "y",
+            "x"
+        ],
+        "Student D": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My preference is w > y > x > z. My priority at each school is w: 1, x: 2, y: 1, z: 2. Most applicants favor y > x > w > z.\n\nI want to maximize my chances of getting into my most preferred school, w. Since I have the highest priority (1) at w, and most applicants prefer y and x over w, my chances of getting into w are good.\n\nIf I don't get into w, my next preference is y. I also have the highest priority (1) at y. Since my priority is high and y is a popular choice, I'm likely to get into y if I don't get into w.\n\nIf I don't get into w or y, my next preference is x. I have a priority of 2 at x, and it seems to be a popular choice.\n\nFinally, if I don't get into w, y, or x, my last preference is z. I have a priority of 2 at z.\n\nSince I have high priority at both w and y, and they are my top two choices, I should list them first. Then x, and finally z.",
+        "Student B": "My goal is to get matched to the best school possible according to my preference: w > x > y > z. My priority rank at each school is: w: 2, x: 1, y: 2, z: 1.\n\nSchool x has the highest priority for me (rank 1), and it's my second choice. School z also has highest priority for me (rank 1), but it's my last choice. School w is my top choice, but my priority is only 2. School y is my 3rd choice, and my priority is 2.\n\nI should stick to my preference ordering since rejection from a school automatically considers me for the remaining schools. Therefore, I will rank them according to my preference.",
+        "Student C": "My goal is to be matched to the best school possible according to my preferences: w > z > y > x. The key insight is that being rejected from a school doesn't eliminate my chances at lower-ranked schools. Therefore, I should stick to my true preferences.\n\nSchool w is my top choice, and my priority is 3. School z is my second choice, and my priority is 4. Since most applicants favor y > x > w > z, it is possible that I have a chance at w. Even if I don't get w, I will be considered for z. If I don't get z, I will be considered for y, and finally x. There is no strategic benefit to misrepresenting my preferences.",
+        "Student D": "My goal is to maximize my chances of getting into the best school possible according to *my* preferences, which are w > y > z > x. The key insight is that rejections don't eliminate options; they simply move me down my preference list.\n\nI should stick to my true preferences. There's no strategic reason to deviate since a rejection from a higher-ranked school automatically means I'm considered at lower-ranked schools. Trying to game the system by ranking a school lower than I actually prefer it could lead to me missing out on a spot at that school if it were available.\n\nTherefore, I will rank the schools according to my stated preference: w > y > z > x."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student B",
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student B",
+                    "w"
+                ],
+                [
+                    "Student D",
+                    "w"
+                ],
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student B"
+                ],
+                "y": [
+                    "Student D"
+                ],
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student B",
+                "y": "Student D",
+                "z": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

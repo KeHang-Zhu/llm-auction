@@ -1,0 +1,154 @@
+==============================================================================
+TRACE FEATURE ANALYSIS -- OLS + mediation results
+rows total=21990; sealed second-price rows=14073
+Deviations in $ (values Unif{0..49}); SMAD normalizer E[b*]=24.5.
+Cluster-robust SEs, clustered on run_id (run directory / flat cell).
+==============================================================================
+
+### MODEL (2): |deviation| ~ features + model FE + family FE (sealed second-price cells)
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:                abs_dev   R-squared:                       0.251
+Model:                            OLS   Adj. R-squared:                  0.250
+Method:                 Least Squares   F-statistic:                     23.86
+Date:                Tue, 07 Jul 2026   Prob (F-statistic):           2.73e-32
+Time:                        15:02:04   Log-Likelihood:                -36690.
+No. Observations:               14073   AIC:                         7.344e+04
+Df Residuals:                   14042   BIC:                         7.368e+04
+Df Model:                          30                                         
+Covariance Type:              cluster                                         
+=====================================================================================================
+                                        coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------------------------
+Intercept                             4.0548      0.497      8.166      0.000       3.082       5.028
+C(model)[T.gemini-2.0-flash]         -0.7484      0.417     -1.794      0.073      -1.566       0.069
+C(model)[T.google/gemma-3-27b-it]     1.5345      0.526      2.915      0.004       0.503       2.566
+C(model)[T.gpt-4o]                    0.3247      0.349      0.931      0.352      -0.359       1.008
+C(family)[T.beliefs_C3]               0.3587      0.253      1.417      0.157      -0.138       0.855
+C(family)[T.clock_framing_B3]        -0.7647      0.473     -1.618      0.106      -1.691       0.162
+C(family)[T.contingent_C1]            0.3568      0.246      1.452      0.147      -0.125       0.839
+C(family)[T.loss_D]                   0.4306      0.263      1.635      0.102      -0.086       0.947
+C(family)[T.menu_B1]                  0.5116      0.450      1.137      0.255      -0.370       1.393
+C(family)[T.payoff_safety_B2]        -0.9544      0.175     -5.464      0.000      -1.297      -0.612
+C(family)[T.payoff_tree_C1]          -1.3657      0.346     -3.948      0.000      -2.044      -0.688
+C(family)[T.planning_C2]             -0.0289      0.658     -0.044      0.965      -1.318       1.260
+C(family)[T.risk_D]                   0.4240      0.510      0.831      0.406      -0.575       1.423
+dominance_language                   -0.8356      0.535     -1.563      0.118      -1.884       0.213
+truthful_intent                      -1.5041      0.308     -4.876      0.000      -2.109      -0.899
+payment_rule_correct                 -0.7711      0.226     -3.405      0.001      -1.215      -0.327
+second_price_mention                 -0.2109      0.206     -1.021      0.307      -0.616       0.194
+first_price_mention                  -0.1369      0.341     -0.402      0.688      -0.805       0.531
+opponent_modeling                     0.1016      0.204      0.497      0.619      -0.299       0.502
+probability_reasoning                 0.0974      0.103      0.941      0.347      -0.105       0.300
+expected_value_reasoning              0.1088      0.191      0.569      0.569      -0.266       0.483
+shading_intent                       -2.0613      0.239     -8.631      0.000      -2.529      -1.593
+overbid_intent                       -2.1807      0.336     -6.499      0.000      -2.838      -1.523
+worst_case                           -0.2827      0.210     -1.343      0.179      -0.695       0.130
+safety_recognition                    8.2645      8.242      1.003      0.316      -7.889      24.418
+overpay_concern                      -0.2937      0.132     -2.226      0.026      -0.552      -0.035
+zero_profit_fallacy                  -0.8190      0.367     -2.231      0.026      -1.539      -0.100
+margin_language                       0.1699      0.156      1.086      0.277      -0.137       0.477
+conservative_language                 0.7613      0.145      5.266      0.000       0.478       1.045
+aggressive_language                   0.0149      0.585      0.026      0.980      -1.131       1.161
+risk_language                         0.0639      0.137      0.467      0.640      -0.204       0.332
+==============================================================================
+Omnibus:                     4609.316   Durbin-Watson:                   1.796
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            18073.453
+Skew:                           1.597   Prob(JB):                         0.00
+Kurtosis:                       7.541   Cond. No.                         137.
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)
+
+R2 with features = 0.2512; R2 FE only = 0.1758; incremental R2 of text features = 0.0754
+
+### MODEL (3): signed deviation ~ stated intent (sealed second-price cells)
+
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:              deviation   R-squared:                       0.335
+Model:                            OLS   Adj. R-squared:                  0.334
+Method:                 Least Squares   F-statistic:                     46.48
+Date:                Tue, 07 Jul 2026   Prob (F-statistic):           5.44e-37
+Time:                        15:02:04   Log-Likelihood:                -37615.
+No. Observations:               14073   AIC:                         7.526e+04
+Df Residuals:                   14057   BIC:                         7.538e+04
+Df Model:                          15                                         
+Covariance Type:              cluster                                         
+=====================================================================================================
+                                        coef    std err          z      P>|z|      [0.025      0.975]
+-----------------------------------------------------------------------------------------------------
+Intercept                            -1.7813      0.527     -3.378      0.001      -2.815      -0.748
+C(model)[T.gemini-2.0-flash]         -0.9219      0.473     -1.951      0.051      -1.848       0.004
+C(model)[T.google/gemma-3-27b-it]    -4.2184      0.599     -7.048      0.000      -5.391      -3.045
+C(model)[T.gpt-4o]                   -2.0039      0.454     -4.417      0.000      -2.893      -1.115
+C(family)[T.beliefs_C3]              -0.2666      0.279     -0.956      0.339      -0.813       0.280
+C(family)[T.clock_framing_B3]         0.3302      0.579      0.570      0.569      -0.805       1.466
+C(family)[T.contingent_C1]           -0.1929      0.271     -0.712      0.477      -0.724       0.338
+C(family)[T.loss_D]                  -0.2867      0.287     -0.998      0.318      -0.850       0.277
+C(family)[T.menu_B1]                 -0.1137      0.378     -0.301      0.764      -0.854       0.627
+C(family)[T.payoff_safety_B2]         0.8749      0.298      2.940      0.003       0.292       1.458
+C(family)[T.payoff_tree_C1]           1.1760      0.523      2.247      0.025       0.150       2.202
+C(family)[T.planning_C2]              0.0768      0.710      0.108      0.914      -1.315       1.469
+C(family)[T.risk_D]                   0.7169      0.930      0.770      0.441      -1.107       2.540
+shading_intent                        0.9929      0.380      2.614      0.009       0.248       1.738
+overbid_intent                        4.7215      0.356     13.250      0.000       4.023       5.420
+truthful_intent                       0.9112      0.253      3.599      0.000       0.415       1.407
+==============================================================================
+Omnibus:                     3067.746   Durbin-Watson:                   1.706
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):            17734.707
+Skew:                          -0.924   Prob(JB):                         0.00
+Kurtosis:                       8.180   Cond. No.                         20.5
+==============================================================================
+
+Notes:
+[1] Standard Errors are robust to cluster correlation (cluster)
+
+### Stated-vs-revealed consistency (sealed second-price cells)
+shading_intent traces: n=7469, share with dev<0: 0.971, mean dev -1.84
+overbid_intent traces: n=1797, share with dev>0: 0.876, mean dev +1.88
+truthful_intent traces: n=950, share with |dev|<=0.5: 0.776, mean |dev| 1.03
+no stated intent: n=4541, mean dev -4.84, mean |dev| 5.51
+
+### Dictionary validity check (GPT-4o): shading_intent prevalence
+FPSB (shading optimal): 0.662 (n=3711)
+SPSB (truthful optimal): 0.675 (n=3600)
+
+### MODEL (4): mediation sketch -- Payoff Safety (axis2_forward_onestep)
+Mediators: safety_recognition (invariant echo), payment_rule_correct,
+           second_price_mention (weak rule name-drop).
+
+-- baseline = pooled axis baselines (canonical): n_treat=600, n_ctrl=1788
+   mean dev: treated -1.534 vs control -2.439; mean |dev|: 1.953 vs 3.271
+   1st stage safety_recognition: treated coef = +0.0000 (p=nan); prevalence T=0.000 vs C=0.000
+   1st stage payment_rule_correct: treated coef = -0.0070 (p=0.655); prevalence T=0.028 vs C=0.035
+   1st stage second_price_mention: treated coef = +0.0365 (p=0.576); prevalence T=0.282 vs C=0.244
+   2nd stage safety_recognition: NA (no variation within treatment)
+   2nd stage payment_rule_correct (within treatment): coef = -1.5386 (p=0.000); raw gap boot 95% CI [-2.153, -0.561] (seed 1299)
+   2nd stage second_price_mention (within treatment): coef = -0.4882 (p=0.039); raw gap boot 95% CI [-1.545, +0.017] (seed 1299)
+
+-- baseline = spsb cell (paper's published comparison): n_treat=600, n_ctrl=600
+   mean dev: treated -1.534 vs control -2.670; mean |dev|: 1.953 vs 3.115
+   1st stage safety_recognition: treated coef = +0.0000 (p=nan); prevalence T=0.000 vs C=0.000
+   1st stage payment_rule_correct: treated coef = -0.0233 (p=0.205); prevalence T=0.028 vs C=0.052
+   1st stage second_price_mention: treated coef = -0.0833 (p=0.078); prevalence T=0.282 vs C=0.365
+   2nd stage safety_recognition: NA (no variation within treatment)
+   2nd stage payment_rule_correct (within treatment): coef = -1.5386 (p=0.000); raw gap boot 95% CI [-2.153, -0.561] (seed 1299)
+   2nd stage second_price_mention (within treatment): coef = -0.4882 (p=0.039); raw gap boot 95% CI [-1.545, +0.017] (seed 1299)
+
+### Robustness: deduplicated traces (n=8839 of 14073)
+Model (2) dedup: R2 = 0.2482 (FE only 0.1795; incremental 0.0688)
+key coefs (full-sample -> dedup):
+  shading_intent: -2.061 -> -1.905 (dedup p=0.0000)
+  overbid_intent: -2.181 -> -2.168 (dedup p=0.0000)
+  truthful_intent: -1.504 -> -1.456 (dedup p=0.0000)
+  payment_rule_correct: -0.771 -> -0.769 (dedup p=0.0008)
+  conservative_language: +0.761 -> +0.722 (dedup p=0.0000)
+  overpay_concern: -0.294 -> -0.202 (dedup p=0.1021)
+Model (3) dedup intent coefs: shading +0.901, overbid +4.504, truthful +0.935 (all vs no-intent ref)
+
+### Manipulation check: axis1_contingent_worstcase vs axis1 baseline
+worst_case language: treatment 0.430 vs baseline 0.020
+mean |dev|: treatment 3.066 vs baseline 3.240

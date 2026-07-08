@@ -1,0 +1,159 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 66,
+            "x": 87,
+            "y": 68,
+            "z": 57
+        },
+        "Student B": {
+            "w": 67,
+            "x": 72,
+            "y": 61,
+            "z": 63
+        },
+        "Student C": {
+            "w": 63,
+            "x": 70,
+            "y": 54,
+            "z": 56
+        },
+        "Student D": {
+            "w": 52,
+            "x": 76,
+            "y": 52,
+            "z": 55
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 68,
+        "Student B": 72,
+        "Student C": 63,
+        "Student D": 55
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "z",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my outcome given my preferences (x > y > w > z). My priority at each school is: w: 1, x: 2, y: 1, z: 2.\n\nSchool w: I have the highest priority. Therefore, w is always obtainable.\nSchool x: I have the second highest priority. Given that most applicants prefer y > x > w > z, it's likely that many applicants with higher priority than me at x will also apply to y, potentially reducing competition for x.\nSchool y: I have the highest priority. Therefore, y is always obtainable.\nSchool z: I have the second highest priority. Given that most applicants prefer y > x > w > z, it's likely that many applicants with higher priority than me at z will also apply to y, potentially reducing competition for z.\n\nSince w and y are always obtainable, the key decision is the relative ranking of x and z. Since I prefer x > z, I should rank x higher than z.\n\nMy ranking should therefore reflect my preferences, while also considering the \"obtainable set\". I should rank my most preferred school first, followed by my next most preferred school, and so on.\n\nTherefore, I will rank the schools in the order of my preference: x > y > w > z. This strategy ensures that if x is obtainable, I will be matched to x. If x is not obtainable, but y is, I will be matched to y, and so on.",
+        "Student B": "My goal is to be matched with my most preferred school from the set of schools that would accept me. Since my priority at school x is 1 (highest), x is definitely in my \"obtainable set.\" My priority at school z is also 1 (highest), so z is also in my \"obtainable set.\" My priority at school w is 2, and my priority at school y is 2.\n\nMy preferences are x > w > z > y. Because x and z are definitely obtainable, I need to rank them according to my preferences. So, x > z.\n\nNow consider w and y. Since x and z are definitely obtainable, and I prefer x > w > z > y, I should rank x and z higher than w and y. Whether w or y is obtainable depends on the other students' applications, which I don't know. However, I prefer w > y. Therefore, I should rank w higher than y.\n\nMy complete ranking should be x > w > z > y. This ensures that if w becomes obtainable, I will be matched to w rather than z, and if y becomes obtainable, I will be matched to y only if x, w, and z are not obtainable.",
+        "Student C": "My goal is to be matched to the best school possible according to my preferences (x > w > z > y). My outcome is determined by my *priorities* at each school, not my ranking. The ranking I submit only affects which *obtainable* school I end up at.\n\nMy priorities at each school are:\n- w: 3\n- x: 3\n- y: 4\n- z: 4\n\nSince my priority at y and z are both 4, and my priorities at x and w are both 3, it means x and w are more competitive.\n\nGiven my preferences, I should rank the schools in my preference order: x > w > z > y. This is because any school that *would* accept me will accept me regardless of the order I submit. The only thing my ranking does is determine which of the schools that would accept me I actually get matched to. Therefore, the best strategy is to simply rank in preference order.",
+        "Student D": "My goal is to maximize my chances of getting my most preferred school, x, and avoid my least preferred school, y. The key insight is that my ranking only affects which *obtainable* school I get. So, I need to figure out which schools are potentially obtainable.\n\n*   **School x:** My priority at x is 4. Many applicants favor y > x > w > z. This means x is likely to be a popular choice, and my low priority might make it difficult to get in. However, I still want to list it first to maximize my chances if it *is* obtainable.\n\n*   **School z:** My priority at z is 3. This is better than my priority at x and w. Given the popularity of y and x, z might be a good option. I like z more than w and y, so I want to rank it high.\n\n*   **School w:** My priority at w is 4. This is the same as my priority at x, and I prefer z over w.\n\n*   **School y:** My priority at y is 3. I dislike y the most.\n\nTherefore, I should rank x first, since it's my top choice. Then I should rank z second, as it is my second favorite and has a decent priority. I should rank w third, as it is better than y. Finally, I should rank y last to minimize my chances of ending up there."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student A",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ],
+                "w": [
+                    "Student C"
+                ],
+                "y": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "z": "Student D",
+                "w": "Student C",
+                "y": "Student A"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

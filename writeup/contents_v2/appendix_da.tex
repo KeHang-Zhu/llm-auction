@@ -1,0 +1,233 @@
+% ---------------------------------------------------------------------------
+% Appendix: Robustness domain — two-sided matching (deferred acceptance).
+% Absorbs the DA material formerly in main-text §6 (per PI directive: auctions
+%   are the main domain; DA is the generalization check).
+% Sources: results/merged_ranking/da_cells.csv + da_cells_summary.md (all DA
+%   numbers, market-cluster bootstrap B=2000, numpy seed 1299; built by
+%   analysis/build_da_cells.py from the raw pipeline logs),
+%   results/merged_ranking/concordance.md (DA preservation indices, Kendall W),
+%   Engineering_simplicity/contents/appendix.tex:78-118 (Algorithm 1 + OSP
+%   interface, reuse), Engineering_simplicity/main.tex:126-214 (market
+%   construction) and main.tex:284,305-308 (metric + Type-1/2 definitions,
+%   observability caveat kept verbatim per plan §4).
+% ---------------------------------------------------------------------------
+\section{Robustness in a Second Domain: Two-Sided Matching}\label{app:da}
+
+Auctions are this paper's primary domain. This appendix replicates the full design exercise in a second dominant-strategy environment---school choice under student-proposing deferred acceptance (DA)---as a robustness and generalization check on the ranking of Section~\ref{sec:ranking}. The two domains share the property that truthful reporting is a dominant strategy, but differ in nearly everything else: the action space (a discrete rank-order list versus a near-continuous bid), the failure mode (pairwise ranking swaps versus dollar-valued shading), and the algorithmic structure behind the outcome (multi-round proposal-and-rejection dynamics versus a one-shot payment rule). A lever ranking that survived only in auctions could reflect idiosyncrasies of bidding; the DA replication shows that the ordering of design levers is a property of the agents, not of the auction. Indeed, the cross-model agreement on the lever ordering is \emph{stronger} in DA (Kendall's $W = 0.90$, $p = 4\times10^{-4}$) than in auctions ($W = 0.49$, $p = 0.046$; Section~\ref{sec:ranking-synthesis}).
+
+This appendix proceeds as follows. Section~\ref{app:da-market} recaps the environment and the two elicitation protocols. Section~\ref{app:da-results} reports the headline direct-versus-iterative comparison. Section~\ref{app:da-descriptions} reports the mechanism-description cells, including the menu-description variants that sharpen the paper's invariance-content finding, and Section~\ref{app:da-scaffolds} the reasoning-scaffold cells. Section~\ref{app:da-ranking} assembles the DA ranking. Section~\ref{app:da-accounting} defines the error metrics and gives the decision-level accounting behind the iterative protocol's ``zero misreports'' result, including its honest rescoping. Sections~\ref{app:da-osp} and~\ref{app:da-repro} document the OSP algorithm and the replication pipeline. All DA numbers in this paper are recomputed from the raw per-instance logs by \path{analysis/build_da_cells.py} (market-cluster percentile bootstrap, $B = 2000$, seed 1299); the cell means previously reported in the ES manuscript reproduce exactly. Cross-model figures are \emph{unweighted} means of per-model means throughout.\footnote{The distinction matters in one cell: GPT-4o's second-order-beliefs condition was run twice (100 markets rather than 50), so student-weighted pooling would give $7.5\%$ rather than the unweighted $9.1\%$ we report.}
+
+\subsection{Environment and Elicitation Protocols}\label{app:da-market}
+
+Each instance contains four students $i\in\{A,B,C,D\}$ and four schools $s\in\{w,x,y,z\}$ with unit capacity. To induce correlated demand across students while preserving idiosyncratic tastes, valuations follow an affiliated structure, $v_{i,s} = c_s + \varepsilon_{i,s}$, with a school-level common component $c_s \sim \mathrm{Unif}[40,70]$ and independent student--school shocks $\varepsilon_{i,s}\sim \mathrm{Unif}[0,20]$ (Table~\ref{tab:calibration-master}). Each student's \emph{true preference ranking} $\pi_i^{\star}$ is the descending sort of $\{v_{i,s}\}_s$, ties broken deterministically \citep{klijn2019static}. Schools rank students by fixed, Ergin-acyclic priority orders \citep{ergin2002efficient}, held constant across repetitions:
+\begin{align*}
+w:&\; A \succ B \succ C \succ D &
+x:&\; B \succ A \succ C \succ D \\
+y:&\; A \succ B \succ D \succ C &
+z:&\; B \succ A \succ D \succ C,
+\end{align*}
+creating a ``top tier'' $\{A,B\}$ and a ``bottom tier'' $\{C,D\}$ while ruling out priority cycles that would otherwise create long rejection chains. Acyclicity is the condition under which the proposer-optimal stable matching rule admits an OSP implementation for the proposing side \citep{ashlagi2018stable}. All students additionally observe a fixed ``global popularity'' ranking, $y \succ x \succ w \succ z$, intended to proxy common beliefs about demand; depending on the realized $v_{i,s}$, this signal may be aligned or misaligned with the instance's true preferences. Such beliefs should not change a student's report if the student understands that DA is strategy-proof---which is precisely what the belief scaffolds of Section~\ref{app:da-scaffolds} probe. For each condition and model we run 50 independent repetitions (distinct seeds for value draws; priorities and popularity signal fixed); instances dropped for unparseable output are rare and logged, and realized market counts per cell appear in \path{results/merged_ranking/da_cells.csv}.
+
+Two elicitation protocols implement the same matching rule. Under \emph{direct DA}, each student submits a complete rank-order list in one shot, after a description of the five-step student-proposing algorithm (base prompt in Appendix~\ref{app:prompts}); the pipeline then executes DA on the submitted lists. Under \emph{iterative DA}, no full list is ever elicited: the mechanism queries one student at a time with simple choices---either ``pick your most preferred school among this set'' or a yes/no offer with an explicit consequence guarantee---following the OSP decision-tree construction of \citet{ashlagi2018stable} (Algorithm~\ref{alg:osp-da} below). Direct DA is the domain's baseline; iterative DA is the domain's Family-A (extensive-form) lever, the analogue of the ascending clock.
+
+\subsection{Main Result: Direct versus Iterative DA}\label{app:da-results}
+
+Student-proposing DA is strategy-proof for the proposing side \citep{roth1982economics}, yet human subjects routinely misreport in practice; \citet{rees2018suboptimal}, for example, documents dominated rank-order lists in the National Resident Matching Program despite the mechanism being well known and the stakes substantial. DA is generally not OSP-implementable \citep{ashlagi2018stable}, but under Ergin-acyclic priorities an iterative query protocol implements the proposer-optimal stable matching in an OSP manner. To our knowledge, no prior work has experimentally tested an OSP implementation of DA with either human or LLM subjects.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.82\linewidth,height=0.84\textheight,keepaspectratio]{da_vs_osp.png}
+    \caption{Direct versus iterative (OSP) deferred acceptance across four model families. Each row is a model; the left column shows the distribution of normalized Kendall-$\tau$ error (fraction of pairwise ranking swaps relative to the true preference order) in direct DA, the right column in iterative DA. Dashed lines indicate means. All models misreport at nontrivial rates in direct DA; the iterative protocol eliminates every \emph{observable} misreport ($\mu = 0\%$ for all four models). See Section~\ref{app:da-accounting} for the decision-level accounting behind the $0\%$.}
+    \label{fig:da-osp}
+\end{figure}
+
+Table~\ref{tab:da-cells} collects every reported DA cell; Figure~\ref{fig:da-osp} shows the headline distributions. In direct DA, all four models misreport: mean Kendall-$\tau$ errors of $5.8\%$ (Claude), $7.6\%$ (Gemini), $1.0\%$ (GPT-4o), and $2.6\%$ (Gemma), for an unweighted cross-model mean of $4.2\%$. Though these error rates are not directly comparable to the auction deviations (which are measured in dollars), they can be consequential: under deferred acceptance, even small misreports can cascade through rejection chains and alter the final matching for $\Theta(n)$ participants \citep{dubins1981machiavelli}.
+
+The iterative protocol, by contrast, achieves perfect \emph{observed} truthfulness: $\mu = 0.0\%$ for all four models, with zero variance---a sharper correction than the ascending clock achieves in auctions, where the clock substantially improves but does not perfect bidding (Section~\ref{sec:ranking-extensive}). We see two candidate explanations. First, the decision space in DA is much smaller than in auctions: at most four options per query versus any tick on a bid grid. The smaller action space does not eliminate the need for contingent reasoning---models still err in direct DA---but once the iterative format simplifies the reasoning problem, the coarse action space may make it easier for models to land on the correct answer. Second, and relatedly, the coarse decision space also admits a coarse space for error detection: it may indeed be true that LLMs are making cognitive errors in the iterative format, but we cannot observe them as long as they accurately choose their most preferred school from a set. This caveat accompanies the $0\%$ result wherever it is quoted in this paper; Section~\ref{app:da-accounting} quantifies it with per-decision error rates, rule-of-three confidence bounds, and an alternative implementation of the same extensive form that turns out to \emph{expose} model-specific failures the pick-based protocol cannot see.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccc}
+\toprule
+& & \multicolumn{4}{c}{Mean Kendall-$\tau$ error, \% [95\% CI]} & \\
+\cmidrule(lr){3-6}
+Condition & Family & Claude & Gemini & GPT-4o & Gemma & Mean \\
+\midrule
+Direct DA (baseline) & --- & 5.8 [4.3, 7.5] & 7.6 [6.1, 9.2] & 1.0 [0.4, 1.7] & 2.6 [1.4, 4.0] & 4.2 \\
+\addlinespace
+\multicolumn{7}{l}{\emph{Descriptions (Section~\ref{app:da-descriptions})}} \\
+No explanation (\texttt{direct\_null}) & --- & 8.7 [6.7, 10.8] & 2.1 [1.3, 3.0] & 3.3 [2.3, 4.3] & 7.0 [5.2, 8.9] & 5.2 \\
+Menu, mechanics only & B1 & 6.7 [5.3, 8.2] & 3.1 [2.0, 4.2] & 4.2 [2.9, 5.7] & 13.7 [11.0, 16.7] & 6.9 \\
+Menu, invariance property & B1 & 2.1 [1.3, 3.0] & 0.3 [0.1, 0.7] & 0.3 [0.1, 0.7] & 4.2 [2.6, 6.1] & 1.8 \\
+Rejection Safety & B2 & 0.8 [0.3, 1.7] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.2 \\
+Textbook strategy-proofness & (advice) & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 \\
+\addlinespace
+\multicolumn{7}{l}{\emph{Reasoning scaffolds (Section~\ref{app:da-scaffolds})}} \\
+Payoff Tree & C1 & 2.0 [1.0, 3.1] & 2.8 [1.5, 4.3] & 0.6 [0.3, 1.0] & 1.3 [0.5, 2.4] & 1.7 \\
+One-step lookahead & C2 & 5.4 [4.1, 6.8] & 8.3 [6.6, 10.1] & 4.8 [3.4, 6.2] & 12.7 [10.5, 14.9] & 7.8 \\
+Two-step lookahead & C2 & 6.7 [5.2, 8.3] & 5.5 [4.1, 7.1] & 2.5 [1.7, 3.4] & 5.7 [4.6, 7.0] & 5.1 \\
+First-order beliefs & C3 & 8.2 [6.5, 10.0] & 4.8 [3.7, 6.1] & 3.6 [2.7, 4.6] & 3.9 [2.7, 5.3] & 5.1 \\
+Second-order beliefs & C3 & 13.1 [11.3, 14.8] & 7.1 [5.4, 8.9] & 1.7 [1.1, 2.3] & 14.3 [12.0, 16.6] & 9.1 \\
+\addlinespace
+\multicolumn{7}{l}{\emph{Extensive form (Sections~\ref{app:da-results} and~\ref{app:da-accounting})}} \\
+Iterative DA (OSP, pick protocol) & A & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 \\
+\bottomrule
+\end{tabular}
+\caption{All reported DA cells: mean normalized Kendall-$\tau$ error in percent, with market-cluster bootstrap $95\%$ confidence intervals ($B = 2000$, seed 1299); ``Mean'' is the unweighted cross-model mean. Models: Claude 3.5 Haiku, Gemini 2.0 Flash, GPT-4o, Gemma 27B. Most cells are 50 markets $\times$ 4 students; realized counts per cell (a few cells have 42--49 markets after parse-failure drops; GPT-4o second-order beliefs has 100) are recorded in \texttt{results/merged\_ranking/da\_cells.csv}. The textbook strategy-proofness cell states the dominant strategy outright and is therefore excluded from the lever ranking (see text). The iterative-DA $0.0\%$ is subject to the observability caveat quantified in Section~\ref{app:da-accounting}.}
+\label{tab:da-cells}
+\end{table}
+
+\subsection{Descriptions in DA: The Invariance Content Is the Active Ingredient}\label{app:da-descriptions}
+
+The description cells (Family B; prompts in Appendix~\ref{app:prompts}) replicate, and sharpen, the auction-domain finding of Section~\ref{sec:ranking-descriptions}: what moves behavior is not additional text about the mechanism but text that states the \emph{invariance} making truthful play safe.
+
+\paragraph{Safety-exposing description (B2).} The \emph{Rejection Safety} description states the property that distinguishes DA from the Boston mechanism \citep{abdulkadirouglu2003school}: rejections only redirect, never eliminate---a rejection from a school does not hurt the student's chances at her next-ranked school. It nearly eliminates misreporting, from $4.2\%$ to $0.2\%$ pooled (Claude $5.8\% \to 0.8\%$ $[0.3, 1.7]$; Gemini, GPT-4o, and Gemma all to exactly $0.0\%$)---comparable to the full OSP implementation without touching the extensive form.
+
+\paragraph{Menu descriptions (B1) split by content.} \citet{gonczarowski2023strategyproofness} propose describing a strategy-proof mechanism through the \emph{menu} it induces: given others' reports, a student faces a fixed set of obtainable schools, and her report selects from that set. We implement two variants that bracket the informational content of this idea. The \emph{invariance-property} variant states the menu's incentive content explicitly (``your ranking \emph{cannot change} your obtainable set; it only determines which school you receive within it''). The \emph{mechanics} variant restates the same construction procedurally (``Step 1: the mechanism computes your obtainable schools. Step 2: you receive the school you ranked highest among them'') without asserting the invariance. The two variants move behavior in opposite directions:
+\begin{itemize}
+    \item \emph{Menu with the invariance property improves play}, behaving like a safety-exposing description: pooled error falls from $4.2\%$ to $1.8\%$ (Mann--Whitney $p < 10^{-4}$), with large significant gains for the two weak-baseline models (Claude $5.8\% \to 2.1\%$, MW $p = 10^{-4}$; Gemini $7.6\% \to 0.3\%$, $p < 10^{-4}$) and null effects for the models already near truthful (GPT-4o $p = 0.23$; Gemma $p = 0.43$).
+    \item \emph{Menu mechanics alone worsens play}: pooled error rises from $4.2\%$ to $6.9\%$ ($p < 10^{-4}$), driven by GPT-4o ($1.0\% \to 4.2\%$) and especially Gemma ($2.6\% \to 13.7\%$). Restating the outcome computation gives the models material to strategize over without the property that would make strategizing pointless.
+\end{itemize}
+In auctions the menu restatement is null on average and sign-mixed across models (Section~\ref{sec:ranking-descriptions}); the DA data explain why: the standard menu text bundles a computation with an invariance, and only the invariance helps. Where the auction cell delivers the bundle and finds nothing, the DA cells unbundle it and find two opposing effects.
+
+\paragraph{Diagnostic ceiling: the textbook statement.} A \emph{textbook strategy-proofness} description---a plain statement that submitting one's true ranking is optimal regardless of what others do---produces $0.0\%$ error for \emph{all four} models, marginally below even Rejection Safety ($0.2\%$). This cell reveals the dominant strategy outright, so it is excluded from the lever ranking (it is advice, not a simplicity-preserving lever; cf.\ Table~\ref{tab:intervention-inventory-da}), but it serves as a useful ceiling: when told the answer, every model complies perfectly, confirming that baseline misreporting reflects a failure to \emph{derive} strategy-proofness rather than an inability to execute a truthful report.
+
+\paragraph{Removing the explanation.} Conversely, a \emph{null} description that states the rules with no explanation of the algorithm shifts play heterogeneously (pooled $4.2\% \to 5.2\%$, MW $p = 0.03$): it worsens Claude ($8.7\%$), GPT-4o ($3.3\%$), and Gemma ($7.0\%$) but \emph{improves} Gemini ($2.1\%$)---description content interacts with model-specific priors rather than acting uniformly.
+
+\paragraph{Robustness: cardinal presentation.} An earlier variant of the grid presented raw dollar values (``$w = \$72$, $x = \$61$, \ldots'') instead of a sorted preference ordering, forcing the model to derive its own ranking. Baseline errors rise by an order of magnitude ($12$--$24\%$ across models), and the description split replicates: the invariance-property menu again produces the large improvement (Gemini $18.8\% \to 1.2\%$; GPT-4o $11.9\% \to 1.9\%$) while the mechanics variant barely moves the needle. The cardinal variant is incomplete (several cells were not run) and is documented, cell by cell, in \path{results/merged_ranking/da_cells.csv} (\texttt{variant=da\_cardinal}).
+
+\subsection{Reasoning Scaffolds in DA}\label{app:da-scaffolds}
+
+The scaffold cells (Family C) hold the direct mechanism and its description fixed and append a mode of reasoning (prompts in Appendix~\ref{app:prompts}).
+
+\paragraph{Contingent reasoning (C1) helps.} The \emph{Payoff Tree} scaffold, which lays out DA's accept/reject branches as a tree of possibilities, reduces mean error from $4.2\%$ to $1.7\%$, with improvement in every model: Claude $5.8\% \to 2.0\%$, Gemini $7.6\% \to 2.8\%$, GPT-4o $1.0\% \to 0.6\%$, Gemma $2.6\% \to 1.3\%$. As in auctions, making the payoff-relevant contingencies visible---without saying what to do---closes roughly half the gap to the OSP benchmark.
+
+\paragraph{Forward planning (C2) backfires.} DA is the natural domain for forward-planning scaffolds, because its algorithm processes the submitted ranking through multiple proposal-and-rejection rounds \citep{pycia2023theory}; the sealed-bid auction has no analogous internal dynamics, so C2 runs in DA only (Section~\ref{sec:framework}). Prompting one-step lookahead (``if you are rejected from your first choice, which school would you propose to next?'') \emph{worsens} play from $4.2\%$ to $7.8\%$, with the damage concentrated in GPT-4o ($1.0\% \to 4.8\%$) and Gemma ($2.6\% \to 12.7\%$); two-step lookahead worsens it to $5.1\%$. If models recognized that DA is strategy-proof, lookahead would be irrelevant; because they do not, simulating rejection dynamics gives them material to strategize with, not the ability to strategize well. The dose--response is non-monotone (one-step $7.8\%$, two-step $5.1\%$, and an unreported full-simulation variant pools near $3.8\%$), so the C2 rung's magnitude---though not its sign---is sensitive to the lookahead depth; we use the one-step cell as the canonical C2 mark.
+
+\paragraph{Belief scaffolds (C3) backfire, second order worse than first.} Making opponents' reports salient moves error from $4.2\%$ to $5.1\%$ (first-order) and $9.1\%$ (second-order). The deterioration is consistent for three of the four models, with Gemma the most susceptible ($2.6\% \to 14.3\%$ under second-order beliefs) and Gemini essentially immune in both domains---in DA it even improves slightly. Since the dominant strategy is belief-independent, any movement here measures a failure to internalize strategy-proofness; the same pattern, with the same model heterogeneity, appears in the auction cells (Section~\ref{sec:ranking-scaffolds}).
+
+\paragraph{Preference framings (D).} The risk- and loss-framing battery is reported in Appendix~\ref{app:prospect}; in DA the risk-averse persona is the single most destructive lever (pooled error $18.8\%$), anchoring the bottom of the ranking below.
+
+\subsection{The DA Ranking}\label{app:da-ranking}
+
+Table~\ref{tab:da-ranking} assembles the DA cells into the domain's ranking using the preservation index $\rho$, defined as $1 - D(\text{lever})/D(\text{baseline})$ and computed within model (Section~\ref{sec:metrics}). The tier structure of Section~\ref{sec:ranking-synthesis} reproduces: the extensive-form lever at the top; safety-exposing content (Rejection Safety, and the menu variant that carries the invariance property) and the payoff tree in a strong second tier; mechanical restatement null-to-harmful; strategizing scaffolds and the risk-averse persona at the bottom. Agreement across the four models on this ordering is high (Kendall's $W = 0.90$, $\chi^2(8) = 28.7$, $p = 4\times10^{-4}$)---tighter than in the auction domain ($W = 0.49$)---and the one within-tier flip is the expected one: safety beats the payoff tree in all four DA cells, while the tree beats safety in three of four auction cells, consistent with keeping B2 and C1 in a single tier with no within-tier order asserted.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llc cccc}
+\toprule
+& & $D$ (mean $\tau$ & \multicolumn{4}{c}{Preservation index $\rho$ (DA)} \\
+\cmidrule(lr){4-7}
+Lever & Family & error, \%) & GPT-4o & Claude & Gemini & Gemma \\
+\midrule
+Iterative DA (OSP) & A & 0.0 & $+1.00^{a}$ & $+1.00^{a}$ & $+1.00^{a}$ & $+1.00^{a}$ \\
+Rejection Safety & B2 & 0.2 & $+1.00$ & $+0.86$ & $+1.00$ & $+1.00$ \\
+Menu, invariance property & B1 & 1.8 & $+0.67$ & $+0.64$ & $+0.96$ & $-0.65$ \\
+Payoff Tree & C1 & 1.7 & $+0.42$ & $+0.65$ & $+0.63$ & $+0.48$ \\
+\midrule
+Baseline (direct DA) & --- & 4.2 & 0 & 0 & 0 & 0 \\
+\midrule
+First-order beliefs & C3 & 5.1 & $-2.58$ & $-0.42$ & $+0.36$ & $-0.51$ \\
+Second-order beliefs & C3 & 9.1 & $-0.67$ & $-1.28$ & $+0.06$ & $-4.54$ \\
+One-step lookahead$^{b}$ & C2 & 7.8 & $-3.75$ & $+0.06$ & $-0.10$ & $-3.91$ \\
+Menu, mechanics only & B1 & 6.9 & $-3.17$ & $-0.17$ & $+0.59$ & $-4.32$ \\
+Risk-averse persona & D & 18.8 & $-20.25$ & $-2.45$ & $-1.20$ & $-5.81$ \\
+\bottomrule
+\end{tabular}
+\caption{The DA lever ranking. $D$ = unweighted cross-model mean Kendall-$\tau$ error (Table~\ref{tab:da-cells}); $\rho = 1 - D(\text{lever})/D(\text{baseline})$ computed within model against the same model's direct-DA baseline (bootstrap procedure and pooled cross-domain values in Section~\ref{sec:ranking-synthesis}; per-cell inputs in \texttt{results/merged\_ranking/da\_cells.csv}). Because GPT-4o's DA baseline error is only $1.0\%$, its negative $\rho$ magnitudes are ratio-unstable (a treatment error of a few percent produces an extreme ratio); ranks are unaffected. $^{a}$Censored at the ranking metric: the $\tau$ statistic records zero error by construction on single-pick revealed sequences; see the decision-level accounting of Section~\ref{app:da-accounting}. $^{b}$Canonical C2 mark; the two-step cell gives milder but same-signed values. The textbook strategy-proofness cell ($0.0\%$) is excluded as advice rather than a simplicity-preserving lever.}
+\label{tab:da-ranking}
+\end{table}
+
+\subsection{Error Metrics, Decision-Level Accounting, and Observability}\label{app:da-accounting}
+
+\paragraph{Direct DA: normalized Kendall-$\tau$ error.} In direct DA, student $i$ submits a complete rank-order list $\pi_i$ over the four schools. We measure misreporting as the normalized Kendall-$\tau$ distance between the submitted list and the true preference ranking,
+\[
+d_K(\pi_i, \pi_i^{\star}) \;=\; \frac{\#\bigl\{(s,s') : \pi_i \text{ and } \pi_i^{\star} \text{ order } s,s' \text{ differently}\bigr\}}{\binom{4}{2}},
+\]
+i.e., the fraction of the six school pairs that are swapped relative to the truth, reported in percent (0\% = truthful report; 100\% = fully reversed list). This is the DA analogue of the auction deviation metrics in Section~\ref{sec:metrics}: like SMAD, it is a scale-free deviation from the dominant-strategy benchmark.
+
+\paragraph{Tie robustness.} Seventeen percent of simulated students have at least one pair of schools with exactly tied values. The primary metric breaks ties deterministically, so swapping two equal-valued schools counts as an ``error'' even though the report is payoff-equivalent to the truth. A tie-robust variant that scores only strict-value inversions is systematically, but only slightly, lower (pooled direct baseline $4.2\% \to 4.1\%$; column \texttt{mean\_tau\_tierobust\_pct} in the cells CSV); no qualitative conclusion changes. The tie artifact matters more for the decision-level flags below: the pipeline's original per-student truthfulness recorder scores a pick between equal-valued schools as untruthful, and \emph{every} misreport it recorded for Claude, Gemini, and GPT-4o in the iterative baseline (5, 10, and 11 students respectively) is such a tie. All decision-level accounting in this paper is therefore tie-tolerant: a pick is truthful if and only if its value equals the maximum over the available set.
+
+\paragraph{Iterative DA: Type-1 and Type-2 misreports.} In the iterative protocol, students may never be asked to reveal their entire rank-order list, so we count misreports over the smaller set of revealed decisions. At pick nodes, a misreport is choosing any school whose value is strictly below the maximum among the available set (``informative'' decisions exclude forced picks from singleton sets). At binary yes/no nodes we classify deviations as:
+\begin{itemize}
+    \item \textbf{Type-1 misreport} (\emph{false rejection}): answering NO when the offered school \emph{is} the unique value-maximum among the remaining set;
+    \item \textbf{Type-2 misreport} (\emph{false acceptance}): answering YES when a strictly more preferred school is still available.
+\end{itemize}
+Type-1 and Type-2 rates use the respective opportunity denominators (truthful-YES and truthful-NO nodes). When zero errors are observed in $n$ decisions, we report the rule-of-three one-sided $95\%$ upper confidence bound of $3/n$ on the per-decision error rate.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4.5pt}
+\begin{tabular}{llccccc}
+\toprule
+Model & Protocol & Decisions & Misreports & Type-1 & Type-2 & 95\% UB \\
+\midrule
+\multicolumn{7}{l}{\emph{Pick-based protocol (\texttt{osp\_baseline}; the paper's iterative-DA cells)}} \\
+Claude 3.5 Haiku & pick & 346 & 0 (0.0\%) & --- & --- & 0.87\% \\
+Gemini 2.0 Flash & pick & 351 & 0 (0.0\%) & --- & --- & 0.85\% \\
+GPT-4o & pick & 325 & 0 (0.0\%) & --- & --- & 0.92\% \\
+Gemma 27B & pick & 322 & 5 (1.6\%) & --- & --- & --- \\
+\addlinespace
+\multicolumn{7}{l}{\emph{Ashlagi--Gonczarowski yes/no tree (\texttt{osp\_yesno\_fixed})}} \\
+Claude 3.5 Haiku & yes/no & 194 & 16 (8.2\%) & 13/54 (24.1\%) & 2/75 (2.7\%) & --- \\
+Gemini 2.0 Flash & yes/no & 179 & 0 (0.0\%) & 0/54 (0.0\%) & 0/68 (0.0\%) & 1.68\% \\
+GPT-4o & yes/no & 188 & 0 (0.0\%) & 0/55 (0.0\%) & 0/71 (0.0\%) & 1.60\% \\
+Gemma 27B & yes/no & 210 & 3 (1.4\%) & 3/62 (4.8\%) & 0/77 (0.0\%) & --- \\
+\bottomrule
+\end{tabular}
+\caption{Decision-level error accounting for the iterative DA protocols (tie-tolerant; see text). ``Decisions'' counts informative revealed decisions, excluding forced picks from singleton choice sets; ``Type-1'' = false rejections, ``Type-2'' = false acceptances; ``95\% UB'' is the rule-of-three upper bound. In the pick protocol every node is a pick; in the yes/no tree, misreports decompose into Type-1 (false rejection at a truthful-YES node) and Type-2 (false acceptance at a truthful-NO node), with the number of opportunity nodes as denominators. Rule-of-three $95\%$ upper bounds ($3/n$) are reported only for zero-error cells. Market counts per cell: 45--49 (pick), 36--43 (yes/no) after parse-failure drops. An intermediate yes/no run (\texttt{osp\_yesno}) logged only the derived pick per round, not the underlying answers, so its errors cannot be split into Type-1/Type-2; it was superseded by the run shown here. Source: \texttt{results/merged\_ranking/da\_cells.csv}.}
+\label{tab:da-decisions}
+\end{table}
+
+\paragraph{What the accounting shows.} Table~\ref{tab:da-decisions} refines the headline in three ways. First, for the pick-based protocol---the implementation behind every iterative-DA number in this paper---the zero is exact at the decision level for Claude, Gemini, and GPT-4o: no value-inconsistent pick in 346, 351, and 325 informative decisions, bounding the per-decision error rate below $0.87\%$, $0.85\%$, and $0.92\%$ respectively. Second, Gemma is \emph{not} error-free: it makes 5 strict-value pick errors ($1.6\%$ of decisions) that the Kendall-$\tau$ metric cannot see, because a single revealed pick generates no rankable pairs---a concrete instance of the observability caveat. Third, implementation details of the \emph{same} extensive form matter: in the yes/no-question tree of \citet{ashlagi2018stable}, Gemini and GPT-4o remain perfectly truthful (upper bounds $1.68\%$ and $1.60\%$), but Claude exhibits a large, systematic Type-1 failure---it falsely rejects its top remaining school at $24.1\%$ of truthful-YES nodes (13 of 54), for example declining an immediate match to its highest-valued school---and Gemma shows a milder $4.8\%$ Type-1 rate. The paper's ``zero observable misreports'' claim is therefore scoped precisely: it is exact for the pick-based protocol in three of four models, and it is a statement about a protocol, not about cognition. Obviousness in the sense of \citet{li2017obviously} is a property of the game tree; these results show that for LLM agents the \emph{query format} at each node---pick-from-set versus accept/reject---can make or break the behavioral guarantee the tree is designed to deliver.
+
+\subsection{The Iterative OSP Protocol}\label{app:da-osp}
+
+Our OSP implementation for DA follows the decision-tree construction of \citet{ashlagi2018stable}, which provides an OSP mechanism for student-proposing DA under Ergin-acyclic priority profiles. Rather than asking the LLM to submit a full ranking, the mechanism queries \emph{one student at a time} with binary yes/no offers about individual schools, each accompanied by an explicit guarantee of what happens under either response (the query prompt is Figure~\ref{fig:prompt-da-osp-yesno} in Appendix~\ref{app:prompts}). Algorithm~\ref{alg:osp-da} summarizes the procedure.
+
+\begin{algorithm}[H]
+\caption{OSP Decision Tree for DA under Acyclic Priorities \citep{ashlagi2018stable}}
+\label{alg:osp-da}
+\begin{algorithmic}[1]
+\Procedure{RunOSPTree}{students, schools, priorities}
+  \If{students $= \emptyset$}
+    \State \Return matches
+  \EndIf
+  \State $\text{top\_by\_school} \gets \{s : \arg\min_{\text{priority}} \text{students at } s\}$ for each remaining school $s$
+  \State $\text{top\_students} \gets \text{unique}(\text{top\_by\_school.values})$
+  \If{$|\text{top\_students}| = 1$} \Comment{Serial dictatorship node}
+    \State $s^* \gets$ the single top-priority student
+    \State $w \gets$ \Call{AskPickTop}{$s^*$, schools} \Comment{Use \texttt{da\_osp\_choice} prompt}
+    \State Assign $s^*$ to $w$
+    \State \Return \Call{RunOSPTree}{students $\setminus \{s^*\}$, schools $\setminus \{w\}$, priorities}
+  \EndIf
+  \State Let $a, b \gets \text{top\_students}$ \Comment{$|\text{top\_students}| = 2$ under acyclicity}
+  \For{each school $w$ where $\text{top\_by\_school}[w] = a$ (in fixed order)}
+    \If{\Call{AskYesNo}{$a$, $w$, fallback $=$ schools}} \Comment{Use \texttt{da\_osp\_yesno} prompt}
+      \State Assign $a$ to $w$
+      \State \Return \Call{RunOSPTree}{students $\setminus \{a\}$, schools $\setminus \{w\}$, priorities}
+    \EndIf
+  \EndFor
+  \For{each school $w$ where $\text{top\_by\_school}[w] = b$ (in fixed order)}
+    \If{\Call{AskYesNo}{$b$, $w$, fallback $=$ schools}}
+      \State Assign $b$ to $w$
+      \State \Return \Call{RunOSPTree}{students $\setminus \{b\}$, schools $\setminus \{w\}$, priorities}
+    \EndIf
+  \EndFor
+  \State $w_a \gets$ \Call{AskPickTop}{$a$, schools}; assign $a$ to $w_a$
+  \State $w_b \gets$ \Call{AskPickTop}{$b$, schools $\setminus \{w_a\}$}; assign $b$ to $w_b$
+  \State \Return \Call{RunOSPTree}{students $\setminus \{a,b\}$, schools $\setminus \{w_a, w_b\}$, priorities}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+At each node, the mechanism provides an ``obviousness witness'': answering YES yields an immediate match to the offered school, while answering NO keeps all remaining schools (including the offered one) available. This ensures that if the offered school is the student's true top choice among remaining options, YES weakly dominates NO, and vice versa---making truthful play obvious without contingent reasoning. When only one top-priority student remains, the protocol reduces to serial dictatorship: the student simply picks their most preferred school from the remaining set (\texttt{da\_osp\_choice}). The protocol terminates when all students are matched. The two protocol variants of Table~\ref{tab:da-decisions} differ only in the query format at the tree's nodes---pick-from-set throughout (\texttt{osp\_baseline}) versus explicit yes/no offers (\texttt{osp\_yesno\_fixed})---holding the tree itself fixed.
+
+\subsection{Reproducibility}\label{app:da-repro}
+
+The complete DA pipeline is included in the repository under \path{Engineering_simplicity/engineer_simplicity-main/}. Mechanism and elicitation code lives in \path{src/util_da.py} and \path{src/main_da.py} (with unit tests for the DA algorithm in \path{src/test_da.py}); there is one YAML configuration per model $\times$ condition under \path{configs_da/{gpt4o,claude,gemini,gemma}/}; and per-condition logs under \path{experiment_logs/da/<model>/<condition>/}, each containing the exact \path{config.yaml} used, the rendered prompts (\path{prompts/}), and one JSON record per market instance (\path{raw_data/}) with true rankings, raw model responses, parsed decisions, the full DA trace (proposals, holds, and rejections by round), and final matches---allowing exact replay and audit of every step from value generation to matching outcome. Every DA cell reported in this paper is recomputed from those raw records by \path{analysis/build_da_cells.py}, which emits \path{results/merged_ranking/da_cells.csv} (one row per variant $\times$ model $\times$ condition, with naive and bootstrap standard errors, cluster-bootstrap confidence intervals, tie-robust means, and the decision-level counts of Table~\ref{tab:da-decisions}); the manuscript's numbers are read from that file.

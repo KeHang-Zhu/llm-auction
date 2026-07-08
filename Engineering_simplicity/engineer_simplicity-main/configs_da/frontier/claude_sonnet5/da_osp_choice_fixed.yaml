@@ -1,0 +1,39 @@
+# FRONTIER battery cell — generated 2026-07 per plan/FRONTIER_RUNBOOK.md.
+# Cloned from configs_da/gpt4o/da_osp_baseline.yaml; only the llm block and output_dir changed.
+# Pick-protocol OSP with fixed global ranking; experiment name and condition folder kept as 'osp_baseline' so build_da_cells.py aligns it with the existing four-model cells.
+
+experiment:
+  name: "da_osp_baseline"
+  version: "V1"
+  description: "OSP mechanism DA with sequential choice queries"
+
+da:
+  number_students: 4
+  number_schools: 4
+
+mechanism:
+  mechanism_type: "osp"
+  intervention_type: "baseline"
+  special_name: "da_osp_choice.txt"
+
+value:
+  common_range: [40, 70]
+  private_range: 20
+  seed_base: 3000
+
+llm:
+  # Exact Anthropic API model id (current-generation Sonnet; aliases carry no date suffix).
+  model: claude-sonnet-5
+  service_name: anthropic
+  temperature: 0.5
+prompt:
+  templates_dir: "rule_template/DA/"
+
+global_ranking:
+  strategy: "fixed"
+
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 4
+  output_dir: "experiment_logs/da/claude_sonnet5/osp_baseline"

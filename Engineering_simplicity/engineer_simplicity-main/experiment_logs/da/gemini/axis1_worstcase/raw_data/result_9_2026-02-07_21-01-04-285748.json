@@ -1,0 +1,212 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 63,
+            "x": 44,
+            "y": 52,
+            "z": 82
+        },
+        "Student B": {
+            "w": 48,
+            "x": 60,
+            "y": 46,
+            "z": 80
+        },
+        "Student C": {
+            "w": 53,
+            "x": 53,
+            "y": 61,
+            "z": 79
+        },
+        "Student D": {
+            "w": 61,
+            "x": 44,
+            "y": 47,
+            "z": 69
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "x",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 63,
+        "Student B": 80,
+        "Student C": 53,
+        "Student D": 47
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student B": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ],
+        "Student C": [
+            "z",
+            "y",
+            "w",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "w",
+            "y",
+            "x"
+        ]
+    },
+    "reasoning": {
+        "Student A": "I need to consider the worst-case scenario to determine the minimum set of schools I can be matched with, regardless of what other students do. My priority at each school is: w: 1, x: 2, y: 1, z: 2. Most applicants favor y > x > w > z.\n\nSchool w: I have priority 1. In the worst case, I will be tentatively accepted.\nSchool x: I have priority 2. In the worst case, someone else with priority 1 will be tentatively accepted.\nSchool y: I have priority 1. In the worst case, I will be tentatively accepted.\nSchool z: I have priority 2. In the worst case, someone else with priority 1 will be tentatively accepted.\n\nTherefore, in the worst case, I'm guaranteed to be tentatively accepted by schools w and y. Thus, the minimum set of schools I could be matched with is {w, y}. My ranking should prioritize my true preferences within this set, and then consider the other schools.\n\nMy true preference is z > w > y > x. Given the worst-case analysis, I should prioritize w and y over x and z. Between w and y, I prefer w. Thus, I should rank w highest. My next highest preference is y, so I should rank y second. Between z and x, I prefer z, so I should rank z third and x last.\n\nTherefore, my ranking should be w > y > z > x.",
+        "Student B": "I want to maximize my chances of getting my most preferred school. My true preferences are z > x > w > y.\n\n*   **School z:** I have priority 1 at z. This is great! I should definitely rank z highly.\n*   **School x:** I have priority 1 at x. This is also great! I should definitely rank x highly.\n*   **School w:** I have priority 2 at w. It's better than nothing, but not great.\n*   **School y:** I have priority 2 at y, and I dislike y the most.\n\nNow, the question is: should I rank z or x first? Since I have top priority at both, it doesn't *really* matter which I put first, as I should get whichever one I rank higher if it's available. However, if I put z first, and z is oversubscribed, I'll get rejected and go to x. If I put x first, and x is oversubscribed, I'll get rejected and go to z.\n\nGiven that most applicants seem to favor y > x > w > z, it seems likely that z will be *less* competitive than x. Therefore, I should rank z first. This way, if I don't get z, I'll fall back to x, which I also have top priority at.\n\nThen, I should rank w over y, since I prefer w to y.\n\nTherefore, my ranking should be z > x > w > y.",
+        "Student C": "My goal is to be matched to the best school possible, given my preferences and priorities. I need to consider the worst-case scenario to determine the minimum set of schools I could be matched with.\n\nSchool z: My priority at z is 4, which is relatively low. Given that most applicants favor y > x > w > z, there's a good chance z will be oversubscribed with higher-priority students.\n\nSchool y: My priority at y is also 4, which is relatively low. Since most applicants favor y, y is likely to be very competitive.\n\nSchool w: My priority at w is 3. This is better than my priority at y and z.\n\nSchool x: My priority at x is 3. This is the same as my priority at w.\n\nWorst-case scenario: y and z are oversubscribed with higher-priority students. In this case, I would only be able to get into w or x.\n\nConsidering the possibility that w and x might also be oversubscribed, it's still best to rank my true preferences first. This is because if I rank w or x higher than y or z, I might get matched to w or x even if I could have gotten into y or z.\n\nTherefore, I will rank the schools according to my true preferences: z > y > w > x. This strategy ensures that I will be matched to the best school possible, given my priorities and the preferences of other students.",
+        "Student D": "I want to be matched to the best school possible, given my preferences and priorities. My preference ordering is z > w > y > x. My priorities are w: 4, x: 4, y: 3, z: 3.\n\nLet's consider the worst-case scenario for each school:\n\n*   **z:** My priority is 3. It's possible that two other students rank z highly and have higher priority than me. In this case, I might not get z even if I rank it first.\n*   **w:** My priority is 4. It's possible that three other students rank w highly and have higher priority than me. In this case, I might not get w even if I rank it second.\n*   **y:** My priority is 3. It's possible that two other students rank y highly and have higher priority than me. In this case, I might not get y even if I rank it third.\n*   **x:** My priority is 4. It's possible that three other students rank x highly and have higher priority than me. In this case, I might not get x even if I rank it last.\n\nSince my goal is to get the best possible school, I should rank them in order of my preference, regardless of my priority at each school. This is because the deferred acceptance algorithm guarantees a stable matching, which means I can't improve my outcome by misrepresenting my preferences.\n\nTherefore, I should rank the schools in the order of my true preference: z > w > y > x."
+    },
+    "truthfulness": {
+        "Student A": false,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student B",
+                    "Student D",
+                    "Student C"
+                ],
+                "w": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ],
+                [
+                    "Student C",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A",
+                "y": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "y": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 4,
+            "proposals": {
+                "x": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A",
+                "y": "Student D",
+                "x": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

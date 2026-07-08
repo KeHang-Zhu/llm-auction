@@ -1,0 +1,195 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 71,
+            "x": 77,
+            "y": 72,
+            "z": 64
+        },
+        "Student B": {
+            "w": 63,
+            "x": 89,
+            "y": 64,
+            "z": 76
+        },
+        "Student C": {
+            "w": 75,
+            "x": 82,
+            "y": 57,
+            "z": 74
+        },
+        "Student D": {
+            "w": 64,
+            "x": 79,
+            "y": 73,
+            "z": 64
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 72,
+        "Student B": 89,
+        "Student C": 75,
+        "Student D": 64
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my utility, given that I will be assigned to my most preferred school among my \"Obtainable Schools.\" Since the set of \"Obtainable Schools\" is fixed regardless of my ranking, I should simply rank the schools according to my true preferences. My values are w = $71, x = $77, y = $72, z = $64. Therefore, my preference order is x > y > w > z.",
+        "Student B": "My goal is to maximize my value, given the constraints of the mechanism. The key constraint is that my ranking only affects which school I get *within* my \"Obtainable Schools\" set. It *cannot* change what schools are in that set. Therefore, I want to rank the schools in descending order of my value for them, because that will guarantee I get the best school *within* my obtainable set.\n\nMy values are: w = $63, x = $89, y = $64, z = $76. Therefore, I should rank them x > z > y > w.",
+        "Student C": "My goal is to maximize my value, which means getting the school with the highest value among my obtainable schools. The key property of this mechanism is that my ranking *only* determines which school I receive *within* my set of obtainable schools. It *cannot* change what's in my obtainable schools.\n\nGiven this, I should rank the schools in order of my true preferences. Since my ranking doesn't affect *which* schools I can get, but only *which one I get if I can get multiple*, ranking truthfully guarantees that I'll get my most preferred school among the obtainable set.\n\nMy values are: x = $82, w = $75, z = $74, y = $57. Therefore, my true preference ranking is x > w > z > y.",
+        "Student D": "My goal is to maximize my value, given the constraint that my ranking can only influence which school I get *within* my set of obtainable schools. Since the obtainable schools are fixed regardless of my ranking, I should simply rank the schools according to my true preferences. My values are x = $79, y = $73, w = $64, and z = $64. Therefore, I should rank x > y > w > z."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student C",
+                    "Student A",
+                    "Student B",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student A",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "y": [
+                    "Student A",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student C",
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "w": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student C",
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student C",
+                "y": "Student A",
+                "z": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

@@ -1,0 +1,174 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 73,
+            "x": 60,
+            "y": 43,
+            "z": 60
+        },
+        "Student B": {
+            "w": 72,
+            "x": 54,
+            "y": 55,
+            "z": 62
+        },
+        "Student C": {
+            "w": 67,
+            "x": 50,
+            "y": 56,
+            "z": 52
+        },
+        "Student D": {
+            "w": 60,
+            "x": 64,
+            "y": 52,
+            "z": 65
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "y",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 73,
+        "Student B": 62,
+        "Student C": 56,
+        "Student D": 64
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "z",
+            "y"
+        ],
+        "Student B": [
+            "w",
+            "z",
+            "y",
+            "x"
+        ],
+        "Student C": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my utility, given that I will be assigned my most preferred school within my \"Obtainable Schools.\" The key is understanding that my ranking only affects *which* school I get *within* that set, not *what* schools are in that set.\n\nI value w at $73, x at $60, y at $43, and z at $60. My priorities are w: 1, x: 2, y: 1, z: 2.\n\nSince my ranking *cannot* change what is in my Obtainable Schools, I should simply rank the schools according to my true preferences. This is because, no matter what my Obtainable Schools are, I will always get my most preferred school *within* that set. Ranking strategically will not change the contents of the set, only which element I get.\n\nTherefore, I should rank w > x > z > y, based solely on my stated values. Note that x and z have the same value, but I arbitrarily chose to rank x higher.",
+        "Student B": "My goal is to maximize my utility, given that my ranking only affects which school I get *within* my obtainable set. I need to consider both my values for each school and my priority at each school.\n\nSince my ranking doesn't change my \"Obtainable Schools,\" I should simply rank the schools in order of my true preferences. My values are w = $72, x = $54, y = $55, z = $62. Therefore, I prefer w > z > y > x.\n\nTherefore, I will rank the schools w > z > y > x.",
+        "Student C": "My goal is to maximize my value, given the constraints of the matching mechanism. The key insight is that my ranking only determines which school I get *within* my \"Obtainable Schools\" set. It doesn't change what schools are in that set. Therefore, I should rank the schools according to my true preferences, because that will guarantee I get the best possible outcome *given* which schools are available to me.\n\nMy values are: w = $67, x = $50, y = $56, z = $52. So my true preference order is w > y > z > x.\n\nTherefore, I will rank the schools w > y > z > x.",
+        "Student D": "My goal is to maximize my value, which means getting the best school possible given the constraints. The key property is that my ranking only affects *which* school I get *within* my \"Obtainable Schools,\" and *not* the set of schools itself. Therefore, I should rank the schools in order of my true preferences. This guarantees that I will get my most preferred school among the set of schools that I could possibly be matched with.\n\nMy true preferences are based on the values provided: z ($65) > x ($64) > w ($60) > y ($52). Therefore, I should rank them in that order."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student C",
+                    "Student A",
+                    "Student B"
+                ],
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ],
+                [
+                    "Student B",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student C"
+                ],
+                "z": [
+                    "Student B"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "y": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "y": "Student C",
+                "x": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

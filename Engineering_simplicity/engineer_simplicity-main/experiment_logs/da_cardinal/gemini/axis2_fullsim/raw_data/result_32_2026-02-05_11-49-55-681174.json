@@ -1,0 +1,155 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 73,
+            "x": 60,
+            "y": 43,
+            "z": 60
+        },
+        "Student B": {
+            "w": 72,
+            "x": 54,
+            "y": 55,
+            "z": 62
+        },
+        "Student C": {
+            "w": 67,
+            "x": 50,
+            "y": 56,
+            "z": 52
+        },
+        "Student D": {
+            "w": 60,
+            "x": 64,
+            "y": 52,
+            "z": 65
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "y",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 73,
+        "Student B": 62,
+        "Student C": 56,
+        "Student D": 64
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "z",
+            "y"
+        ],
+        "Student B": [
+            "z",
+            "y",
+            "w",
+            "x"
+        ],
+        "Student C": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my outcome, given my values for each school and my priority at each school. I also need to consider the preferences of other applicants.\n\nMy values are: w = $73, x = $60, y = $43, z = $60\nMy priorities are: w: 1, x: 2, y: 1, z: 2\n\nSince I have top priority at both w and y, I should aim for one of these. However, most applicants favor y > x > w > z. This means w is likely to be less competitive than y.\n\nLet's consider a few scenarios:\n\n1. **Ranking: w > x > y > z:** I propose to w and am immediately accepted (priority 1). This is a good outcome.\n\n2. **Ranking: y > w > x > z:** I propose to y and am immediately accepted (priority 1). This is an even worse outcome since w is valued higher than y.\n\n3. **Ranking: x > w > y > z:** I propose to x. I might get accepted or rejected. If rejected, I propose to w and am accepted (priority 1). This is a gamble, as I might end up unmatched if x is very competitive and w fills up before I get there.\n\n4. **Ranking: w > y > x > z:** I propose to w and am immediately accepted (priority 1). This is a good outcome, and potentially better than scenario 2.\n\n5. **Ranking: y > x > w > z:** I propose to y and am immediately accepted (priority 1). This is a bad outcome, since w is valued higher than y.\n\nGiven that I have top priority at w and most applicants favor y > x > w > z, w is likely my best option. I should rank w first to secure it. Then, I should put x and z next, since they have the same value. Since I have a higher priority at x, I will put it higher. Finally, I put y last.",
+        "Student B": "My goal is to maximize my value. My values are w = $72, x = $54, y = $55, z = $62. Therefore, my ideal ranking would be w > z > y > x, if I could get them. However, I also need to consider my priority at each school and the preferences of other applicants.\n\nI have top priority (1) at x and z. I have second priority (2) at w and y. Most applicants favor y > x > w > z.\n\nLet's consider different rankings and simulate the deferred acceptance algorithm:\n\n*   **Ranking: w > z > y > x**\n    *   Round 1: Propose to w. I'm priority 2. Someone else with priority 1 proposes to w. I am rejected.\n    *   Round 2: Propose to z. I'm priority 1. I am tentatively accepted.\n    *   This seems like a good outcome, as z is my second-highest value.\n\n*   **Ranking: z > w > y > x**\n    *   Round 1: Propose to z. I'm priority 1. I am tentatively accepted.\n    *   This also seems like a good outcome, as z is my second-highest value.\n\n*   **Ranking: z > y > w > x**\n    *   Round 1: Propose to z. I'm priority 1. I am tentatively accepted.\n    *   This also seems like a good outcome, as z is my second-highest value.\n\n*   **Ranking: x > w > y > z**\n    *   Round 1: Propose to x. I'm priority 1. I am tentatively accepted.\n    *   This ensures I get matched, but x is my lowest value.\n\n*   **Ranking: w > y > z > x**\n    *   Round 1: Propose to w. I'm priority 2. Someone else with priority 1 proposes to w. I am rejected.\n    *   Round 2: Propose to y. I'm priority 2. Someone else with priority 1 proposes to y. I am rejected.\n    *   Round 3: Propose to z. I'm priority 1. I am tentatively accepted.\n    *   This also seems like a good outcome, as z is my second-highest value.\n\nSince I have top priority at z, including it relatively high in my ranking will likely secure it for me. I need to decide between w and y for my second choice. Since most applicants prefer y > x > w > z, w might be less competitive than y. Therefore, ranking w second might be a good strategy.\n\nTherefore, ranking z > w > y > x or z > y > w > x seems reasonable. Since my value for y is slightly higher than w, I will choose z > y > w > x.",
+        "Student C": "My goal is to maximize my value, which means getting into the best school possible given my priorities and the likely behavior of other students. My values are w = $67, x = $50, y = $56, z = $52. My priorities are w: 3, x: 3, y: 4, z: 4. Most applicants favor y > x > w > z.\n\nIf I simply rank by value (w > y > z > x), I might get rejected from w in the first round due to my priority of 3. Then I'd propose to y, where I also have a relatively low priority (4). I might end up with z or x, which are lower value than y.\n\nInstead, I can try to \"game\" the system a bit. Since most applicants favor y > x > w > z, I expect w to be quite competitive. I also have a relatively low priority at y, so I might not get in there either. However, I have the same priority (3) at both w and x. Since y is generally favored over w, there might be fewer applicants at w compared to y.\n\nTherefore, I will try ranking w first. If I get rejected, I'll go to y. If I get rejected from y, I'll go to z. I'll rank x last, since it is the lowest value option.\n\nSo, my ranking will be w > y > z > x.",
+        "Student D": "My goal is to maximize the value of the school I attend. My values are z ($65) > x ($64) > w ($60) > y ($52).\n\nGiven the information that most applicants favor y > x > w > z, I need to consider my priority at each school. My priorities are w: 4, x: 4, y: 3, z: 3.\n\nIf I rank z first, I might get it since it's generally less popular, and I have priority 3 there. However, if I get rejected from z, I'll likely have to go to w or y, which have lower values.\n\nIf I rank x first, I might get it since it's more popular than z but less popular than y. I have priority 4 there, so it's a gamble.\n\nIf I rank y first, given it's popular, I may get rejected due to my priority 3.\n\nIf I rank w first, I may get rejected due to my priority 4.\n\nLet's consider the possibility of ranking z first. If I get rejected, my next best option is x. If I rank z > x > w > y, I propose to z. If rejected, I propose to x. If rejected, I propose to w. If rejected, I propose to y.\n\nLet's consider the possibility of ranking x first. If I get rejected, my next best option is z. If I rank x > z > w > y, I propose to x. If rejected, I propose to z. If rejected, I propose to w. If rejected, I propose to y.\n\nSince z has the highest value and I have priority 3 there, while x has value close to z but I have priority 4, I should rank z first. Then, I should rank x second, as it has the next highest value. Between w and y, w has higher value, so I should rank w third and y last.\n\nTherefore, my ranking should be z > x > w > y."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": false,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student C",
+                    "Student A"
+                ],
+                "z": [
+                    "Student B",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ],
+                [
+                    "Student D",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student C"
+                ],
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "y": "Student C",
+                "x": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

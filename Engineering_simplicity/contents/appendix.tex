@@ -1,0 +1,510 @@
+% Appendix: Prompt Templates for LLM Mechanism Design Experiments
+% Include this file via \input{appendix_prompts} in your main document.
+% Requires: \usepackage{listings}, \usepackage{float}, \usepackage{booktabs},
+%           \usepackage{longtable}, \usepackage{algorithm}, \usepackage{algpseudocode}
+
+\section{Prompts}
+\label{sec:appendix-prompts}
+
+This appendix documents the prompt templates used in our experiments. We present the full base rule prompts for both Deferred Acceptance (DA) and Second-Price Sealed-Bid (SPSB) auction mechanisms, together with the Obviously Strategy-Proof (OSP) sequential interfaces: the \citet{ashlagi2018stable} decision-tree implementation for DA and the \citet{breitmoser2022obviousness} ascending-clock (closed) implementation. 
+For each intervention, we show only the text that is \emph{added to or modified from} the corresponding base prompt, since the surrounding context (preference ordering, priorities, output format) remains identical. Template variables (e.g., \texttt{\{\{student\_id\}\}}, \texttt{\{\{preference\_order\}\}}) are populated at runtime with experiment-specific values.
+
+%% ============================================================
+%% SECTION 1: DEFERRED ACCEPTANCE
+%% ============================================================
+\subsection*{A.1\quad Deferred Acceptance (DA)}
+
+\subsubsection*{A.1.1\quad Base Rules --- Direct Revelation}
+
+In the direct revelation interface, the LLM submits a complete ranking of all schools in a single shot. We vary \emph{how} the mechanism is explained while keeping the underlying student-proposing DA algorithm identical.
+
+\paragraph{Null Baseline.}
+The minimal prompt provides no explanation of the matching algorithm---only the decision environment and output format.
+
+\begin{figure}[H]
+\begin{lstlisting}
+You are Student {{student_id}}. There are 4 schools: w, x, y, z.
+You will be matched to at most one school based on submitted
+rankings and school priorities.
+
+Your preference ordering (most preferred to least preferred):
+  {{preference_order}}
+
+Your priority rank at each school (1 = highest priority):
+  w: {{pw}}, x: {{px}}, y: {{py}}, z: {{pz}}
+
+Moreover, most applicants seem to favor {{global_ranking}}.
+
+Submit a complete ranking of schools from most preferred to
+least preferred.
+Format: Ranking: <1st> > <2nd> > <3rd> > <4th>
+\end{lstlisting}
+\caption{DA Direct Revelation --- Null Baseline (\texttt{da\_direct\_null}). No mechanism explanation is provided.}
+\label{fig:da-direct-null}
+\end{figure}
+
+\paragraph{Traditional DA.}
+The standard prompt describes the full five-step Deferred Acceptance algorithm.
+
+\begin{figure}[H]
+\begin{lstlisting}
+You are Student {{student_id}}. There are 4 schools: w, x, y, z.
+You will be matched to at most one school.
+
+HOW THE MATCHING WORKS (Deferred Acceptance):
+1. All students simultaneously submit a ranking of schools
+2. Each student "proposes" to their top-ranked school
+3. Each school tentatively accepts the proposer it ranks highest
+   (by priority), rejecting others
+4. Rejected students propose to their next choice
+5. This repeats until all students are matched
+
+Your preference ordering (most preferred to least preferred):
+  {{preference_order}}
+
+Your priority rank at each school (1 = highest priority):
+  w: {{pw}}, x: {{px}}, y: {{py}}, z: {{pz}}
+
+Moreover, most applicants seem to favor {{global_ranking}}.
+\end{lstlisting}
+\caption{DA Direct Revelation --- Traditional (\texttt{da\_direct\_traditional}). The full student-proposing DA algorithm is described step by step.}
+\label{fig:da-direct-traditional}
+\end{figure}
+
+
+%% ------------------------------------------------------------
+%% A.1.2  OSP Sequential Interface for DA
+%% ------------------------------------------------------------
+\subsubsection*{A.1.2\quad OSP Sequential Interface for DA}
+
+Our OSP implementation for DA follows the decision-tree construction of \citet{ashlagi2018stable}, which provides an OSP mechanism for student-proposing DA under Ergin-acyclic priority profiles. Rather than asking the LLM to submit a full ranking, the mechanism queries \emph{one student at a time} with binary yes/no offers about individual schools, each accompanied by an explicit guarantee of what happens under either response. Algorithm~\ref{alg:osp-da} summarizes the procedure.
+
+\begin{algorithm}[H]
+\caption{OSP Decision Tree for DA under Acyclic Priorities \citep{ashlagi2018stable}}
+\label{alg:osp-da}
+\begin{algorithmic}[1]
+\Procedure{RunOSPTree}{students, schools, priorities}
+  \If{students $= \emptyset$}
+    \State \Return matches
+  \EndIf
+  \State $\text{top\_by\_school} \gets \{s : \arg\min_{\text{priority}} \text{students at } s\}$ for each remaining school $s$
+  \State $\text{top\_students} \gets \text{unique}(\text{top\_by\_school.values})$
+  \If{$|\text{top\_students}| = 1$} \Comment{Serial dictatorship node}
+    \State $s^* \gets$ the single top-priority student
+    \State $w \gets$ \Call{AskPickTop}{$s^*$, schools} \Comment{Use \texttt{da\_osp\_choice} prompt}
+    \State Assign $s^*$ to $w$
+    \State \Return \Call{RunOSPTree}{students $\setminus \{s^*\}$, schools $\setminus \{w\}$, priorities}
+  \EndIf
+  \State Let $a, b \gets \text{top\_students}$ \Comment{$|\text{top\_students}| = 2$ under acyclicity}
+  \For{each school $w$ where $\text{top\_by\_school}[w] = a$ (in fixed order)}
+    \If{\Call{AskYesNo}{$a$, $w$, fallback $=$ schools}} \Comment{Use \texttt{da\_osp\_yesno\_guaranteed}}
+      \State Assign $a$ to $w$
+      \State \Return \Call{RunOSPTree}{students $\setminus \{a\}$, schools $\setminus \{w\}$, priorities}
+    \EndIf
+  \EndFor
+  \For{each school $w$ where $\text{top\_by\_school}[w] = b$ (in fixed order)}
+    \If{\Call{AskYesNo}{$b$, $w$, fallback $=$ schools}}
+      \State Assign $b$ to $w$
+      \State \Return \Call{RunOSPTree}{students $\setminus \{b\}$, schools $\setminus \{w\}$, priorities}
+    \EndIf
+  \EndFor
+  \State $w_a \gets$ \Call{AskPickTop}{$a$, schools}; assign $a$ to $w_a$
+  \State $w_b \gets$ \Call{AskPickTop}{$b$, schools $\setminus \{w_a\}$}; assign $b$ to $w_b$
+  \State \Return \Call{RunOSPTree}{students $\setminus \{a,b\}$, schools $\setminus \{w_a, w_b\}$, priorities}
+\EndProcedure
+\end{algorithmic}
+\end{algorithm}
+
+At each node, the mechanism provides an ``obviousness witness'': answering YES yields an immediate match to the offered school, while answering NO keeps all remaining schools (including the offered one) available. This ensures that if the offered school is the student's true top choice among remaining options, YES weakly dominates NO, and vice versa---making truthful play obvious without contingent reasoning.
+
+
+\paragraph{Yes/No with Consequence Explanation.}
+The primary prompt used at binary-offer nodes in Algorithm~\ref{alg:osp-da}. It explicitly states the consequence of each answer, providing the ``obviousness witness.''
+
+\begin{figure}[H]
+\begin{lstlisting}
+You are Student {{student_id}}. We are running a step-by-step
+matching procedure.
+
+Current remaining schools: {{remaining_set}}
+
+Your preference ordering (most preferred to least preferred):
+  {{preference_order}}
+
+Your priority rank at each school (1 = highest priority):
+  w: {{pw}}, x: {{px}}, y: {{py}}, z: {{pz}}
+
+Moreover, most applicants seem to favor {{global_ranking}}.
+
+Question: Among the remaining schools ({{remaining_set}}), is
+  {{candidate}} your most preferred?
+- If you answer YES: you are immediately matched to
+  {{candidate}} and leave the process.
+- If you answer NO: {{candidate}} remains available to you.
+  You continue in the process with all current remaining
+  schools ({{fallback_set}}).
+
+Please provide your response in TWO parts:
+
+1. First, explain your reasoning in <REASON></REASON> tags
+2. Then, submit your answer in <DECISION></DECISION> tags
+
+Format:
+<REASON>
+Your reasoning here...
+</REASON>
+
+<DECISION>
+Answer: YES
+</DECISION>
+
+or
+
+<DECISION>
+Answer: NO
+</DECISION>
+\end{lstlisting}
+\caption{DA OSP --- Yes/No with Consequences (\texttt{da\_osp\_yesno}). The consequences of YES (immediate match) and NO (continue with all remaining schools) are made explicit, providing the obviousness witness per \citet{ashlagi2018stable}.}
+\label{fig:da-osp-yesno-guaranteed}
+\end{figure}
+
+
+%% ------------------------------------------------------------
+%% A.1.3  DA Interventions
+%% ------------------------------------------------------------
+\subsubsection*{A.1.3\quad Reasoning Interventions for DA}
+
+Each intervention below is appended to (or replaces a section of) the Traditional DA base prompt (Figure~\ref{fig:da-direct-traditional}). The surrounding context---student identity, preference ordering, priorities, global ranking hint, and output format---remains identical. We show only the intervention-specific text that differs from the base.
+
+\paragraph{Axis 1: Contingent Reasoning.}
+These interventions prompt the agent to reason about what happens given others' possible actions. We show the \emph{Enumerate} variant; other Axis~1 variants are listed in Table~\ref{tab:all-interventions}.
+
+\begin{figure}[H]
+\begin{lstlisting}
+REASONING GUIDANCE:
+Before submitting your ranking, consider: What rankings might
+the other students submit? For each possible combination of
+their rankings, what school would you receive if you ranked
+truthfully vs. if you ranked differently?
+\end{lstlisting}
+\caption{DA Axis 1 --- Enumerate (\texttt{axis1\_da\_enumerate}). Inserted after the DA algorithm description. Other variants: \emph{Dominated} (eliminate dominated strategies), \emph{Worst-Case} (consider minimum obtainable set), \emph{One-Step} (simplify to single-step decision), \emph{Decision Tree} (visualize DA as a tree), \emph{Backward Induction} (reason backwards from final round).}
+\label{fig:da-axis1-enumerate}
+\end{figure}
+
+\paragraph{Axis 2: Forward Planning.}
+These interventions scaffold varying depths of forward simulation through the DA algorithm. We show the $k{=}1$ variant; other Axis~2 variants are listed in Table~\ref{tab:all-interventions}.
+
+\begin{figure}[H]
+\begin{lstlisting}
+HOW THE MATCHING WORKS:
+You submit a ranking. The algorithm processes your ranking
+sequentially:
+- First, you "propose" to your top-ranked school
+- If accepted, you're matched there
+- If rejected, you propose to your second choice
+
+THINK ONE STEP AHEAD:
+Before finalizing your ranking, consider: If you are rejected
+from your first choice, which school would you propose to next?
+Does this affect how you should rank schools?
+\end{lstlisting}
+\caption{DA Axis 2 --- $k{=}1$ Forward Planning (\texttt{axis2\_da\_1step}). Replaces the standard DA algorithm description with a simplified sequential framing plus one-step lookahead guidance. Other variants: $k{=}0$ (no guidance), $k{=}2$ (two-step lookahead), $k{=}\infty$ (full simulation), and three \emph{Monotonicity} framings (options never shrink; rejections redirect, never eliminate; outcome determined by priorities).}
+\label{fig:da-axis2-1step}
+\end{figure}
+
+\paragraph{Axis 3: Higher-Order Beliefs.}
+These interventions prompt reasoning about other agents' beliefs and common knowledge. We show the \emph{Common Knowledge} variant.
+
+\begin{figure}[H]
+\begin{lstlisting}
+IMPORTANT: All students know these rules. All students know
+that all students know these rules. All students are trying
+to maximize their own earnings.
+\end{lstlisting}
+\caption{DA Axis 3 --- Common Knowledge (\texttt{axis3\_da\_common\_knowledge}). Inserted after the DA algorithm description. Other variants: \emph{First-Order} (what will others rank?) and \emph{Second-Order} (what do others believe you will rank?).}
+\label{fig:da-axis3-common-knowledge}
+\end{figure}
+
+
+%% ============================================================
+%% SECTION 2: SECOND-PRICE SEALED-BID AUCTION
+%% ============================================================
+\newpage
+\subsection*{A.2\quad Second-Price Sealed-Bid Auction}
+
+\subsubsection*{A.2.1\quad Base Rule}
+The base rule is implemented as the standard Second-price sealed-bid auction.
+
+\begin{figure}[H]
+\begin{lstlisting}
+In this game, you will participate in an auction for a prize
+against {{num_bidders}} other bidders. You will play this game
+for {{n}} rounds.
+At the start of each round, bidders will see their value for
+the prize, randomly drawn between $0 and ${{private}}, with
+all values equally likely.
+After learning your value, you will submit a bid privately at
+the same time as the other bidders. Bids must be in
+${{increment}} increments.
+The highest bidder wins the prize and pays the second-highest
+bid. If you win, your earnings will increase by your value for
+the prize, and decrease by the second-highest bid. If you don't
+win, your earnings will remain unchanged.
+After each auction, we will display all bids. Ties for the
+highest bid will be resolved randomly.
+\end{lstlisting}
+\caption{SPSB Auction --- Base Rule (\texttt{private\_second\_price}). Standard second-price sealed-bid auction with independent private values.}
+\label{fig:auction-base}
+\end{figure}
+
+
+%% ------------------------------------------------------------
+%% A.2.2  OSP Implementation: Two-Stage Ascending Clock
+%% ------------------------------------------------------------
+\subsubsection*{A.2.2\quad OSP Implementation --- Two-Stage Ascending Clock}
+
+Following \citet{breitmoser2022obviousness}, we implement an Ascending Clock Auctions, each round consists of multiple clock cycles, during which every bidder is asked whether they want to stay or drop out at the current clock price.
+In the first round, bidders are reminded of the auction rules. 
+The auction starts with an initial price of 0, which increases incrementally until only one bidder remains or two bidders drop out simultaneously, in which case the winner is chosen randomly. 
+The detailed prompt is listed as follows, with variables enclosed in brackets:
+
+\begin{figure}[H]
+\begin{lstlisting}
+In this game, you will participate in an auction for a prize
+against {{num_bidders}} other bidders. You will play this game
+for {{n}} rounds.
+At the start of each round, bidders will see their value for
+the prize, randomly drawn between $0 and ${{private}}, with
+all values equally likely.
+
+**END OF AUCTION**
+If you win, your earnings will increase by your value for the
+prize and decrease by the clock price at the end of the auction.
+If you don't win, your earnings will remain unchanged.
+After each auction, we will display all bids. Ties for the
+highest bid will be resolved randomly.
+
+Your value towards to the prize is {value} in this round.
+The current price in this clock cycle is {current_price}. 
+The price for next clock cycle is {current_price + increment}.
+
+Do you want to stay in the bidding? 
+If you choose yes, you can keep bidding for next clock. If you choose No, you will exit and have no chance to re-enter the bidding. Your response must use these EXACT tags below. You must output the ACTION.
+    ```
+    <PLAN>
+    [Write your plans for bidding strategies. Be detailed and precise but keep things succinct and don't repeat yourself. LIMIT your plan to 50 words. ] </PLAN>
+    <ACTION> Yes or No </ACTION>
+\end{lstlisting}
+\caption{SPSB OSP --- Ascending Clock (\texttt{intervention\_proxy\_breitmoser}). No dropping out information will be displayed as in \citet{breitmoser2022obviousness}.}
+\label{fig:auction-proxy}
+\end{figure}
+
+
+%% ------------------------------------------------------------
+%% A.2.3  Auction Interventions
+%% ------------------------------------------------------------
+\subsubsection*{A.2.3\quad Reasoning Interventions for SPSB}
+
+Each intervention below is appended to or modifies the SPSB base prompt (Figure~\ref{fig:auction-base}). We show only the intervention-specific text.
+
+\paragraph{Axis 1: Contingent Reasoning.}
+We show the \emph{Enumerate} variant. Other Axis~1 variants are listed in Table~\ref{tab:all-interventions}.
+
+\begin{figure}[H]
+\begin{lstlisting}
+Before deciding your bid, think through the following: What are
+the possible bids the other players might submit? For each
+possible bid they might make, what would be your best response?
+Does your optimal bid depend on what others do, or is there a
+strategy that works well regardless?
+\end{lstlisting}
+\caption{SPSB Axis 1 --- Enumerate (\texttt{axis1\_contingent\_enumerate}). Inserted before the ``After each auction'' line. Other variants: \emph{Dominated} (identify dominated bids), \emph{Worst-Case} (worst-case analysis per bid), \emph{One-Step} (bid as ``maximum price''), \emph{Decision Tree} (PATH A: win vs.\ PATH B: lose), \emph{Backward Induction} (two-stage sealed $\to$ clock with backward-induction guidance).}
+\label{fig:auction-axis1-enumerate}
+\end{figure}
+
+\paragraph{Axis 3: Higher-Order Beliefs.}
+We show the \emph{Common Knowledge} variant.
+
+\begin{figure}[H]
+\begin{lstlisting}
+Important: All bidders are rational and this is common
+knowledge. This means:
+- Every bidder is rational and maximizes their own earnings
+- Every bidder knows that every other bidder is rational
+- Every bidder knows that every other bidder knows this
+- And so on, infinitely
+
+Given this common knowledge of rationality, what is the optimal
+bidding strategy? Is there a strategy that all rational bidders
+would converge on?
+\end{lstlisting}
+\caption{SPSB Axis 3 --- Common Knowledge (\texttt{axis3\_beliefs\_common\_knowledge}). Inserted after the payment rule. Other variants: \emph{First-Order} (what do others bid?) and \emph{Second-Order} (what do others think you bid?).}
+\label{fig:auction-axis3-common-knowledge}
+\end{figure}
+
+
+
+%% ============================================================
+%% SECTION 3: SUMMARY TABLE
+%% ============================================================
+\subsection*{A.3\quad Summary of All Prompt Variants}
+
+Table~\ref{tab:all-interventions} lists every prompt template used in the experiments. Prompts shown in full above are marked with $\star$; prompts whose intervention-specific text is shown are marked with $\dagger$.
+
+\begin{longtable}{p{3.2cm} p{4.8cm} p{5.5cm}}
+\toprule
+\textbf{Category} & \textbf{Prompt ID} & \textbf{Description} \\
+\midrule
+\endfirsthead
+\toprule
+\textbf{Category} & \textbf{Prompt ID} & \textbf{Description} \\
+\midrule
+\endhead
+\bottomrule
+\endlastfoot
+
+\multicolumn{3}{l}{\textbf{Deferred Acceptance --- Direct Revelation}} \\
+\midrule
+Base & da\_direct\_null $\star$ & Minimal baseline; no mechanism explanation \\
+Base & da\_direct\_traditional $\star$ & Full 5-step DA algorithm description \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{Deferred Acceptance --- OSP Sequential \citep{ashlagi2018stable}}} \\
+\midrule
+OSP & da\_osp\_yesno $\star$ & Binary with consequence explanation (obviousness witness) \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{DA Axis 1: Contingent Reasoning}} \\
+\midrule
+Axis 1 & axis1\_da\_enumerate $\dagger$ & Enumerate others' possible rankings \\
+Axis 1 & axis1\_da\_dominated & Identify and eliminate dominated rankings \\
+Axis 1 & axis1\_da\_worstcase & Consider worst-case obtainable set \\
+Axis 1 & axis1\_da\_onestep & Simplify to one-step decision \\
+Axis 1 & axis1\_da\_tree & Visualize DA as a decision tree \\
+Axis 1 & axis1\_da\_backward\_induct & Reason backwards from final round \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{DA Axis 2: Forward Planning}} \\
+\midrule
+Axis 2 & axis2\_da\_0step & $k{=}0$: no guidance baseline \\
+Axis 2 & axis2\_da\_1step $\dagger$ & $k{=}1$: think one step ahead \\
+Axis 2 & axis2\_da\_2step & $k{=}2$: think two steps ahead \\
+Axis 2 & axis2\_da\_fullsim & $k{=}\infty$: simulate full algorithm \\
+Axis 2 & axis2\_da\_monotonic\_options & ``Your options never shrink'' \\
+Axis 2 & axis2\_da\_monotonic\_safety & ``Rejections redirect, never eliminate'' \\
+Axis 2 & axis2\_da\_monotonic\_outcome & ``Outcome determined by priorities, not ranking'' \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{DA Axis 3: Higher-Order Beliefs}} \\
+\midrule
+Axis 3 & axis3\_da\_firstorder & What will others rank? \\
+Axis 3 & axis3\_da\_secondorder & What do others believe you will rank? \\
+Axis 3 & axis3\_da\_common\_knowledge $\dagger$ & Common knowledge of rationality \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{SPSB Auction --- Base}} \\
+\midrule
+Base & private\_second\_price $\star$ & Standard SPSB with independent private values \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{SPSB --- OSP Implementations \citep{breitmoser2022obviousness}}} \\
+\midrule
+OSP & intervention\_proxy\_breitmoser $\star$ & ascending clock \\
+
+\midrule
+
+\multicolumn{3}{l}{\textbf{SPSB Axis 1: Contingent Reasoning}} \\
+\midrule
+Axis 1 & axis1\_contingent\_baseline & SPSB baseline (identical to base) \\
+Axis 1 & axis1\_contingent\_enumerate $\dagger$ & Enumerate others' possible bids \\
+Axis 1 & axis1\_contingent\_dominated & Identify and eliminate dominated bids \\
+Axis 1 & axis1\_contingent\_worstcase & Consider worst-case for each bid \\
+Axis 1 & axis1\_contingent\_onestep & Bid as ``maximum price'' framing \\
+Axis 1 & axis1\_contingent\_tree & Decision tree: PATH A (win) vs.\ PATH B (lose) \\
+Axis 1 & axis1\_contingent\_backward\_induct & Two-stage sealed $\to$ clock with backward induction \\
+\midrule
+
+\multicolumn{3}{l}{\textbf{SPSB Axis 3: Higher-Order Beliefs}} \\
+\midrule
+Axis 3 & axis3\_beliefs\_baseline & SPSB with ``rational agents'' mention \\
+Axis 3 & axis3\_beliefs\_firstorder & What do others bid? \\
+Axis 3 & axis3\_beliefs\_secondorder & What do others think you bid? \\
+Axis 3 & axis3\_beliefs\_common\_knowledge $\dagger$ & Common knowledge of rationality \\
+
+\bottomrule
+\caption{Complete list of prompt templates. $\star$~=~full prompt shown; $\dagger$~=~intervention-specific text shown.}
+\label{tab:all-interventions}
+\end{longtable}
+
+
+
+
+\section{Prospect-Theoretic Interventions} \label{sec:appendix-prospect}
+
+In addition to the cognitive interventions reported in the main text, we test a separate family of interventions inspired by prospect theory \citep{kahneman1979prospect} and behavioral departures from expected utility theory. These interventions do not scaffold strategic reasoning; instead, they reframe the payoff structure to test whether LLMs exhibit sensitivity to framing effects, loss aversion, the endowment effect, and risk attitudes. We test these across both auctions and DA, with the same four model families.
+
+\subsection*{B.1\quad Loss Aversion and Framing Effects}
+
+We test five variants that reframe the payoff description while holding the mechanism and underlying payoffs constant:
+
+\begin{itemize}
+    \item \emph{Gain Frame}: Presents all outcomes as gains from zero (``you cannot lose money---you can only gain'').
+    \item \emph{Loss Frame}: Endows the agent with an initial amount equal to their maximum possible value, then presents outcomes as losses from this reference point (``Think carefully about what you might lose'').
+    \item \emph{Mixed Frame}: Explicitly decomposes each outcome into a GAIN component and a LOSE component, asking the agent to weigh both.
+    \item \emph{Endowment}: Gives the agent an initial endowment and frames payment as a deduction ``from your endowment,'' targeting the endowment effect.
+    \item \emph{WTA/WTP}: Asks the agent to compare their willingness-to-accept (selling price) with their willingness-to-pay (buying price), invoking the classic WTA--WTP gap.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{plots/appendix_loss_aversion_auctions.pdf}
+    \caption{Loss aversion interventions in SPSB auctions. Baseline SPSB in gray, intervention in color. Dashed lines indicate means. None of the framing interventions consistently improve play relative to the SPSB baseline ($\mu = -2.67$). The loss frame ($\mu = -3.44$) and endowment ($\mu = -3.40$) worsen underbidding, while the gain frame ($\mu = -2.51$) and WTA/WTP ($\mu = -2.17$) show modest, inconsistent effects.}
+    \label{fig:appendix-loss-auctions}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{plots/appendix_loss_aversion_da.pdf}
+    \caption{Loss aversion interventions in deferred acceptance. Baseline direct DA in gray, intervention in color. The results are noisy and largely negative: most framing interventions worsen play relative to the baseline ($\mu = 4.2\%$), with WTA/WTP producing the worst outcomes ($\mu \approx 12.6\%$ across models with data). Claude is particularly sensitive to these framings.}
+    \label{fig:appendix-loss-da}
+\end{figure}
+
+In auctions, the framing interventions do not produce consistent improvements. The loss frame and endowment interventions worsen underbidding (overall means of $\mu = -3.44$ and $-3.40$, compared to the SPSB baseline of $-2.67$), opposite to what a naive application of loss aversion would predict. The gain frame and WTA/WTP interventions produce small, model-dependent effects. In DA, the interventions are uniformly harmful, with WTA/WTP and endowment producing the largest increases in error.
+
+The overall picture is that prospect-theoretic framings do not improve play---and often worsen it. This contrasts with the main-text interventions along contingent reasoning and mechanism description, which produce large, consistent improvements. The difference is informative: the cognitive barrier in these mechanisms is not about how payoffs are framed, but about understanding the mechanism's strategic structure.
+
+\subsection*{B.2\quad Risk Preference Interventions}
+
+We also test whether assigning explicit risk attitudes to LLMs changes bidding behavior. Each intervention instructs the model to adopt a calibrated risk preference via a concrete coin-toss example:
+
+\begin{itemize}
+    \item \emph{Risk Averse}: ``You would only pay \$4 for a coin toss worth \$0 or \$10 (expected value \$5).''
+    \item \emph{Risk Neutral}: ``You would pay \$5 for a coin toss worth \$0 or \$10.''
+    \item \emph{Risk Seeking}: ``You would pay \$6 for a coin toss worth \$0 or \$10 (expected value \$5).''
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{plots/appendix_risk_preferences_auctions.pdf}
+    \caption{Risk preference interventions in SPSB auctions. Risk aversion increases underbidding ($\mu = -4.71$), while risk-seeking dramatically shifts Claude to overbidding ($\mu = +8.40$). Risk neutrality ($\mu = -1.82$) modestly improves play relative to the SPSB baseline ($\mu = -2.67$).}
+    \label{fig:appendix-risk-auctions}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{plots/appendix_risk_preferences_da.pdf}
+    \caption{Risk preference interventions in deferred acceptance. Risk aversion dramatically worsens play ($\mu \approx 18.8\%$, compared to baseline $4.2\%$). Risk neutrality and risk-seeking also worsen play, though less severely.}
+    \label{fig:appendix-risk-da}
+\end{figure}
+
+The risk interventions reveal that LLMs are highly responsive to persona-based instructions about risk attitudes, but that this responsiveness does not improve play. The risk-averse persona produces the most dramatic deterioration: in auctions, it increases underbidding from $\mu = -2.67$ to $-4.71$; in DA, it roughly quadruples the error rate. The risk-seeking persona shifts Claude 3.5 Haiku to massive overbidding ($\mu = +8.40$), while the other models are less affected. Risk neutrality modestly improves auction play ($\mu = -1.82$) but worsens DA play. In fact, in aggregate, it appears that the model---while strategizing---are extremely susceptible to risk preference priming. 
+
+These results underscore that the LLMs' failures in strategy-proof mechanisms are not driven by implicit risk attitudes. Truthful bidding is dominant regardless of risk preferences under IPV, so the fact that risk-persona instructions change behavior at all confirms that the models do not understand the mechanism's incentive structure. The risk interventions change \emph{how} models deviate from truth-telling, but do not address \emph{why} they deviate in the first place.
+
+
+
+
+
+
+
+

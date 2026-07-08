@@ -1,0 +1,41 @@
+# Ascending Clock Auction with Affiliated Private Values
+
+experiment:
+  name: "ascending_clock_apv"
+  version: "V10"
+  description: "Ascending Clock Auction with Affiliated Private Values"
+
+auction:
+  number_agents: 3
+  rounds: 1
+
+rule:
+  seal_clock: "clock"
+  ascend_descend: "ascend"
+  price_order: "second"
+  private_value: "private"
+  open_blind: "open"
+  closing: false
+  reserve_price: 0
+  special_name: "affiliated_ac.txt"
+
+value:
+  common_range: [0, 29]
+  private_range: 49
+  increment: 1
+  seed_base: 1319  # 1399 for affiliated
+
+llm:
+  model: "gpt-4o"
+  temperature: 0.5
+
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: rule_template/auctions/
+  include_payment_example: true
+execution:
+  repetitions: 40
+  parallel: true
+  max_workers: 4
+  output_dir: "experiment_logs/gpt4o/ascending_clock"

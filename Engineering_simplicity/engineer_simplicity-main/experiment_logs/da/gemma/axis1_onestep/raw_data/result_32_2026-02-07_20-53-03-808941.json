@@ -1,0 +1,155 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 73,
+            "x": 60,
+            "y": 43,
+            "z": 60
+        },
+        "Student B": {
+            "w": 72,
+            "x": 54,
+            "y": 55,
+            "z": 62
+        },
+        "Student C": {
+            "w": 67,
+            "x": 50,
+            "y": 56,
+            "z": 52
+        },
+        "Student D": {
+            "w": 60,
+            "x": 64,
+            "y": 52,
+            "z": 65
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "y",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 73,
+        "Student B": 62,
+        "Student C": 56,
+        "Student D": 64
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "z",
+            "y"
+        ],
+        "Student B": [
+            "z",
+            "w",
+            "y",
+            "x"
+        ],
+        "Student C": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Given the \"SIMPLE VIEW\" instruction, I should simply rank the schools based on my stated preferences: w > x > z > y. The information about other applicants' preferences is a distraction in this scenario, as I'm only choosing from the schools I *could* be matched with, and ranking them based on *my* desires. My priority rank at each school doesn\u2019t change my personal preference ordering; it would be relevant if I were trying to strategically *influence* matching, but the prompt explicitly instructs a simple preference ranking. Therefore, I will stick to my stated preference order.",
+        "Student B": "Given the \"simple view\" framing, I should rank schools based on my personal preference *within* the set of schools I realistically might get into. The prompt states most applicants prefer y > x > w > z. This means w, z, y, and x all have different levels of competitiveness.\n\nMy personal preference is w > z > y > x. However, knowing the general applicant pool's preferences, w is likely *very* competitive. I have a low priority at w (rank 2). x is generally less desired, and I have the highest priority there (rank 1). y is popular, and I have moderate priority (rank 2). z is less popular, and I have high priority (rank 1).\n\nTherefore, I need to balance my preference with the likely chance of admission. I believe z is my most realistic top choice, as I have high priority and it's less popular than y. w is still my second choice, as I strongly prefer it to y and x, and my rank isn\u2019t terrible. I'll put y third, as it\u2019s moderately desirable to me, but also very popular. Finally, x is my last choice, as I like it the least and, while I have high priority, it's still a last resort.",
+        "Student C": "Given the \"simple view\" and my preferences (w > y > z > x), I should rank schools according to my true preferences. The information about other applicants favoring y > x > w > z is relevant because it suggests competition for y will be high, and x will be easier to get into. However, since I'm operating under the \"simple view\" assumption, I simply choose my most preferred school from my obtainable set. I don't need to strategically misrepresent my preferences to increase my chances of getting *any* school. My priority ranks at each school are relatively low, suggesting I'm not a highly sought-after applicant at any of them. Therefore, I should just rank according to my genuine preferences.",
+        "Student D": "Given the simple view and my strong preference for z, I will rank z as my first choice. The information about other applicants' preferences is crucial. They generally prefer y > x > w > z. This means z is likely to have spaces available, as it's less popular overall. My priority at z is 3, which isn't the highest, but it's not the lowest either.\n\nMy second preference is x. While many applicants prefer y, x is still relatively popular. My priority at x is 4, meaning I'm a high-priority applicant there.\n\nMy third preference is w. It's better than y for me, and while not highly sought after by others, my priority is 4, making me a competitive applicant.\n\nFinally, y is my least preferred school, and given others prioritize it highly, it's the least likely I'll be matched there. My priority is only 3.\n\nTherefore, sticking to my preferences and considering the applicant pool, ranking z first is the best strategy."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": false,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student D",
+                    "Student B"
+                ],
+                "w": [
+                    "Student A",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ],
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A",
+                "x": "Student D",
+                "y": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

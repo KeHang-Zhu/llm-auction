@@ -1,0 +1,38 @@
+# FRONTIER battery cell — generated 2026-07 per plan/FRONTIER_RUNBOOK.md.
+# Cloned from configs_da/gpt4o/da_direct_null.yaml; only the llm block and output_dir changed.
+
+experiment:
+  name: "da_direct_null"
+  version: "V1"
+  description: "Direct revelation DA with minimal information baseline"
+
+da:
+  number_students: 4
+  number_schools: 4
+
+mechanism:
+  mechanism_type: "direct"
+  intervention_type: "null"
+  special_name: "da_direct_null.txt"
+
+value:
+  common_range: [40, 70]
+  private_range: 20
+  seed_base: 3000
+
+llm:
+  # Same pattern as configs/robustness/*_gpt5mini.yaml (no service_name -> edsl default openai).
+  # Note: the gpt-5-mini API ignores the temperature parameter (see appendix_ablations footnote).
+  model: gpt-5-mini
+  temperature: 0.5
+prompt:
+  templates_dir: "rule_template/DA/"
+
+global_ranking:
+  strategy: "fixed"
+
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 4
+  output_dir: "experiment_logs/da/gpt5mini/direct_null"

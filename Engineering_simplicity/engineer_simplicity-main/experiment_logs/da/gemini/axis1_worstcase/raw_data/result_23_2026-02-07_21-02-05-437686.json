@@ -1,0 +1,191 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 58,
+            "x": 52,
+            "y": 72,
+            "z": 53
+        },
+        "Student B": {
+            "w": 58,
+            "x": 58,
+            "y": 62,
+            "z": 73
+        },
+        "Student C": {
+            "w": 67,
+            "x": 58,
+            "y": 74,
+            "z": 53
+        },
+        "Student D": {
+            "w": 63,
+            "x": 48,
+            "y": 66,
+            "z": 62
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "z",
+        "Student C": "w",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 72,
+        "Student B": 73,
+        "Student C": 67,
+        "Student D": 48
+    },
+    "rankings": {
+        "Student A": [
+            "y",
+            "w",
+            "z",
+            "x"
+        ],
+        "Student B": [
+            "z",
+            "y",
+            "w",
+            "x"
+        ],
+        "Student C": [
+            "y",
+            "w",
+            "x",
+            "z"
+        ],
+        "Student D": [
+            "y",
+            "w",
+            "z",
+            "x"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to be matched with the best possible school, given my preferences and priorities. I need to consider the worst-case scenario to determine the minimum set of schools I could be matched with.\n\n*   **School y:** I have the highest priority (1) at school y, and it's my most preferred school. Therefore, I should rank it first.\n*   **School w:** I have the highest priority (1) at school w, and it's my second preferred school. I should rank it second.\n*   **School z:** I have priority 2 at school z. Since y and w are more preferred and I have top priority at both, I should rank z third.\n*   **School x:** I have priority 2 at school x, and it's my least preferred school.\n\nRanking the schools in this order will ensure that I get my most preferred option if available. If not, the algorithm will move down my list.",
+        "Student B": "My goal is to be matched with the best possible school, given my preferences and priorities. I need to consider the worst-case scenario to determine my ranking.\n\n*   **School z:** I have priority 1 at z, and it is my top choice. If I rank z first, I am guaranteed to be tentatively accepted initially. If I am rejected later, it means z is full of students they prefer (who also have priority 1).\n*   **School y:** I have priority 2 at y, and it is my second choice. If I rank y second, I will propose to y if z rejects me.\n*   **School w:** I have priority 2 at w, and it is my third choice. If I rank w third, I will propose to w if z and y reject me.\n*   **School x:** I have priority 1 at x, and it is my last choice. If I rank x last, I will propose to x if z, y, and w reject me.\n\nIn the worst case, everyone else prefers y > x > w > z. This means many students will be applying to y first. Since I have priority 2 at y, I might get rejected. However, I have priority 1 at both z and x.\n\nTherefore, my ranking should be based on my preferences, as my priority at z and x should guarantee me a spot at one of them.",
+        "Student C": "My goal is to be matched to the best school possible. I need to consider the worst-case scenario to determine the minimum set of schools I could possibly be matched with.\n\n*   **School y:** My priority at y is 4, which is relatively low. Given that most applicants favor y, it's possible that y will fill its spots with students having higher priority than me.\n*   **School w:** My priority at w is 3, which is also not great. There's a chance w will be filled by students with priority 1 or 2.\n*   **School x:** My priority at x is 3, similar to w. Again, I might be rejected.\n*   **School z:** My priority at z is 4, the lowest. It's very likely that z will be filled with higher-priority students.\n\nIn the worst case, I could be rejected by y, w, and x. Therefore, z serves as a safety net.\n\nGiven my priorities and the likely preferences of other students, I should rank the schools in my true preference order: y > w > x > z. This ensures I propose to my most preferred school first, and only move down the list if rejected. There's no benefit to misrepresenting my preferences, as that could lead to being matched to a less preferred school unnecessarily.",
+        "Student D": "I need to consider the worst-case scenario to determine the minimum set of schools I could be matched with. Since the matching is student-proposing, I can only influence which school I get into within that set, not the set itself.\n\nMy priorities at the schools are:\nw: 4, x: 4, y: 3, z: 3\n\nThis means at schools w and x, I have very low priority. At schools y and z, I have relatively better priority (3rd).\n\nWorst Case Analysis:\nIt's possible that schools w and x will be filled with students who have higher priority than me. So, I might not get into w or x.\n\nHowever, at schools y and z, I have a better chance. It's still possible that y and z will be filled with students with higher priorities, but I should definitely include them in my ranking.\n\nStrategic Ranking:\nGiven my preferences (y > w > z > x) and my priorities at each school, I should rank the schools in the order of my true preference. This is because the deferred acceptance algorithm is student-optimal. By ranking truthfully, I maximize my chances of getting my most preferred school that I can get into.\n\nTherefore, I should rank the schools as y > w > z > x."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student B"
+                ],
+                "y": [
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "y"
+                ],
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student D",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "y": "Student A",
+                "w": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "y": "Student A",
+                "w": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "y": "Student A",
+                "w": "Student C",
+                "x": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

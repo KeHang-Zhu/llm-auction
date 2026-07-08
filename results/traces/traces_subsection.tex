@@ -1,0 +1,136 @@
+% ---------------------------------------------------------------------------
+% DRAFT SUBSECTION: What the reasoning traces say
+% Source of all numbers: analysis/build_trace_features.py
+%   -> results/traces/{trace_features.csv, ols_results.txt, traces_summary.md}
+% Intended location: end of Section 6 (after sec:ranking-scaffolds), or as the
+% bridge into the discussion. Uses only macros already defined in the master
+% (\TODO). Labels are new; cross-references to existing labels are guarded
+% with comments.
+% ---------------------------------------------------------------------------
+\subsection{What the Traces Say: Stated Reasoning and Realized Bids}
+\label{sec:traces}
+
+Every bid in our experiments is accompanied by a short free-text plan in
+which the agent explains its choice (median 68 words). We analyze all
+21{,}990 plans from the sealed-bid and clock cells with a transparent
+dictionary of 17 keyword features---stated intent to shade below or bid
+above value, rehearsal of the second-price payment rule, dominance language,
+worst-case and profit-margin rhetoric, and explicit mechanism confusion
+(calling the auction ``first-price''), among others (full regular
+expressions and per-cell prevalence in the replication package,
+\path{analysis/build_trace_features.py}).%
+\footnote{The plans are stated strategies, not full chains of thought; all
+claims in this subsection concern what models \emph{say}, with
+Table~\ref{tab:trace-dissociation} showing that what they say tracks what
+they do.}
+
+Three regularities stand out. First, the modal plan applies
+\emph{first-price} logic to the second-price auction: 53\% of sealed-bid
+second-price traces state an intent to bid below value, 55\% worry about
+``overpaying,'' and 31\% invoke a ``profit margin'' or ``buffer,'' while
+only 2\% use dominance language and only 4\% correctly rehearse that the
+winner pays the \emph{second}-highest bid. Claude-3.5-Haiku explicitly
+mislabels the mechanism ``first-price'' in 10\% of its traces; no other
+model does so more than 0.1\% of the time.
+
+Second, the traces are not cheap talk: stated intent predicts the realized
+bid direction almost perfectly. Among traces stating an intent to shade,
+97\% of bids fall below value (mean deviation $-\$1.84$); among traces
+stating an intent to bid above value, 88\% fall above (mean $+\$1.88$); the
+largest errors come from the 4{,}541 traces that state no value-anchored
+intent at all (mean deviation $-\$4.84$), whose plans anchor on
+uninformative quantities such as ``slightly above half my value.'' In a
+pooled regression of $|b-v|$ on the dictionary features with model and
+lever-family fixed effects (cluster-robust by run), articulating \emph{any}
+value-anchored plan---shading, overbidding, or truthful---is associated with
+\$1.5--\$2.2 smaller absolute deviations than an unanchored plan; the text
+features add $0.075$ of incremental $R^2$ over the fixed effects
+($0.251$ vs.\ $0.176$). The traces are informative about \emph{how} an
+agent errs, but stated reasoning is far from a sufficient statistic for the
+error itself.
+\TODO{Trace option 4 (stated-vs-revealed): parse the dollar amounts quoted
+inside plans and report a calibration curve of stated vs.\ realized shade
+per model; GPT-4o's overbid-intent traces execute the stated direction only
+61\% of the time vs.\ Claude's 98\%.}
+
+Third, and most important for interpreting the ranking, the levers of
+Section~\ref{sec:ranking-scaffolds} produce a \emph{double dissociation}
+between stated reasoning and behavior
+(Table~\ref{tab:trace-dissociation}). \emph{Payoff Safety} (B2) moves bids
+substantially while leaving stated reasoning untouched: the invariant it
+asserts (``your bid determines \emph{if} you win, not \emph{what} you
+pay'') is echoed in zero of its 600 treated traces, and payment-rule
+rehearsal is flat relative to baseline ($2.8\%$ vs.\ $3.5\%$, $p=0.66$);
+the plans keep the same shading rhetoric and simply shrink the shade to
+pennies (``I will bid \$31.9 to avoid overbidding,'' value \$32). The
+\emph{worst-case} scaffold (C1) does the opposite: it massively shifts
+stated reasoning (worst-case language rises from $2\%$ to $43\%$) while
+bids barely move. The \emph{Payoff Tree} moves both, and the \emph{menu}
+restatement moves neither, serving as the placebo row. A classical
+mediation analysis therefore fails at the first stage: whatever Payoff
+Safety does, it does not work by making agents verbalize why truth-telling
+is safe. Stated comprehension and behavioral improvement are separable
+outcomes, and our effective descriptions improve the latter without the
+former.
+\TODO{Trace option 2 (formal mediation): upgrade this paragraph with the
+full manipulation-check matrix over all levers and an explicit
+first-stage-zero mediation bound; all inputs are in
+\path{results/traces/trace_features.csv}.}
+\TODO{Trace option 1 (LLM-judge taxonomy): replace/augment the dictionary
+with a judged strategy taxonomy (truthful-dominance, shading-for-margin,
+opponent-anchored, mechanism-confused, \ldots) validated against a
+100-trace human-labeled set; needed before making the ``zero dominance
+recognition'' claim load-bearing.}
+
+Finally, the traces speak to \emph{why} comprehension fails. In the GPT-4o
+first-price and third-price variants of the same grid, the model deploys a
+nearly identical shading script---shading language in 70\%/79\%/72\% of
+second-/first-/third-price traces and mean bids of $0.88$/$0.87$/$0.84$
+of value---even though the optimum differs sharply across formats (truthful
+in second-price; roughly $\tfrac{2}{3}v$ in our three-bidder first-price
+cell; above value in third-price). The same words justify underbidding
+where shading is optimal and where it is an error: the reasoning script is
+a property of the model, not of the mechanism it faces.
+\TODO{Trace option 3: the cross-mechanism script-invariance result is
+currently GPT-4o--only (V12 recovered logs); run FPSB/TPSB cells for
+Claude, Gemini, and Gemma with the frozen dictionary before claiming
+generality.}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Stated reasoning} & \multicolumn{2}{c}{Behavior} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Lever (family) & target language & $\Delta$ vs.\ baseline &
+mean $|b-v|$ & baseline \\
+\midrule
+Payoff Safety (B2) & payment-rule rehearsal & $3.5\%\to 2.8\%$ &
+$1.95$ & $3.27$ \\
+Worst-case scaffold (C1) & worst-case rhetoric & $2\%\to 43\%$ &
+$3.07$ & $3.24$ \\
+Payoff Tree (C1) & rule rehearsal & $7.5\%\to 26.7\%$ &
+$1.29$ & $3.41$ \\
+Menu restatement (B1) & --- & no shift & $3.55$ & $3.11$ \\
+\bottomrule
+\end{tabular}
+\caption{Double dissociation between stated reasoning and bidding behavior
+(pooled over four models, sealed-bid second-price cells; baselines are the
+axis-specific baseline cells, cluster-robust tests in
+\texttt{results/traces/ols\_results.txt}). Payoff Safety improves bids without
+changing what agents say; the worst-case scaffold changes what agents say
+without improving bids.
+\label{tab:trace-dissociation}}
+\end{table}
+\TODO{Table~\ref{tab:trace-dissociation}: (i) decide whether the Payoff
+Safety baseline column should quote the \texttt{spsb} cell ($3.11$/$-2.67$,
+as in Section~\ref{sec:ranking-descriptions}) or the pooled axis baselines
+($3.27$) --- both are in \path{results/traces/traces_summary.md};
+(ii) reconcile the Claude Payoff-Safety sign ($+0.30$ in the logs vs.\
+$-0.30$ in the current draft); (iii) caveat for the menu row: the menu
+prompt replaces the ``second-highest'' vocabulary entirely (rule-rehearsal
+prevalence is $0\%$ by construction), so the language column measures
+prompt echo there, not comprehension --- consider dropping the language
+entry for B1 or noting the confound in the caption.}
+% ---------------------------------------------------------------------------

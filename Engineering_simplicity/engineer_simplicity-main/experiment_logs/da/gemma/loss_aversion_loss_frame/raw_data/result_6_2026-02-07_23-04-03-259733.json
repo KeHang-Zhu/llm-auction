@@ -1,0 +1,180 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 64,
+            "x": 48,
+            "y": 64,
+            "z": 80
+        },
+        "Student B": {
+            "w": 75,
+            "x": 52,
+            "y": 52,
+            "z": 84
+        },
+        "Student C": {
+            "w": 73,
+            "x": 46,
+            "y": 65,
+            "z": 81
+        },
+        "Student D": {
+            "w": 78,
+            "x": 63,
+            "y": 58,
+            "z": 81
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "y",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 64,
+        "Student B": 84,
+        "Student C": 65,
+        "Student D": 63
+    },
+    "rankings": {
+        "Student A": [
+            "z",
+            "w",
+            "y",
+            "x"
+        ],
+        "Student B": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ],
+        "Student C": [
+            "z",
+            "w",
+            "y",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "w",
+            "x",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My best possible outcome is matching with school z, with an expected value of ${{ max_value }}. My goal is to minimize potential loss. The information provided suggests most applicants prefer y > x > w > z. This means z is likely to be less competitive. My ranking reflects my strong preference for z, but I need to consider the possibility of being unmatched if I only rank z.\n\nGiven the applicant pool's preferences, y and w are likely to be highly competitive. While I prefer w over y, my priority at w is only 1, while my priority at y is also 1. This suggests I have a better chance at y than others do at w.\n\nTherefore, I will rank z first, as it's my most preferred and has the highest potential payoff. Then I'll rank w second, as it's my second choice and I have the highest priority there. I'll rank y third, hoping to secure it if z and w don't work out, and finally x. This strategy balances my preferences with the competitive landscape. If I were to rank x higher, I'd be accepting a lower value school more readily, potentially losing more. Being unmatched is the worst outcome, so I need to include schools I have some chance of getting into.",
+        "Student B": "My best possible outcome is matching with school z, valued at ${{ max_value }}. I need to consider the risk of being unmatched, which would result in losing the entire ${{ max_value }}. The information that most applicants favor y > x > w > z is crucial. This suggests z will be highly competitive, and my priority at z (rank 1) is good, but doesn't guarantee a match.\n\nGiven my strong preference for z, I will rank it first. However, knowing that others favor y, x, and w, and that I have a high priority at x (rank 1), I should rank x second. This gives me a good backup option if z is too competitive. \n\nRanking w third is reasonable as it's my second preference, but not as strategically important as securing x. Finally, y is my least preferred option, so I will rank it last.\n\nMy strategy prioritizes maximizing my chance of getting *a* match, while still attempting to get my most preferred school. Because of the applicant pool tendencies, I feel x is a safer bet than w, despite my preference for w. The risk of being unmatched is too high to ignore.",
+        "Student C": "My best possible outcome is matching with school z, valued at ${{ max_value }}. My goal is to minimize potential loss. Most applicants prefer y > x > w > z, meaning z is likely to be less competitive. My own ranking is z > w > y > x.\n\nGiven the general applicant preferences, I'm worried that z might be oversubscribed and I won't get it. If I don't get z, I'll lose my entire ${{ max_value }}. I also have relatively low priority at z (rank 4).\n\nSchool w is my second choice, and I have a rank of 3 there. It seems likely I could get w if z doesn't work out. School y is less desirable to me, and school x is the least desirable.\n\nSince most applicants prefer y, x, and w over z, I believe strategically ranking z first is still the best approach, despite my lower priority there. The potential gain (keeping my ${{ max_value }}) is worth the risk of being unmatched. If z fails, w is my backup. I will rank w second to increase my chances of getting matched to w if z is not possible. Then y and finally x.",
+        "Student D": "My best possible outcome is matching to school z, with a value of ${{ max_value }}. I need to consider the risk of being unmatched and losing everything. Most applicants seem to prefer y > x > w > z, which means z is likely to be less competitive. My ranking reflects this, prioritizing z first.\n\nHowever, if z is *too* competitive and I don't get it, I'm left unmatched and lose everything. w is my second choice, and while it's not ideal, it\u2019s better than losing ${{ max_value }}. x and y are less desirable to me, but I need to rank them in some order. Given the applicant pool's preferences, x is likely to be more competitive than y. Therefore, I will rank x before y.\n\nThis strategy aims to secure a match, even if it's not my top choice, while still prioritizing my most preferred school. It's a balance between aiming high and mitigating the risk of complete loss. I'm betting that my relatively low priority at w, x, and y won't be a dealbreaker, especially if many others rank those schools higher."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": false,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student D",
+                    "Student B",
+                    "Student A",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ],
+                [
+                    "Student A",
+                    "z"
+                ],
+                [
+                    "Student C",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student D",
+                    "Student A",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ],
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "x": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "w": "Student A",
+                "x": "Student D",
+                "y": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

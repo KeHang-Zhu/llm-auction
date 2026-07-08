@@ -1,0 +1,195 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 48,
+            "x": 67,
+            "y": 62,
+            "z": 68
+        },
+        "Student B": {
+            "w": 57,
+            "x": 71,
+            "y": 64,
+            "z": 84
+        },
+        "Student C": {
+            "w": 51,
+            "x": 57,
+            "y": 65,
+            "z": 88
+        },
+        "Student D": {
+            "w": 47,
+            "x": 64,
+            "y": 66,
+            "z": 80
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "x",
+        "Student B": "z",
+        "Student C": "w",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 67,
+        "Student B": 84,
+        "Student C": 51,
+        "Student D": 66
+    },
+    "rankings": {
+        "Student A": [
+            "z",
+            "x",
+            "y",
+            "w"
+        ],
+        "Student B": [
+            "z",
+            "x",
+            "y",
+            "w"
+        ],
+        "Student C": [
+            "z",
+            "y",
+            "x",
+            "w"
+        ],
+        "Student D": [
+            "z",
+            "y",
+            "x",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Given the key insight that rejections only redirect and never eliminate, and that my ranking determines the *order* of consideration, not *whether* I'm considered, I should rank schools based purely on my personal values. There's no downside to ranking a school highly even if I suspect competition will be fierce. The algorithm protects me \u2013 a rejection simply means I move on to my next preference.\n\nMy values are: w = $48, x = $67, y = $62, z = $68. Therefore, my most preferred school is z, followed by x, then y, and finally w.\n\nThe information about other applicants' preferences (y > x > w > z) is interesting, but doesn't change *my* optimal strategy. If many people prefer y, that just means competition for y will be higher, but a rejection from y doesn't impact my chances at x, w, or z. I still want to *apply* to y first if it's my second highest value.",
+        "Student B": "Given the key insight that rejections only redirect and never eliminate, and that my priority ranking at each school is known, I should rank the schools based on my personal values, *without* trying to game the system based on what I think others are doing. The information about other applicants' preferences is interesting, but irrelevant to my optimal strategy. Since rejections only redirect, there's no downside to listing my most preferred school first, even if it's highly competitive.\n\nMy values are: w = $57, x = $71, y = $64, z = $84. Therefore, my preference order is z > x > y > w. I will rank the schools accordingly.",
+        "Student C": "Given the key insight that rejections only redirect and never eliminate, and that my ranking determines the *order* of consideration, not *whether* I'm considered, I should rank schools based on my personal values, not what others are doing. The fact that most applicants favor y > x > w > z is irrelevant to *my* optimal strategy.\n\nMy values are: w = $51, x = $57, y = $65, z = $88. Therefore, I should rank them in ascending order of value. This maximizes my chance of getting the highest value school possible. Even if I get rejected from z, y, and x, I still have a chance at w. The algorithm guarantees I won't be blocked from a school I *would* have been accepted to.",
+        "Student D": "Given the key insight that rejections only redirect and never eliminate, and knowing my values for each school (w=$47, x=$64, y=$66, z=$80), I should rank schools based on my personal value, *not* on what I perceive others are doing. The information about others favoring y > x > w > z is useful to understand potential competition, but doesn't change my own preferences.\n\nMy highest value is at school z ($80), followed by y ($66), then x ($64), and finally w ($47). My priority ranks at each school are less important than my own valuation, as the algorithm protects me from being eliminated simply because of lower priority. I want to maximize my potential payout, and the algorithm will find the best possible match for me given my preferences. Therefore, I should rank based on my values."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student A",
+                    "Student C",
+                    "Student B",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student A",
+                    "z"
+                ],
+                [
+                    "Student C",
+                    "z"
+                ],
+                [
+                    "Student D",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student A"
+                ],
+                "y": [
+                    "Student C",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "x": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "y": "Student D",
+                "w": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

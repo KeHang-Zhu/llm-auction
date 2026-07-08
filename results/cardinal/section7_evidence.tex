@@ -1,0 +1,121 @@
+% ============================================================================
+% section7_evidence.tex -- bullet-level evidence notes for Section 7
+% "From ordinal to cardinal agreement: is there a consistent tuning?"
+% Source of every number: results/cardinal/cardinal_grid.csv
+% (built by analysis/build_cardinal_grid.py; seed 1299; SMAD = 100*E|b-b*|/24.5;
+%  direction = share of bids > value + 0.1 (0.5 clock); W1 on scaled b-v vs the
+%  moment-matched human reconstructions). NOT prose -- raw material for the writer.
+% ============================================================================
+
+% ---------- Setup / framing bullets ----------
+% \item Knobs with data: temperature (0.1/0.5/1.0, GPT-4o, 8 mechanisms);
+%   risk personas (averse/neutral/seeking; SP for 4 models, FP+TP N=3 for GPT-4o);
+%   prospect frames (loss/gain/mixed/endowment/WTA-WTP; same coverage as personas);
+%   rule-explanation on/off (GPT-4o, sealed-bid formats only).
+% \item Distance to humans measured on three axes: level (\Delta SMAD), direction
+%   (overbid-share gap), shape (Wasserstein-1 vs reconstructed human bid
+%   distributions). Human targets: plots/auction_human.csv.
+% \item Canonical baselines: intervention cells are tested against the same
+%   model's pooled axis1/2/3 baselines (personas) or loss-aversion baseline
+%   (frames); temperature and explanation cells against the V10 anchors.
+
+% ---------- (a) LEVEL: best setting per mechanism (GPT-4o) ----------
+% \item FP: T=1.0 closes the level gap almost exactly: SMAD 25.50 [23.49,27.69]
+%   vs human 24.76 (\Delta=+0.74); untuned anchor 28.11.
+% \item SP: WTA--WTP frame is best: 7.24 [6.02,8.56] vs human 5.65 (\Delta=+1.59);
+%   improvement over its own baseline $-3.57$ SMAD (Welch $p=0.005$).
+% \item SP-APV: untuned anchor already best (10.95 vs 9.31); both temperatures hurt.
+% \item AC / AC-B: LLMs are \emph{too rational}: SMAD 0.83 / 0.48 vs human 3.54 / 5.83.
+%   Raising temperature to 1.0 adds human-like noise and moves TOWARD humans
+%   (1.02 / 2.19) -- the only case where a knob works by degrading the LLM.
+%   (Caveat: AC-B T=1.0 has n=8 exits.)
+% \item CV-FP: temperature helps (T=0.1: 39.0; T=1.0: 42.9 vs human 47.6; anchor 59.99,
+%   level test $p\le0.016$). CV-SP: all settings remain 15--22 SMAD above human 18.23.
+% \item TP: cardinal failure under EVERY setting. Best cell in the entire grid:
+%   T=0.1, N=5: SMAD 44.11 vs human 7.66 (n=5 Kagel--Levin). At N=3 all persona/frame
+%   cells sit at SMAD 106--131 (equilibrium 2v; LLMs bid $\approx$ value).
+
+% ---------- (b) DIRECTION: only risk-seeking moves it ----------
+% \item Human overbid-vs-value shares: FP 0.4\%, SP 67.2\%, TP 89.8\%.
+% \item GPT-4o baselines: FP 0\%, SP 0.4\% (axis baseline; V10 anchor 16.7\%), TP3 0.2\%.
+% \item Risk-seeking persona (GPT-4o): SP overbid $0.4\%\to45.3\%$ ($p<10^{-4}$),
+%   TP3 $0.2\%\to56.5\%$ ($p<10^{-4}$) -- direction gaps fall from 66.8 to 21.9pp (SP)
+%   and 89.6 to 33.3pp (TP3). It also improves TP3 level ($-14.4$ SMAD, $p=0.011$)
+%   and SP shape (W1 23.8$\to$14.8pp).
+% \item COST: in FP the same persona induces dominated bids: overbid-above-value
+%   $0\%\to18.0\%$ vs human 0.4\% ($p<10^{-4}$); FP SMAD $+4.6$ ($p=0.002$).
+% \item No other knob moves direction: under temperature, frames, and explanation
+%   the SP overbid share never exceeds 17\% (gap $\ge50$pp); risk-averse pushes all
+%   overbid shares to 0.
+% \item Direction rank table (rank\_core\_dir\_gap.csv): risk-seeking is rank 1 of 15
+%   on SP and TP3 and rank 15 of 15 on FP.
+
+% ---------- (c) VERDICT: no portable setting ----------
+% \item No setting is in the top half of both the level and the direction ranking
+%   on all three core mechanisms (FP, SP, TP3) -- see rank\_core\_*.csv.
+% \item Level winner (worst-case rank): WTA--WTP frame (6/15); direction winner on
+%   SP+TP: risk-seeking; the two are disjoint and risk-seeking breaks FP.
+% \item Interpretation bullet: matching human overbidding in SP/TP requires a
+%   disposition that violates the sharpest human regularity in FP (almost never
+%   bidding above value). Cardinal calibration is mechanism-specific by
+%   construction, not by accident of the grid.
+% \item Model-specificity (SP, risk-seeking, SMAD vs human 5.65 / overbid vs 67.2\%):
+%   gemma-3-27b $20.71\to5.87$ / $26\%\to56\%$ (best cardinal match in grid);
+%   gemini-2.0-flash $11.74\to4.92$ / $0\%\to82\%$;
+%   gpt-4o $11.38\to10.48$ / $0.4\%\to45\%$;
+%   claude-3.5-haiku $9.53\to35.03$ / $43\%\to93\%$ (overshoots badly).
+%   A persona calibrated on one model does not transfer to another.
+% \item Temperature is not a cardinal dial: SP SMAD is non-monotone in T
+%   (15.07 / 8.86 / 13.15 at T=0.1/0.5/1.0; both deviations from 0.5 significant,
+%   $p\le10^{-4}$); its only clean use is noising the too-perfect clock formats.
+% \item Rule-explanation on/off: no-op. Level differences $\le0.16$ SMAD on FP, SP,
+%   SP-APV (all $p\ge0.53$); TP3 $+3.0$ ($p=0.53$); only a small TP3 direction shift
+%   (19.4\%$\to$12.6\%, $p=0.02$). [Caveat: manipulation not verifiable from saved
+%   prompts; contrast rests on the recovered git tree ce36a78b. Phrase as ``no
+%   detectable effect''.]
+
+% ---------- Proposed main table (draft skeleton) ----------
+% Cells: SMAD / overbid-vs-value share. Human targets in the header row.
+% TP3 note: human target is Kagel--Levin n=5; persona cells are N=3 (b* = 2v).
+\begin{table}[t]
+\centering
+\caption{Cardinal calibration under tuning knobs (GPT-4o, sealed-bid IPV).
+Each cell: SMAD\,\% / share of bids above value. Human targets in the top row.
+SMAD $=100\cdot\mathbb{E}|b-b^*(v)|/24.5$ with each environment's own $b^*$.
+$\dagger$: differs from its baseline at $p<0.05$ (Welch / two-proportion tests);
+baselines: pooled axis baselines (personas), loss-aversion baseline (frames),
+V10 anchor (temperature, explanation).}
+\label{tab:cardinal-tuning}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{2}{c}{First price} & \multicolumn{2}{c}{Second price} & \multicolumn{2}{c}{Third price ($N{=}3$)} \\
+Setting & SMAD & over\,\% & SMAD & over\,\% & SMAD & over\,\% \\
+\midrule
+\emph{Human target} & \emph{24.8} & \emph{0.4} & \emph{5.6} & \emph{67.2} & \emph{7.7}$^{n=5}$ & \emph{89.8} \\
+\midrule
+Untuned anchor (T=0.5)   & 28.1 & 0.0  & 8.9  & 16.7 & 108.3 & 19.4 \\
+Axis-pooled baseline     & 23.4 & 0.0  & 11.4 & 0.4  & 120.2 & 0.2  \\
+Temperature 0.1          & 28.6 & 0.0  & 15.1$^\dagger$ & 10.2$^\dagger$ & 112.5 & 1.3$^\dagger$ \\
+Temperature 1.0          & 25.5 & 0.7  & 13.2$^\dagger$ & 9.8$^\dagger$  & 123.7$^\dagger$ & 2.7$^\dagger$ \\
+Risk-averse persona      & 15.0$^\dagger$ & 0.0 & 18.3$^\dagger$ & 0.0 & 129.2 & 0.0 \\
+Risk-neutral persona     & 20.9 & 0.0 & 11.0 & 2.7$^\dagger$ & 121.3 & 6.7$^\dagger$ \\
+Risk-seeking persona     & 28.0$^\dagger$ & 18.0$^\dagger$ & 10.5 & 45.3$^\dagger$ & 105.8$^\dagger$ & 56.5$^\dagger$ \\
+WTA--WTP frame           & 23.0 & 0.0  & 7.2$^\dagger$  & 0.0  & 114.0 & 0.0 \\
+Rule explanation off     & 28.1 & 0.0  & 8.7  & 16.0 & 111.3 & 12.6$^\dagger$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ---------- Numbers for other mechanisms (text or appendix) ----------
+% \item Temperature row for the remaining formats (SMAD, human target in parens):
+%   SP-APV 13.1 / 10.95 / 13.0 at T=0.1/0.5/1.0 (9.31);
+%   AC  --- / 0.83 / 1.02 (3.54); AC-B --- / 0.48 / 2.19 (5.83) [T=0.1 clock runs empty; AC-B T=1.0 n=8];
+%   CV-FP 39.0 / 60.0 / 42.9 (47.6); CV-SP 35.5 / 40.6 / 33.5 (18.2) [profit-based metric].
+% \item Wasserstein-1 (shape, pp of value scale; compare within mechanism only):
+%   FP: baselines 2.1--3.0 (GPT-4o FPSB bid distribution is genuinely human-shaped);
+%   SP: baseline 23.8 -> risk-seeking 14.8; TP3: 48.1 -> 30.1;
+%   AC/AC-B: 6.5 / 3.0 at anchor. Reconstructions from
+%   results/v12_interventions/moment_matching/ (KL93 n=5; Gonczarowski Traditional;
+%   Li 2017 2P/AC; Breitmoser AC-DO).
+% \item NA cells to acknowledge: AC & AC-B at T=0.1 (empty run dirs); CV explanation-off
+%   (no raw JSONs in git); TP N=5 persona/frame cells never run.

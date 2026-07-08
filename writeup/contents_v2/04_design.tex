@@ -1,0 +1,689 @@
+% ============================================================================
+% Section 4: Experimental Design
+% Sources: writeup/contents/methods.tex (auctions, SMAD, reconstruction, models)
+%          Engineering_simplicity/main.tex:126-274 (DA, prompt skeletons, models)
+% Per plan/plan.md section 3 row 4 and section 5 reconciliation decisions.
+% ============================================================================
+
+\section{Experimental Design}\label{sec:design}
+
+Our design crosses the lever families of Section~\ref{sec:framework} with the
+canonical strategy-proof auction domain---second-price sealed bidding and its
+clock implementations---and four LLM families, plus one field-inspired
+environment (a stylized eBay marketplace) that serves validation only. A second
+strategy-proof domain, school choice under student-proposing deferred
+acceptance, replicates the design end-to-end and serves as a generalization
+check on the ranking; its design is summarized below
+(Section~\ref{sec:design-da}) and its implementation and results are reported
+in Appendix~\ref{app:da}. The unit
+of observation throughout is a fully specified, seed-reproducible \emph{market
+instance}: a draw of values (or preferences), a mechanism, a description, and a
+set of LLM agents whose actions mechanically determine allocations and
+payments. This section describes the mechanisms and environments
+(Section~\ref{sec:design-environments}), the treatment grid
+(Section~\ref{sec:design-treatments}), the models and simulation protocol
+(Section~\ref{sec:design-models}), the unified deviation metrics and the
+preservation index that aggregates them into the ranking
+(Section~\ref{sec:metrics}), and the reconstruction of human benchmarks
+(Section~\ref{sec:reconstruction}). Table~\ref{tab:calibration-master} pins the
+canonical calibration that all cells share; where legacy runs deviate from this
+calibration, the deviation is flagged in the table notes and resolved by the
+harmonized re-runs.
+
+\subsection{Mechanisms and Environments}\label{sec:design-environments}
+
+\subsubsection{Auctions}\label{sec:design-auctions}
+
+We generate synthetic auction data by simulating auctions in which $n$ LLM
+agents bid against one another under fully specified information structures and
+auction rules. Each experimental \emph{setting} is defined by (i) a \emph{value
+model} (how bidder values or signals are drawn), (ii) a \emph{mechanism
+environment} (the action space, allocation and payment rules, and the
+information revealed during play), and (iii) a \emph{prompt framing} (how the
+mechanism is described to the bidder). For each setting, we repeat the
+simulation $K$ times with independent random seeds, producing a dataset of
+realized values (or signals), bidder actions, allocations, prices, profits, and
+free-text plans. ``Actions'' refers to: a numeric bid in sealed-bid formats, a
+\texttt{stay}/\texttt{exit} decision at each clock tick in ascending auctions,
+and an \texttt{increase}/\texttt{hold} decision over a bidder's maximum bid in
+the eBay proxy-bidding environment.
+
+\paragraph{Value models and numerical calibration.}
+We implement three canonical information structures. All parameters (support
+ranges, bidder count $n$, and bid/price increments) are specified in
+configuration files and held fixed within a setting. In sealed-bid auctions,
+bids are restricted to a discrete grid with increment $\$0.1$; in ascending
+clock auctions, the clock price increases by $\$0.5$ per
+tick.\footnote{The predecessor draft of the ranking study stated a $\$0.01$
+sealed-bid increment; the configuration files specify $\$0.1$, which we adopt
+as canonical here (Table~\ref{tab:calibration-master}).}
+
+\begin{itemize}
+    \item \textbf{Independent private values (IPV).} Each bidder's value is an
+    independent private draw from the integer grid
+    \[
+          v_{i} \sim \mathrm{Unif}\{0,1,\dots,49\},
+    \]
+    so that the expected truthful bid in the second-price auction is
+    $\mathbb{E}[v]=24.5$. This is the baseline environment for the lever grid.
+
+    \item \textbf{Affiliated private values (APV).} Values share a common
+    component plus an idiosyncratic private shock:
+    \[
+        c \sim \mathrm{Unif}[0,29], \qquad \epsilon_{i} \sim \mathrm{Unif}[0,20],
+        \qquad v_{i}=c+\epsilon_{i}.
+    \]
+    This induces affiliation: higher realized values for one bidder make higher
+    values for others more likely. Each bidder observes her own realized
+    $v_{i}$, so the dominant strategy in strategy-proof formats is unchanged.
+
+    \item \textbf{Common value (CV).} The item has an underlying common value
+    $V$ shared by all bidders, while each bidder observes a noisy private
+    signal:
+    \[
+        V \sim \mathrm{Unif}[20,29], \qquad \eta_{i} \sim \mathrm{Unif}[-20,20],
+        \qquad s_{i}=V+\eta_{i}.
+    \]
+    Bidder $i$ conditions on $s_{i}$ when bidding, while realized payoffs
+    depend on $V$, generating the winner's-curse selection effect.
+\end{itemize}
+
+\paragraph{Sealed-bid auctions.}
+In sealed-bid auctions, each bidder submits a single bid $b_{i}$
+simultaneously. Let $b_{(1)}\ge b_{(2)}\ge b_{(3)}$ denote the order statistics
+and let $i^\star$ be the highest bidder. The winner pays a price $p$ determined
+by the mechanism:
+\begin{itemize}
+    \item \textbf{First-price sealed-bid (FPSB).} $i^\star$ wins and pays
+    $p=b_{(1)}$.
+    \item \textbf{Second-price sealed-bid (SPSB).} $i^\star$ wins and pays
+    $p=b_{(2)}$.
+    \item \textbf{Third-price sealed-bid (TPSB).} $i^\star$ wins and pays
+    $p=b_{(3)}$.
+\end{itemize}
+Profits are computed as $\pi_{i}=v_{i}-p$ for winners (or $\pi_{i}=V-p$ in CV)
+and $0$ for losers. SPSB is the strategy-proof baseline on which the lever grid
+operates; FPSB and TPSB appear only in the behavioral-fidelity battery of
+Section~\ref{sec:validation}, where their Bayes--Nash benchmarks
+(Section~\ref{sec:metrics}) discipline the comparison with human
+data.\footnote{The repository also contains FPSB and TPSB \emph{intervention}
+batteries; these are outside the scope of the ranking, which concerns
+strategy-proof mechanisms whose benchmark is a dominant strategy rather than a
+Bayes--Nash equilibrium. They enter the paper instead through the
+cardinal-calibration analysis of Section~\ref{sec:humans}, where the
+non-strategy-proof formats discipline the search for prompt-level tunings that
+match human levels and directions.}
+
+\paragraph{Ascending clock auctions.}
+In an ascending clock auction, the price starts at $0$ and increases by a fixed
+increment $\Delta_{\text{clock}}=\$0.5$ at each tick. At each posted price,
+each active bidder chooses \emph{stay} or \emph{exit}; exit is irreversible.
+The last remaining bidder wins and pays the exit price of the second-to-last
+bidder, implementing the standard second-price logic in a dynamic interface. We
+distinguish two information regimes: in the \emph{open} clock (AC), bidders are
+informed as rivals drop out; in the \emph{closed} or \emph{blind} clock (AC-B),
+exit decisions are private and bidders are never told when others leave. Both
+regimes preserve the dominant strategy of remaining active exactly while the
+price is below one's value. The clock format imported from the ranking
+pipeline is AC-B.
+
+\paragraph{Why the sealed-bid-versus-clock comparison runs in both value
+environments.}
+The extensive-form lever (Family~A) appears twice in the auction design---once
+under APV and once under IPV---and the two cells do different work. The
+\emph{APV cells exist for human-benchmark comparability}: the laboratory
+evidence that clock formats improve truthful play
+\citep{li2017obviously,breitmoser2022obviousness} is the evidence base for our
+moment-matched human reconstructions (Section~\ref{sec:reconstruction}), and it
+is in this environment that humans and LLMs can be placed on the same SMAD
+scale across SP, AC, and AC-B. The \emph{IPV cells exist for identification}:
+under independent private values, a bidder who knows her own value learns
+nothing payoff-relevant from the clock---no information about her value exists
+in others' dropout decisions---so any improvement from the clock format must
+operate through a purely cognitive channel. In a common- or affiliated-value
+setting, by contrast, an open clock could in principle improve play by
+revealing information about others' values, confounding the cognitive
+interpretation. Keeping both cells, purpose-labeled, lets the APV cell carry
+the human anchor and the IPV cell carry the causal claim.
+\TODO{Provenance (plan \S5.5, E2): the cross-model clock cells currently
+reported in Section~\ref{sec:ranking} reproduce from the imported pipeline,
+whose clock configurations are APV (common component $[0,29]$) with open and
+blind variants and mixed increments (\$1 vs.\ \$0.5)---not the IPV clock the
+predecessor draft describes. The harmonized IPV-clock re-run
+(four models, $K=50$) will finalize the identification cell.}
+
+\paragraph{Stylized eBay proxy-bidding environment (validation only).}
+Separately from the laboratory mechanisms, we implement a stylized eBay
+environment with \emph{proxy bidding}: each bidder maintains a maximum bid (a
+willingness-to-pay cap), and the platform automatically raises the standing bid
+only as needed to keep the current leader ahead. Each eBay simulation has $n=3$
+bidders, IPV values $v_i \sim \mathrm{Unif}[0,99]$, and $T_{\text{eBay}}=10$
+discrete bidding periods; treatments cross a hard versus soft (auction
+extension) closing rule with the presence of a hidden reserve price. Because
+this environment studies a richer, marketplace-inspired microstructure rather
+than a canonical laboratory mechanism, it enters the paper only as a field
+validation exhibit (Section~\ref{sec:validation}); the eBay prompts are
+deliberately minimal and descriptive, so that behavior is not steered by
+didactic instruction. Full rules, treatments, and procedures appear in
+Appendix~\ref{app:ebay}.
+
+\subsubsection{Deferred acceptance (generalization domain)}\label{sec:design-da}
+
+The matching domain replicates the auction design end-to-end in a school-choice
+environment in which LLMs play the role of students; because the paper's main
+domain is auctions, we summarize the design here and defer the full
+implementation---priority orders, prompt skeletons, and the query
+algorithm---to Appendix~\ref{app:da}. Each market instance comprises four
+students and four schools with unit capacity: large enough to admit meaningful
+strategic considerations (competition for popular schools and priority
+asymmetries), small enough that the full DA trace can be logged and every
+outcome audited. Valuations are affiliated, $v_{i,s} = c_s +
+\varepsilon_{i,s}$, with a school-level common component $c_s \sim
+\mathrm{Unif}[40,70]$ and independent student--school shocks
+$\varepsilon_{i,s} \sim \mathrm{Unif}[0,20]$ \citep{klijn2019static}; a
+student's \emph{true preference ranking} is the descending sort of her
+valuations. Schools rank students by fixed, Ergin-acyclic priority orders
+\citep{ergin2002efficient}---acyclicity being the condition under which a
+sequential-query implementation of DA can be made obviously strategy-proof
+\citep{ashlagi2018stable}. All students additionally observe a fixed ``global
+popularity'' ranking that proxies common beliefs about demand. Because DA is
+strategy-proof for the proposing side \citep{roth1982economics}, beliefs about
+others' demand should not change any report; the fixed signal exists to give
+belief-directed misreporting room to express itself---and to give the belief
+scaffolds of Family~C3 something concrete to amplify.
+
+Each instance is elicited under two protocols, mirroring the auction domain's
+sealed-bid/clock pair. Under \emph{direct DA}---the strategy-proof
+baseline---each student submits a complete rank-order list in a single shot,
+and student-proposing DA runs on the submitted rankings with the true school
+priorities. Under \emph{iterative DA}---the Family~A lever in matching---no
+full ranking is ever submitted: the mechanism queries students sequentially
+with yes/no offers over individual schools, following the OSP tree
+construction of \citet{ashlagi2018stable}, and reduces to serial dictatorship
+(a single pick from the remaining schools) when only one top-priority student
+remains. Within each repetition we query one LLM instance per student with a
+self-contained scenario prompt bundling the student's identity, priorities,
+the popularity signal, the mechanism rules, and any treatment text, with
+chain-of-thought \citep{wei2022chain} elicited through structured reasoning
+and decision tags. For each treatment condition and mechanism we run $K=50$
+independent repetitions (fresh value draws; priorities and popularity signal
+fixed), logging a complete JSON record per instance---raw responses, parsed
+decisions, and the full DA trace---for exact replay and audit. The priority
+orders, both prompt skeletons, and Algorithm~1 (the query protocol) appear in
+Appendix~\ref{app:da} and Appendix~\ref{app:prompts}.
+
+% ---------------------------------------------------------------------------
+% Master calibration table (plan section 5.4)
+% ---------------------------------------------------------------------------
+\begin{table}[t]
+\centering
+\caption{Master calibration. Canonical parameterization of every environment
+in the design; all cells use temperature $T=0.5$ and a one-shot protocol (no
+feedback across instances). $K$ = repetitions per cell (pinned targets;
+deviations of legacy runs flagged in the notes).}
+\label{tab:calibration-master}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lllllcl@{}}
+\toprule
+Environment & Mechanisms & Value model & Action grid & $N$ & $K$ per cell & Model coverage \\
+\midrule
+Sealed bid, IPV & SPSB (anchor); FPSB, TPSB & $v_i \sim \mathrm{Unif}\{0,\dots,49\}$ & bid grid \$0.1 & 3 & 100 / $\ge$50$^{a}$ & canonical four + tiers$^{b}$ \\
+Sealed bid, APV & SP & $v_i = c+\epsilon_i$;\; $c\sim U[0,29]$, $\epsilon_i\sim U[0,20]$ & bid grid \$0.1 & 3 & $\ge$50 & canonical four + tiers$^{b}$ \\
+Clock, APV & AC, AC-B & as APV above & tick \$0.5 & 3 & 50$^{c}$ & canonical four + tiers$^{b}$ \\
+Clock, IPV & AC-B & as IPV above & tick \$0.5 & 3 & 50$^{d}$ & canonical four$^{d}$ \\
+Sealed bid, CV & FPSB, SPSB & $V\sim U[20,29]$;\; $s_i = V+\eta_i$, $\eta_i\sim U[-20,20]$ & bid grid \$0.1 & 4--7 & ---$^{e}$ & GPT-4o \\
+eBay (validation) & proxy bidding; closing rule $\times$ reserve & $v_i \sim U[0,99]$ & raise/hold max bid & 3 & 30$^{e}$ & GPT-4o \\
+Matching (DA)$^{f}$ & direct; iterative (OSP) & $v_{i,s}=c_s+\varepsilon_{i,s}$;\; $c_s\sim U[40,70]$, $\varepsilon_{i,s}\sim U[0,20]$ & rank-order list / yes--no & $4\times4$ & 50 & canonical four \\
+\bottomrule
+\end{tabular}}
+\par\smallskip
+\begin{minipage}{\textwidth}\footnotesize
+\emph{Notes.} $^{a}$\,$K=100$ for the anchor cell (SPSB-IPV baseline, per
+model); $K\ge 50$ for lever-grid and robustness cells.
+\TODO{E8: harmonized baseline re-run pending; some legacy robustness cells ran
+$K=30$--$40$.}
+$^{b}$\,Canonical four = GPT-4o (2024-08-06, anchor), Claude 3.5 Haiku
+(2024-10-22), Gemini 2.0 Flash, Gemma 27B; appendix tiers = gpt-5-mini
+(frontier tier) and Llama-3-8B (capability floor),
+Appendix~\ref{app:ablations}. \TODO{E4: Gemma on the fidelity battery
+pending.}
+$^{c}$\,\TODO{Current clock cells ran $K=40$ (configs \texttt{repetitions:
+40}), below the pinned $K=50$; top up in the harmonized re-runs.}
+$^{d}$\,\TODO{E2: IPV clock $\times$ four models pending; the imported
+pipeline's clock cells are APV with mixed increments (\$1 vs.\ \$0.5), not the
+IPV clock described in the predecessor draft.}
+$^{e}$\,eBay: $K=30$ runs per treatment cell, verified from the recovered
+logs (29 for the soft-close $r=60$ cell; Appendix~\ref{app:ebay}).
+\TODO{Pin $K$ for the CV cells from the recovered run logs (E5/E10).}
+$^{f}$\,Generalization domain: design summary in
+Section~\ref{sec:design-da}; implementation details, Algorithm~1, and results
+in Appendix~\ref{app:da}.
+\end{minipage}
+\end{table}
+
+\subsection{Treatments}\label{sec:design-treatments}
+
+The treatment grid crosses the lever families of Section~\ref{sec:framework}
+with the two strategy-proof domains. Family~A (extensive form) is implemented
+as a change of \emph{mechanism}: the ascending clock replaces the sealed-bid
+interface in auctions, and the iterative query protocol replaces direct
+revelation in DA, with value draws, allocation and payment rules, model, and
+temperature all held fixed. Families~B and~C are implemented as \emph{prompt
+treatments} on the sealed-bid and direct-DA baselines: each treatment modifies
+only the rule-explanation block of the prompt while holding the value
+distribution, bidder identities, payment rules, and the structured response
+format fixed, so that any behavioral change is attributable to the description
+or scaffold alone, under the same underlying game.
+
+\paragraph{Family B: descriptions.}
+Three sub-families restate or expose properties of the mechanism without
+changing its extensive form.
+\begin{itemize}
+    \item \textbf{B1, menu restatement.} Bidders are instructed to choose a
+    ``maximum acceptable price'': they win if the highest rival bid (the market
+    price) is below their chosen maximum, and if they win they pay that market
+    price. This is the menu-style description of the second-price auction
+    studied by \citet{gonczarowski2023strategyproofness}. The DA analogue
+    restates DA through the menu of schools a student's report can obtain
+    given others' reports, and is implemented in two variants---a
+    \emph{property} variant that includes the menu's invariance statement (the
+    student's report cannot change which schools are obtainable) and a
+    \emph{mechanics} variant that restates the computation only---so that the
+    content of a restatement can be separated from its form
+    (Appendix~\ref{app:da}, Appendix~\ref{app:prompts}). This split turns out
+    to be load-bearing for the ranking's interpretation
+    (Section~\ref{sec:ranking-synthesis}).
+    \item \textbf{B2, safety-exposing descriptions.} One-sentence statements of
+    the incentive invariant that makes truthful play safe: \emph{Payoff Safety}
+    in auctions (``your bid determines \emph{if} you win, not \emph{what} you
+    pay'') and \emph{Rejection Safety} in DA (``rejections only redirect, never
+    eliminate''). Exact texts appear in Section~\ref{sec:ranking-descriptions}
+    and Appendix~\ref{app:prompts}.
+    \item \textbf{B3, clock-framing.} The sealed bid is \emph{described} as an
+    automatic exit threshold in a simulated ascending clock: conceptually, the
+    clock rises until bidders ``drop out'' at their thresholds, and the winner
+    pays the second-highest threshold. Both B1 and B3 implement exactly the
+    same allocation and payment rule as the SPSB auction; only the prompt
+    language differs. B3 is a description, \emph{not} a mechanism change, and
+    must never be conflated with the true clock formats AC/AC-B of
+    Family~A.\footnote{\TODO{The repository template name
+    \texttt{intervention\_proxy\_breitmoser} historically referred to both the
+    clock-framing description and the true iterative clock; prompt IDs are
+    split into \texttt{desc\_clock\_framing} (B3) and
+    \texttt{osp\_clock\_iterative} (A) per plan \S5.6, and the provenance of
+    the imported clock cells is being audited.}}
+\end{itemize}
+
+\paragraph{Family C: reasoning scaffolds.}
+Three sub-families scaffold a mode of reasoning without revealing the dominant
+strategy. \textbf{C1, contingent reasoning} (the \emph{Payoff Tree}): the
+prompt lays out the explicit decision tree of outcomes---win versus lose paths
+in auctions, accept versus reject branches in DA---telling the agent \emph{what
+happens} under each action, not what to do; run in both domains. \textbf{C2,
+forward planning} (one- and two-step \emph{lookahead}): the prompt asks the
+agent to simulate the algorithm's future rounds before acting. C2 runs in DA
+only: DA's underlying algorithm processes the submitted ranking dynamically
+through rounds of proposals and rejections, giving forward planning a natural
+place to bind, whereas the sealed-bid auction has no analogous internal
+dynamics. \textbf{C3, belief formation} (first- and second-order beliefs): the
+prompt directs attention to what opponents will do, or to what opponents think
+the agent will do; run in both domains.
+
+\paragraph{Family D: preference framings.}
+Prospect-theory-inspired personas (risk aversion, loss aversion, endowment
+framing) alter the agent's stated objective rather than the mechanism's
+presentation. They are not designer levers in the same sense---no designer
+would instruct participants to be risk-averse---but they bound the ranking from
+below and are reported in Appendix~\ref{app:prospect}.
+
+\paragraph{Inventory and coverage.}
+Every treatment template, its exact prompt text, its mapping from legacy
+template names to the taxonomy above, and its run status appear in
+Appendix~\ref{app:prompts} (Table~\ref{tab:intervention-inventory}). The
+menu-restatement (B1) and clock-framing (B3) auction cells, GPT-4o-only in the
+predecessor draft, now cover all four canonical models at $K \approx 50$
+(Section~\ref{sec:ranking-descriptions}), as do the DA menu variants
+(Appendix~\ref{app:da}).
+
+\subsection{Models and Protocol}\label{sec:design-models}
+
+\paragraph{Models.}
+The canonical model set comprises four widely deployed, non-reasoning model
+families from three commercial API providers and one open-weight family:
+OpenAI's GPT-4o (2024-08-06) \citep{openai2024gpt4o}, which serves as the
+anchor model present in every cell; Anthropic's Claude 3.5 Haiku (2024-10-22)
+\citep{anthropic2024claude}; Google's Gemini 2.0 Flash (2025-02-05)
+\citep{google2024gemini}; and Google's open-weight Gemma 27B
+\citep{google2024gemma}. Two further models delimit the capability range in
+Appendix~\ref{app:ablations}: gpt-5-mini (2025-08-07), a reasoning model that
+serves as the frontier tier, and Meta-Llama-3-8B-Instruct, a small
+open-source model that serves as the capability floor. Our goal is to study the
+interaction between cognitive constraints and mechanism design, which requires
+models that are capable enough to parse the rules of a mechanism yet still
+susceptible to the reasoning failures that mechanism design aims to remedy. We
+therefore deliberately select well-established, widely deployed model families
+rather than the most powerful frontier reasoning models: at the frontier, raw
+reasoning ability may mask the very cognitive bottlenecks our levers target,
+collapsing our ability to identify which design features matter and why. The
+frontier is a measured scope condition, not an omission---and it is
+two-sided. In the fidelity battery, gpt-5-mini plays the textbook formats
+essentially perfectly (SPSB-IPV SMAD $0.2\%$; FPSB bids within pennies of the
+risk-neutral equilibrium shading rule), yet it misses the third-price
+format's equilibrium by a wide margin (Appendix~\ref{app:ablations}): frontier
+reasoning narrows, but does not uniformly dissolve, the bounded-rationality
+regime in which the ranking applies.
+
+\paragraph{Temperature.}
+All non-reasoning models are run at temperature $T=0.5$, the most common
+setting in LLM-based simulation \citep{horton2023large,Horton2024EDSL}; for
+reasoning models (gpt-5-mini), temperature is ignored by the API. For the
+anchor model we ablate $T\in\{0.1, 1.0\}$: effects are modest and
+non-monotonic across formats, so $T=0.5$ is retained as a comparability
+convention rather than a performance choice
+(Appendix~\ref{app:ablations}, Table~\ref{tab:temperature}).
+
+\paragraph{One-shot protocol and the learning ablation.}
+Our main experiments use \emph{single-instance} simulations: each repetition
+$k$ is an independent market instance with freshly drawn values or preferences,
+and agents do not receive feedback across instances. We adopt this design to
+minimize reliance on cross-instance learning and long-term adaptation, which
+remains unreliable for language models \citep{dong2024survey}. This choice is
+distinct from whether a mechanism is \emph{iterative within} an instance: clock
+auctions and iterative DA still unfold over multiple within-instance steps, but
+we do not run repeated markets with feedback by default. In
+Appendix~\ref{app:learning}, we run a repeated-auction ablation in which
+bidders observe outcomes from prior instances; consistent with the motivation
+above, we find no meaningful learning effects across repetitions, which also
+justifies pooling one-shot observations across the two source studies.
+
+\paragraph{Simulation protocol.}
+Each experiment proceeds as follows, repeated for $K$ independent repetitions:
+\begin{enumerate}
+    \item \textbf{Market realization.} For repetition $k$, we draw values
+    (IPV/APV), signals (CV), or school-choice valuations (DA) for all agents
+    under a fixed random seed.
+    \item \textbf{Prompted action.} We construct an individualized prompt for
+    each agent containing (i) the mechanism rules (and treatment text, if
+    applicable), (ii) the agent's private value, signal, or preference
+    information, and (iii) in the learning ablation only, a feedback transcript
+    summarizing prior instances. We request a structured response with explicit
+    tags: \texttt{<PLAN>}\,\ldots\,\texttt{</PLAN>} /
+    \texttt{<ACTION>}\,\ldots\,\texttt{</ACTION>} in auctions and
+    \texttt{<REASON>}\,\ldots\,\texttt{</REASON>} /
+    \texttt{<DECISION>}\,\ldots\,\texttt{</DECISION>} in DA, where the action
+    tag contains a numeric bid (sealed bid), a stay/exit decision (clock), an
+    increase/hold decision (eBay), a rank-order list (direct DA), or a yes/no
+    answer (iterative DA).
+    \item \textbf{Parallel elicitation and parsing.} We query the LLM for each
+    agent using separate API calls in parallel, and parse the action from the
+    action tag using a deterministic regex-based extractor.
+    \item \textbf{Outcome computation.} Given the submitted actions, we
+    determine allocations and payments mechanically---winner and price under
+    the auction rules, or the final matching by executing student-proposing DA
+    (or the query protocol) with the true school priorities.
+\end{enumerate}
+Unless otherwise noted, auction settings use $n=3$ bidders, and each
+configuration is repeated $K$ times with independent seeds
+(Table~\ref{tab:calibration-master}). Step-by-step procedures for the
+sealed-bid, clock, and eBay environments appear in
+Appendix~\ref{app:procedures}.
+
+\subsection{Metrics}\label{sec:metrics}
+
+The ranking requires a single deviation scale that is comparable across
+mechanisms, environments, and models. We build it in three steps: a scaled
+deviation metric for bids, its analogue for rank-order reports, and a
+preservation index that expresses every lever's effect relative to its own
+baseline.
+
+\paragraph{Unified deviation metric for auctions (applied to all bids).}
+Consider an auction \emph{environment} and \emph{format} indexed by $m$. The
+index $m$ collects all primitives needed to define the theoretical benchmark,
+including the number of bidders $N$, the value (or signal) distribution, the
+information structure (independent private value/common value), and the
+mechanism rules (e.g., first-price vs.\ second-price, sealed-bid vs.\ clock).
+Let $\mathcal I_i$ denote bidder $i$'s information at the moment of bidding
+under environment $m$ (e.g., $\mathcal I_i=v_i$ in private values, or
+$\mathcal I_i=s_i$ in common values). Let $b_{i}$ denote an \emph{observed
+submitted bid} by bidder $i$ (we apply the definition to \emph{all bids}, not
+only winning bids), and let $b_m^\star(\mathcal I_i)$ denote the
+\emph{theoretical benchmark bid} under $m$ given information $\mathcal I_i$:
+the risk-neutral Bayes--Nash equilibrium in non-strategy-proof formats,
+\[
+b^\star_{\text{FPSB}}(v) = \tfrac{n-1}{n}\, v, \qquad
+b^\star_{\text{TPSB}}(v) = \tfrac{n-1}{n-2}\, v,
+\]
+and truthful bidding, $b^\star(v)=v$, in strategy-proof formats (second price,
+ascending clock).
+
+\noindent We define the absolute bid error for a bid with information
+$\mathcal I_i$ as
+\[
+d_m(\mathcal I_i)\;\equiv\;\bigl|b_i - b_m^\star(\mathcal I_i)\bigr|.
+\]
+To compare deviations across formats on a common scale, we normalize by the
+expected benchmark bid level,
+\[
+\mu_m^\star \;\equiv\; \mathbb E_m\!\left[b_m^\star(\mathcal I)\right],
+\]
+where $\mathbb E_m[\cdot]$ denotes expectation with respect to the distribution
+of the information object $\mathcal I$ induced by environment $m$ (i.e., the
+value/signal distribution and any randomization in the experimental design). We
+then define the \emph{scaled mean absolute deviation} (SMAD) for auction format
+$m$ as
+\[
+\Delta_m \;\equiv\; 100 \cdot \frac{\mathbb E_m\!\left[d_m(\mathcal I)\right]}{\mu_m^\star}
+\;=\; 100 \cdot \frac{\mathbb E_m\!\left[\left|b-b_m^\star(\mathcal I)\right|\right]}{\mathbb E_m\!\left[b_m^\star(\mathcal I)\right]}.
+\]
+This metric is interpretable as a percentage of the expected benchmark bid:
+$\Delta_m=10$ means that, on average, bids deviate from the benchmark by an
+amount equal to $10\%$ of the expected benchmark bid.
+
+Given a sample of bids $\{(b_k,\mathcal I_k)\}_{k=1}^n$ from format $m$, the
+plug-in estimator is
+\[
+\widehat{\Delta}_m
+\;=\;
+100 \cdot
+\frac{\frac{1}{n}\sum_{k=1}^{n}\left|b_k-b_m^\star(\mathcal I_k)\right|}
+{\widehat{\mu}_m^\star},
+\qquad
+\widehat{\mu}_m^\star \equiv \frac{1}{n}\sum_{k=1}^{n} b_m^\star(\mathcal I_k).
+\]
+When we report a standard error for the (unscaled) mean absolute deviation
+$\frac{1}{n}\sum_k |b_k-b_m^\star(\mathcal I_k)|$, we propagate it to
+$\widehat{\Delta}_m$ by scaling with $\widehat{\mu}_m^\star$. We construct
+$95\%$ confidence intervals using a normal approximation when an analytic
+standard error is available. Alongside SMAD, we report the \emph{signed} mean
+deviation ($\text{bid}-\text{benchmark}$, in dollars) where the direction of
+error is itself of interest; the two statistics can disagree about model
+orderings, and we treat that disagreement as informative rather than choosing
+between them.
+
+\paragraph{Deterministic benchmarks.}
+SMAD requires a single-valued benchmark mapping
+$\mathcal I \mapsto b_m^\star(\mathcal I)$. Accordingly, we restrict attention
+to auction formats where the theoretical prediction is deterministic given the
+bidder's information.
+
+\paragraph{Matching analogue: normalized Kendall-$\tau$ error.}
+For matching we construct the same kind of object: a unit-free percentage
+deviation from truthful play. For student $i$ with true preference ranking
+$\pi_i^\star$ and submitted ranking $\pi_i$ over the school set $S$
+($|S|=4$), the \emph{normalized Kendall-$\tau$ error} is the fraction of
+school pairs ranked in opposite order,
+\[
+\kappa_i \;\equiv\; 100 \cdot
+\frac{\#\bigl\{\{s,s'\} : \pi_i \text{ and } \pi_i^\star \text{ disagree on } s \text{ vs.\ } s'\bigr\}}
+{\binom{|S|}{2}},
+\]
+so $\kappa_i = 0$ if and only if the report is truthful and $\kappa_i = 100$
+for a complete reversal. The parallel to SMAD is deliberate but not literal:
+SMAD normalizes the deviation by the expected benchmark bid, while $\kappa$
+normalizes by the maximum number of pairwise inversions. Both are unit-free
+percentages that equal zero exactly at truthful play and increase in the size
+of the deviation, which is what the ranking requires. Because $17\%$ of
+simulated students draw at least one pair of exactly tied school values, we
+also compute a tie-robust variant of $\kappa$ that does not count inversions
+among tied schools; headline DA numbers use the tie-robust variant, since
+apparent ``misreports'' that merely permute tied schools are artifacts of the
+deterministic tie-break (Appendix~\ref{app:da}). Even small $\kappa$ can
+be consequential: under deferred acceptance, a single misreport can cascade
+through rejection chains and alter the final matching for $\Theta(n)$
+participants \citep{dubins1981machiavelli}.
+
+\paragraph{Misreports under the iterative protocol.}
+The iterative DA protocol never elicits a full rank-order list, so $\kappa$
+cannot be computed directly. Instead we classify each revealed yes/no answer
+against the student's true preferences: a \emph{Type-1 misreport} (false
+rejection) answers NO when the queried school is in fact the most preferred
+among the remaining set; a \emph{Type-2 misreport} (false acceptance) answers
+YES when a more preferred school is still available. The iterative error rate
+is the share of misreports among revealed decisions. Because applicants may
+not be asked to reveal their entire rank-order lists, we count misreports from
+the smaller set of revealed preferences: a measured error rate of zero
+therefore bounds only the \emph{observable} component of behavior---models
+could still be making cognitive errors that never surface because the protocol
+never queries them. This observability caveat travels with every use of the
+iterative-DA result in this paper. Formal per-node definitions, the per-model
+decision-level accounting, rule-of-three upper confidence bounds for cells
+with zero observed misreports, and a comparison of the pick-based and yes/no
+query implementations appear in Appendix~\ref{app:da}.
+
+\paragraph{Baseline declaration.}
+Two baseline families appear in the auction analysis, and we fix their use
+once. \emph{Cross-format} comparisons---sealed bid versus clock, the OSP rung
+of the ranking---are made against the dedicated SPSB baseline cells, whose
+mean deviations ($-0.49$, $-1.63$, $-3.28$, $-5.27$ for Claude 3.5 Haiku,
+Gemini 2.0 Flash, GPT-4o, and Gemma 27B) match the predecessor draft's
+published values to rounding. \emph{Within-format} description and scaffold
+contrasts (Families B--D) are evaluated against the same model's axis-specific
+baseline cells run in the same batch (pooled across axes where a treatment
+spans them), which differ materially from the dedicated cells for some models
+(e.g., $+0.48$ versus $-0.49$ for Claude 3.5 Haiku). Both baseline families
+are reported in the released cell-level data, and no comparison in this paper
+mixes them.
+
+\paragraph{Preservation index.}
+For lever $L$, domain $d\in\{\text{auction},\text{DA}\}$, and model $m$, let
+$D(L,d,m)$ denote the mean scaled deviation from dominant-strategy play---SMAD
+for auctions, mean normalized Kendall-$\tau$ error for DA---and let
+$D(\text{base},d,m)$ denote the same object under the domain's baseline
+mechanism and description (SPSB sealed bid; direct DA). The
+\emph{preservation index} is
+\[
+\rho(L,d,m) \;\equiv\; 1 - \frac{D(L,d,m)}{D(\text{base},d,m)}.
+\]
+By construction $\rho=1$ means the lever restores perfect dominant-strategy
+play, $\rho=0$ means it has no effect, and $\rho<0$ means it \emph{backfires},
+pushing behavior further from the dominant strategy than the untreated
+baseline. Because $\rho$ is computed within each model$\times$domain cell, the
+ranking it induces is invariant to cross-model differences in baseline levels
+(and to the choice between absolute and signed deviation measures for ordering
+models)---a lever is credited only for what it does relative to the behavior
+it inherits.
+
+\paragraph{Tier-claim discipline.}
+We pre-commit to reporting the ranking as a \emph{tier structure} (a partial
+order over levers), not a strict total order. Adjacent tiers are separated
+only where pairwise sign tests across the model$\times$domain cells support
+the separation; concordance of the full ordering across cells is summarized by
+Kendall's $W$ with bootstrap confidence intervals; and within-tier reversals
+across domains (e.g., contingent scaffolds versus safety descriptions) are
+reported as findings, not smoothed away. Section~\ref{sec:ranking-synthesis}
+implements this discipline.
+
+\paragraph{Statistical standard.}
+Every reported cell receives a bootstrap standard error and 95\% confidence
+interval (resampling market instances, $2{,}000$ replications, seed 1299), and
+every treatment effect is evaluated against the baseline declared above with
+both a Mann--Whitney test and a Welch $t$-test, along with Cohen's $d$; we
+report both tests because description levers can move dispersion without
+moving the mean (and vice versa), and the two tests can disagree in exactly
+those cases. Where an error rate of exactly zero is observed, we report
+one-sided rule-of-three upper confidence bounds rather than declaring
+perfection (Appendix~\ref{app:da}). Concordance of the lever ordering across
+model$\times$domain cells (Kendall's $W$ with bootstrap confidence intervals),
+adjacent-tier sign tests, and the double-bootstrap intervals for the pooled
+preservation indices are reported in Section~\ref{sec:ranking-synthesis}.
+Knife-edge cells (e.g., near-zero error rates under Rejection Safety and
+iterative DA) are topped up to $K=100$ before adjacent rungs are declared
+separated.
+
+\subsection{Human Benchmark Reconstruction}\label{sec:reconstruction}
+
+\paragraph{Reconstructing human bid distributions via moment matching.}
+Because micro-level bid data are rarely available from published experiments,
+we reconstruct synthetic human bid distributions by calibrating a mixture model
+to aggregate statistics reported in each source. We model bids as:
+\[
+b = b^\star_m(v) \cdot r
+\]
+where $b^\star_m(v)$ is the equilibrium bid and $r$ is a bid-to-equilibrium
+ratio drawn from a three-component mixture:
+\begin{align*}
+\text{With probability } p_{\text{eq}}: \quad & r \sim \mathcal{N}(1, \sigma^2) \\
+\text{With probability } p_{\text{over}}: \quad & r \sim 1 + \text{Exp}(\lambda) \\
+\text{With probability } p_{\text{under}}: \quad & r \sim \text{Uniform}(1-\delta, 1)
+\end{align*}
+This structure maps directly to how experimental papers categorize behavior:
+equilibrium bidders ($r \approx 1$), overbidders ($r > 1$), and underbidders
+($r < 1$).
+
+\paragraph{Source papers and equilibrium benchmarks.}
+We draw on four sources: \citet{li2017obviously} and
+\citet{breitmoser2022obviousness} for second-price and ascending clock
+auctions; \citet{kagel1993independent} for first-price, second-price, and
+third-price sealed-bid auctions with $n \in \{5, 10\}$ bidders; and
+\citet{gonczarowski2023strategyproofness} for second-price auctions comparing
+mechanism descriptions. For each format, we use the risk-neutral Bayes--Nash
+equilibrium benchmarks of Section~\ref{sec:metrics}.
+
+\paragraph{Parameter identification.}
+Mixture weights $(p_{\text{eq}}, p_{\text{over}}, p_{\text{under}})$ are set
+directly from reported rates. For example, \citet{li2017obviously} reports
+${\sim}50\%$ dominant-strategy play and ${\sim}40\%$ overbidding, yielding
+$p_{\text{eq}} = 0.50$, $p_{\text{over}} = 0.40$, $p_{\text{under}} = 0.10$.
+The overbid scale $\lambda$ is calibrated to match a secondary moment:
+\begin{itemize}
+  \item For \citet{li2017obviously} and \citet{breitmoser2022obviousness}: the
+  mean bid-to-value ratio (e.g., $\mathbb{E}[b/v] \approx 1.08$).
+  \item For \citet{kagel1993independent}: the regression coefficient $\beta$
+  from bid regressions.
+  \item For \citet{gonczarowski2023strategyproofness}: mean absolute deviation
+  (MAD $\approx$ \$0.51--0.55).
+\end{itemize}
+The equilibrium noise $\sigma$ is derived from regression $R^2$ where reported,
+via $\sigma^2 = \beta^2 \text{Var}(v)(1-R^2)/R^2$. The underbid bound $\delta$
+is set consistently across papers; this is a parsimony choice as papers do not
+report underbid tail shapes separately. Full parameter values appear in
+Appendix~\ref{app:mixture} (Table~\ref{tab:mixture-calibration}).
+
+\paragraph{Why a mixture model rather than QRE.}
+Quantal response equilibrium predicts symmetric deviations around equilibrium,
+contradicting the well-documented asymmetric overbidding in second-price
+auctions \citep{kagel1993independent}. The mixture model directly maps to how
+experimental papers categorize and report behavior.
+
+\paragraph{Limitations and epistemic status.}
+Some reported statistics are difficult to reconcile within any parametric
+model---for instance, the regression coefficients and bidding frequencies in
+\citet{kagel1993independent} cannot both be matched under Gaussian noise,
+suggesting heteroskedasticity in the original data. Our approach matches key
+aggregate patterns while acknowledging this limitation. More fundamentally, the
+reconstructions are model-based simulations of published moments, not samples
+of human behavior, and we hold every use of them in this paper to a
+corresponding standard: \emph{comparisons to reconstructed humans are made at
+the level of rankings, directions, and comparative statics only; levels and
+significance tests are reserved for theory benchmarks.} We run no hypothesis
+tests against reconstructed distributions---such tests would be statistically
+circular, reflecting our calibration choices rather than sampling variation in
+human behavior---and where reconstructed anchors appear in figures, their
+uncertainty is represented by Monte-Carlo bands obtained by re-drawing the
+mixture parameters within the ranges the source statistics admit. The ranking
+in Section~\ref{sec:ranking} never depends on the reconstructions; they enter
+only in Section~\ref{sec:validation} (fidelity) and Section~\ref{sec:humans}
+(anchoring). Full reconstruction details, per-paper calibrations, and the
+reconstruction-uncertainty procedure appear in Appendix~\ref{app:human}.

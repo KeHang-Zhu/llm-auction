@@ -1,0 +1,180 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 58,
+            "x": 67,
+            "y": 51,
+            "z": 72
+        },
+        "Student B": {
+            "w": 50,
+            "x": 64,
+            "y": 65,
+            "z": 87
+        },
+        "Student C": {
+            "w": 47,
+            "x": 71,
+            "y": 58,
+            "z": 77
+        },
+        "Student D": {
+            "w": 58,
+            "x": 75,
+            "y": 65,
+            "z": 87
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "x",
+        "Student B": "z",
+        "Student C": "w",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 67,
+        "Student B": 87,
+        "Student C": 47,
+        "Student D": 65
+    },
+    "rankings": {
+        "Student A": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ],
+        "Student B": [
+            "z",
+            "y",
+            "x",
+            "w"
+        ],
+        "Student C": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "y",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to be matched to the school that provides the highest value to me. My values are w = $58, x = $67, y = $51, z = $72. Therefore, without considering priority, my preference would be z > x > w > y. However, priority matters in the Deferred Acceptance algorithm.\n\nI have priority 1 at schools w and y, and priority 2 at schools x and z.\n\nLet's consider a naive ranking based solely on my values: z > x > w > y.\n- If I propose to z, I might get rejected because I have priority 2. If I get rejected, I propose to x, where I also have priority 2. I might get rejected again. Then I propose to w, where I have priority 1. I'll likely be accepted there. If I get rejected from w, I'll end up at y.\n- If I propose to x first, I could get rejected and end up at w or y.\n\nSince most applicants favor y > x > w > z, this means z might be less competitive than x, w, and y. Also, since I have priority 1 at both w and y, I'm more likely to be accepted there than at x or z.\n\nLet's consider starting with z. If I get rejected, I go to x. If I get rejected again, I go to w. If I get rejected again, I go to y. This could be a good approach.\n\nHowever, I have to consider the possibility of being matched to y, which I value the least. To avoid this, I should place it last.\n\nLet's try z > x > w > y.\nRound 1: I propose to z.\n- If accepted, I'm done and get $72.\n- If rejected, I propose to x.\nRound 2: I propose to x.\n- If accepted, I'm done and get $67.\n- If rejected, I propose to w.\nRound 3: I propose to w.\n- If accepted, I'm done and get $58.\n- If rejected, I propose to y.\nRound 4: I propose to y.\n- I'm accepted and get $51.\n\nThis seems reasonable.\n\nLet's consider x > z > w > y.\nRound 1: I propose to x.\n- If accepted, I'm done and get $67.\n- If rejected, I propose to z.\nRound 2: I propose to z.\n- If accepted, I'm done and get $72.\n- If rejected, I propose to w.\nRound 3: I propose to w.\n- If accepted, I'm done and get $58.\n- If rejected, I propose to y.\nRound 4: I propose to y.\n- I'm accepted and get $51.\n\nThis could be better if z is not too competitive.\n\nLet's consider w > x > z > y.\nRound 1: I propose to w.\n- If accepted, I'm done and get $58.\n- If rejected, I propose to x.\nRound 2: I propose to x.\n- If accepted, I'm done and get $67.\n- If rejected, I propose to z.\nRound 3: I propose to z.\n- If accepted, I'm done and get $72.\n- If rejected, I propose to y.\nRound 4: I propose to y.\n- I'm accepted and get $51.\n\nGiven the information that most applicants favor y > x > w > z, it is likely that z is the least competitive. Since my value for z is the highest, I want to try to get matched to z. I will rank z first, followed by x, then w, and lastly y.",
+        "Student B": "My goal is to be matched to the school that gives me the highest value. My values are: w = $50, x = $64, y = $65, z = $87. My priorities are: w: 2, x: 1, y: 2, z: 1. Most applicants favor y > x > w > z.\n\nI should start by considering school z. It gives me the highest value ($87) and I have priority 1 there. If I rank z first, I am very likely to be matched to z.\n\nNext, consider school y. It gives me the second-highest value ($65) and I have priority 2 there. Most applicants favor y, so there will be a lot of competition. If I rank y second, I might get it if z is oversubscribed and I am rejected from z (unlikely).\n\nNext, consider school x. It gives me the third-highest value ($64) and I have priority 1 there. Most applicants favor x after y, so there might be some competition. If I rank x third, I might get it if I am rejected from z and y.\n\nFinally, consider school w. It gives me the lowest value ($50) and I have priority 2 there. Most applicants favor w after x, so there might be some competition. If I rank w last, I will only get it if I am rejected from z, y, and x.\n\nTherefore, my ranking should be z > y > x > w. This maximizes my chance of getting z, then y, then x, then w.",
+        "Student C": "My goal is to be matched to the school that gives me the highest value. My values are z > x > y > w. However, I must also consider my priority at each school and the preferences of other students. Most students prefer y > x > w > z.\n\nLet's analyze each school:\n- z: My value for z is the highest ($77), but my priority is low (4). Given that most students don't favor z, there's a chance I could get in if I rank it highly.\n- x: My value for x is $71, and my priority is 3. Many students favor x, so getting in might be difficult.\n- y: My value for y is $58, and my priority is 4. Many students favor y, so getting in is unlikely.\n- w: My value for w is $47, and my priority is 3. Fewer students favor w, so there's a higher chance of getting in.\n\nGiven the preferences of other students (y > x > w > z), I should optimize my ranking to avoid being rejected too early and ending up with nothing.\n\nScenario 1: I rank z first. I might be rejected immediately due to low priority, and then I'll move down my list.\nScenario 2: I rank x first. I might be rejected, but it's worth a shot.\nScenario 3: I rank y first. I will likely be rejected.\nScenario 4: I rank w first. I have a decent chance of being accepted, but the value is low.\n\nI will start with z because my value for z is the highest. If I get rejected, I will go to x. If I get rejected from x, I will go to w. I will put y last because my value and priority are low, and many students like it.\n\nTherefore, I rank z > x > w > y.",
+        "Student D": "My goal is to be matched to the school that gives me the highest value. My values are z > x > y > w. My priorities at each school are w: 4, x: 4, y: 3, z: 3. Most applicants favor y > x > w > z.\n\nI want to be matched to z if possible, since it gives me the highest value ($87). My priority at z is 3. Since most applicants prefer y > x > w > z, z might be less competitive. I will rank z first.\n\nNext, I want to be matched to x if I cannot be matched to z. My value for x is $75, and my priority is 4. Since most applicants favor x over w and z, x might be competitive. I will rank x second.\n\nNext, I want to be matched to y if I cannot be matched to z or x. My value for y is $65, and my priority is 3. Since most applicants favor y, y will likely be competitive. I will rank y third.\n\nFinally, I want to be matched to w if I cannot be matched to z, x, or y. My value for w is $58, and my priority is 4. I will rank w last.\n\nTherefore, my ranking is z > x > y > w."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": false,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student C",
+                    "Student A",
+                    "Student B",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "z"
+                ],
+                [
+                    "Student A",
+                    "z"
+                ],
+                [
+                    "Student D",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student C",
+                    "Student A",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "y": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "w": "Student C",
+                "y": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

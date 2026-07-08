@@ -1,0 +1,48 @@
+# FRONTIER battery cell — generated 2026-07 per plan/FRONTIER_RUNBOOK.md.
+# Cloned from configs_auction/acb/ascending_clock_closed_*.yaml; only the llm block and output_dir changed.
+# Also changed: repetitions 40 -> 50 (K=50 frontier directive).
+
+# Closed: Bidders are NOT told when someone drops out
+
+experiment:
+  name: "ascending_clock_apv_closed"
+  version: "V10"
+  description: "Ascending Clock Auction with Affiliated Private Values (Closed - no dropout info)"
+
+auction:
+  number_agents: 3
+  rounds: 1
+  use_survey: true
+  survey_price_points: 15
+
+rule:
+  seal_clock: "clock"
+  ascend_descend: "ascend"
+  price_order: "second"
+  private_value: "private"
+  open_blind: "blind"  # blind = closed (no dropout information shown)
+  closing: false
+  reserve_price: 0
+  special_name: "affiliated_ac_closed.txt"
+
+value:
+  common_range: [0, 29]
+  private_range: 49
+  increment: 0.5
+  seed_base: 1299  # 1399 for affiliated
+
+llm:
+  # Same pattern as configs/robustness/*_gpt5mini.yaml (no service_name -> edsl default openai).
+  # Note: the gpt-5-mini API ignores the temperature parameter (see appendix_ablations footnote).
+  model: gpt-5-mini
+  temperature: 0.5
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: rule_template/auctions/
+  include_payment_example: true
+execution:
+  repetitions: 50  # K=50 (existing acb configs use 40)
+  parallel: true
+  max_workers: 2
+  output_dir: "experiment_logs/gpt5mini/ascending_clock_closed"

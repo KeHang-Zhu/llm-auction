@@ -1,0 +1,176 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 53,
+            "x": 79,
+            "y": 73,
+            "z": 63
+        },
+        "Student B": {
+            "w": 64,
+            "x": 84,
+            "y": 82,
+            "z": 46
+        },
+        "Student C": {
+            "w": 55,
+            "x": 73,
+            "y": 73,
+            "z": 66
+        },
+        "Student D": {
+            "w": 67,
+            "x": 72,
+            "y": 66,
+            "z": 46
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "w"
+    },
+    "utilities": {
+        "Student A": 73,
+        "Student B": 84,
+        "Student C": 66,
+        "Student D": 67
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ],
+        "Student B": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ],
+        "Student C": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ],
+        "Student D": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my chances of getting into the best school possible according to my preferences: x > y > z > w.\n\n*   **School x:** I have priority rank 2 at x. Many applicants seem to prefer y > x, which could improve my chances at x. I should keep x as my top choice.\n\n*   **School y:** I have priority rank 1 at y. This is great! I should keep y as my second choice.\n\n*   **School z:** I have priority rank 2 at z. Since I prefer z over w, I should keep z as my third choice.\n\n*   **School w:** I have priority rank 1 at w, but I prefer z over w, so I should keep w as my last choice.\n\nTherefore, my ranking should remain x > y > z > w.",
+        "Student B": "My goal is to maximize my chances of getting into the best school possible according to my preferences (x > y > w > z). My priorities at each school are: w: 2, x: 1, y: 2, z: 1.\n\nSchool x is my top choice and I have the highest priority there (priority 1). Therefore, I should definitely rank it first.\n\nSchool y is my second choice, and I have priority 2 there. School w is my third choice, and I also have priority 2 there. School z is my last choice and I have priority 1 there.\n\nSince rejections only redirect, and never eliminate me from consideration at lower-ranked schools, I should stick to my true preferences. Ranking a school lower than I actually prefer it will not increase my chances of getting into a higher-ranked school.\n\nTherefore, my ranking should simply follow my preferences: x > y > w > z.",
+        "Student C": "My stated preferences are x > y > z > w. My priority ranks are w: 3, x: 3, y: 4, z: 4.\n\nI want to be matched to the best school possible according to my preferences. I should submit my true preferences as the algorithm protects me. If I am rejected from my top choices, it only means those schools had applicants with higher priority. Being rejected doesn't hurt my chances at lower-ranked schools. Therefore, I should rank them in the order I actually prefer them.",
+        "Student D": "My stated preferences are x > w > y > z. My priority ranks are w: 4, x: 4, y: 3, z: 3. I want to submit my true preferences because the algorithm protects me. Rejections only redirect me to schools I ranked lower, and I cannot be knocked out of a school that would have accepted me. Therefore, I should rank the schools truthfully according to my preferences."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student A",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student D",
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student D",
+                "y": "Student A",
+                "z": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

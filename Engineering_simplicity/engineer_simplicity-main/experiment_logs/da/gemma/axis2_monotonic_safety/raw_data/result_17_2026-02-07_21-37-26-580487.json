@@ -1,0 +1,195 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 71,
+            "x": 77,
+            "y": 72,
+            "z": 64
+        },
+        "Student B": {
+            "w": 63,
+            "x": 89,
+            "y": 64,
+            "z": 76
+        },
+        "Student C": {
+            "w": 75,
+            "x": 82,
+            "y": 57,
+            "z": 74
+        },
+        "Student D": {
+            "w": 64,
+            "x": 79,
+            "y": 73,
+            "z": 64
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 72,
+        "Student B": 89,
+        "Student C": 75,
+        "Student D": 64
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Given the key insight that rejections only redirect and never eliminate, and knowing my preferences are x > y > w > z, my strategy is simple: submit my true preferences. There's no benefit to strategically misranking. The algorithm guarantees I won't be worse off by being honest.\n\nThe information about other applicants favoring y > x > w > z is interesting, but doesn\u2019t change my optimal strategy. It *might* mean x is easier to get into than usual, but I still prefer it to y. If I don\u2019t get x, I'd happily take y, and so on.\n\nBecause rejections only redirect, I have no reason to fear ranking x first. If x rejects me, I will still be considered for y, w, and z in that order. There is no downside to expressing my true preference.",
+        "Student B": "Given the key insight that rejections only redirect and never eliminate, and that my ranking order determines *when* I'm considered, not *if*, I should stick to my true preferences. The information about other applicants' preferences (y > x > w > z) is useful, but doesn't change my optimal strategy.\n\nHere's why:\n\n*   **x is my top choice:** I have the highest priority at x (rank 1). Since rejections don't eliminate me from other schools, I should absolutely list x first.\n*   **z is my second choice:** I also have the highest priority at z (rank 1). Listing it second maximizes my chance of getting a good school.\n*   **y is third:** While many others prefer y, I prefer z over y. The algorithm protects me from being \"bumped\" from z by someone who prefers y.\n*   **w is last:** I have a low priority at w (rank 2) and it's my least preferred school.\n\nThe fact that others prefer y more than x doesn't mean I shouldn't rank x first. It just means x might be competitive. The algorithm will handle the competition, and my rejection from x (if it happens) won't affect my chances at z, y, or w. I should always apply to my most preferred school first.",
+        "Student C": "Given the key insight that rejections only redirect and never eliminate, and that my ranking determines the *order* of consideration, not *whether* I'm considered, I should stick to my true preferences. The information about other applicants' preferences (y > x > w > z) is useful, but doesn't change my own ranking.\n\nMy most preferred school is x. While many applicants prefer y, that doesn't diminish my desire for x. I'm ranked 3rd at x, which isn't amazing, but it's not terrible. My next preference is w, where I'm also ranked 3rd. Z is my third choice, and y is my last.\n\nBecause rejections only redirect, there's no downside to listing my preferences honestly. If I'm rejected from x, I'll still be considered for w, z, and y in that order. If I'm rejected from w, I'll still be considered for z and y, and so on. There's no strategic advantage to misrepresenting my preferences.",
+        "Student D": "Given the key insight that rejections only redirect and never eliminate, and knowing my preferences are x > y > w > z, my strategy is simple: stick to my true preferences. The fact that most applicants favor y > x > w > z doesn't change my own ordering. Since rejections don't hurt my chances at lower-ranked schools, I have no incentive to misrepresent my preferences to try and \"game\" the system. I want to end up at x if possible, then y, then w, and z only as a last resort. My priority ranks at each school are relatively low, suggesting I'm not a highly sought-after applicant at any of them, but that doesn't change my underlying preferences. Therefore, submitting my true preferences maximizes my chance of getting my most desired outcome."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student D",
+                    "Student B",
+                    "Student A",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student A",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student D",
+                    "Student A"
+                ],
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "w": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C",
+                "z": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

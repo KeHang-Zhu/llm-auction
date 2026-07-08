@@ -1,0 +1,155 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 82,
+            "x": 81,
+            "y": 71,
+            "z": 65
+        },
+        "Student B": {
+            "w": 72,
+            "x": 87,
+            "y": 71,
+            "z": 64
+        },
+        "Student C": {
+            "w": 64,
+            "x": 79,
+            "y": 74,
+            "z": 71
+        },
+        "Student D": {
+            "w": 64,
+            "x": 82,
+            "y": 66,
+            "z": 68
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "y",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 82,
+        "Student B": 87,
+        "Student C": 74,
+        "Student D": 68
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ],
+        "Student C": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ],
+        "Student D": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my final wealth. I have an endowment of ${{ max_value }}. I want to be matched to the best school possible given my preferences and priorities. My preferences are w > x > y > z, and my priorities are w:1, x:2, y:1, z:2.\n\nSince my priority at w and y are both 1, I should rank them highly. I prefer w to y, so I should rank w first. My priority at x and z are both 2, so I should rank them according to my preferences. I prefer x to z, so I should rank x before z. Therefore, my initial ranking should be w > x > y > z.\n\nHowever, I need to consider the reported preferences of other students, which are y > x > w > z. This suggests that y is highly competitive, and w might be less competitive than expected. Since I have top priority at both w and y, I should stick to my true preference order. Even if y is highly competitive, I have a good chance of getting matched to it due to my top priority.\n\nTherefore, my optimal ranking is w > x > y > z.",
+        "Student B": "My stated preferences are x > w > y > z. My priorities are x: 1, w: 2, y: 2, z: 1. My goal is to maximize my final wealth, which depends on being matched to a school with high value.\n\nSince my priority at x is 1 (highest), and x is my most preferred school, I should rank x first.\n\nMy priority at z is also 1, but z is my least preferred school.\n\nMy priority at w and y are both 2. Most applicants seem to favor y > x > w > z. This suggests that y might be a popular choice, potentially making it harder to get into. However, since w is preferred to y, I should rank w before y.\n\nTherefore, my ranking should be x > w > y > z. This maintains my stated preferences and leverages my priority at x.",
+        "Student C": "My stated preference is x > y > z > w. My priorities at the schools are w: 3, x: 3, y: 4, z: 4. Other applicants prefer y > x > w > z. I want to maximize my chances of getting a match at a school I value.\n\nSince other applicants prefer y and x, and I have a relatively high priority at w and x, I should stick to my true preferences. I have priority 3 at both x and w, but I prefer x. I have lower priority at y and z, and other applicants prefer y and x. Therefore, I should not change my ranking.",
+        "Student D": "My initial preference is x > z > y > w. My priority ranks are w: 4, x: 4, y: 3, z: 3. Most applicants seem to favor y > x > w > z.\n\nSince my priority at x and z are the same (4 and 3 respectively), and x is preferred to z, I will keep x ranked higher than z. Similarly, since my priority at y and w are 3 and 4 respectively, and y is preferred to w, I will keep y ranked higher than w. This aligns with my true preferences.\n\nTherefore, I will submit my true preferences."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student D",
+                    "Student C"
+                ],
+                "w": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A",
+                "z": "Student D",
+                "y": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

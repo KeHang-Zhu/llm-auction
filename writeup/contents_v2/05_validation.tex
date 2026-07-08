@@ -1,0 +1,122 @@
+% ============================================================================
+% 05_validation.tex — Testbed Validation Against Human Data
+% Sources: writeup/contents/results.tex:1-45 (5.1), 71-100 (5.2);
+%          writeup/contents/discussion.tex:1-71 (5.3, the eBay section);
+%          writeup/contents/appendix.tex:229 (5.4 pointers);
+%          validity map = Design-C graft per plan/plan.md §3, §5(R8).
+% ============================================================================
+
+\section{Testbed Validation Against Human Data}\label{sec:validation}
+
+The results in this section establish that the testbed's behavioral responses to mechanism variation track those of human experimental subjects, licensing its use to rank design levers in Section~\ref{sec:ranking}. We proceed through four validation exercises of increasing institutional richness---the cross-mechanism difficulty ordering, the winner's-curse comparative statics, field-style closing-rule dynamics, and behavioral stability---and close with a validity map that states explicitly which phenomena transfer from human to LLM populations and which do not. Throughout, comparisons to the moment-matched human reconstructions of Section~\ref{sec:reconstruction} are made at the level of rankings, directions, and comparative statics; levels and statistical tests are reserved for theory benchmarks.
+
+\subsection{Difficulty Ordering and the Direction of Mistakes}\label{sec:validation-difficulty}
+
+The experimental literature documents that human bidders deviate systematically from theoretical predictions across canonical auction environments, but that the \emph{severity} and \emph{direction} of mistakes depend strongly on the mechanism and the information environment. We therefore ask whether LLM agents (i) reproduce the same cross-mechanism ranking of ``difficulty'' that appears in human data, and (ii) make similar kinds of mistakes once we look beyond aggregate deviation magnitudes. Performance is measured by SMAD, the scaled mean absolute deviation of bids from the relevant theoretical benchmark (Section~\ref{sec:metrics}): the Bayes--Nash equilibrium bid function in first-price formats and truthful bidding in strategy-proof formats. We complement SMAD with a directional decomposition of deviations into underbidding and overbidding.
+
+Figure~\ref{fig:smad-comparison} summarizes the benchmark battery, with formats ordered by human SMAD so that mechanisms appear in decreasing order of measured difficulty for human bidders. The central pattern is that GPT-4o broadly reproduces the human ordering: mechanisms that are empirically harder for humans also generate larger deviations for the LLM. The sharpest comparison is between the two sealed-bid IPV payment rules, which hold the allocation rule fixed while changing only the mapping from bids to payments: human bidders exhibit FPSB SMAD of $24.76\%$ versus SPSB SMAD of $5.65\%$ (a $4.4\times$ difficulty gap), while GPT-4o shows $27.55\%$ versus $8.69\%$ (a $3.2\times$ gap). In the affiliated private-values (APV) environment, GPT-4o's sealed-bid second-price deviation ($10.73\%$) again sits close to the human level ($9.31\%$); the clock formats in the same figure, where the format effect is the object of interest rather than a validation moment, are analyzed as the top rung of the ranking in Section~\ref{sec:ranking-extensive}. That GPT-4o reproduces the qualitative ranking suggests it is sensitive to the additional strategic complexity introduced by paying one's own bid, and that the benchmark set captures genuine variation in strategic and cognitive difficulty. \TODO{Figure~\ref{fig:smad-comparison} is currently GPT-4o only; extend the fidelity battery to Gemma 27B (plan E4) and report the harmonized four-model cells after E8.}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figure1.png}
+    \caption{\textbf{Human vs.\ LLM bidding behavior across seven auction formats.} Blue bars: scaled mean absolute deviation (SMAD) between human bidding and the theoretical benchmark, computed from the moment-matched reconstructions of Section~\ref{sec:reconstruction}. Yellow bars: SMAD between GPT-4o agents and the same benchmark. Formats are ordered by human SMAD. LLM simulations use $N=3$ bidders.}
+    \label{fig:smad-comparison}
+\end{figure}
+
+Aggregate SMAD, however, masks a sharp divergence in \emph{how} the two populations deviate. Figure~\ref{fig:direction} decomposes errors directionally after removing near-optimal bids (within a $\pm2\%$ band of the benchmark). In the first-price IPV setting, both populations primarily \emph{overbid} relative to the risk-neutral equilibrium, but GPT-4o's overbidding is far more extreme: humans overbid $56.5\%$ of the time (with $10.4\%$ of bids near equilibrium removed), whereas GPT-4o overbids $85.9\%$ of the time and almost never lands near the benchmark ($0.7\%$ removed)---consistent with systematically more aggressive competition by LLM bidders in FPSB \citep{cox1988theory}.
+
+The second-price IPV setting \emph{reverses direction}, and this reversal is load-bearing for the rest of the paper. Human bidders are overwhelmingly on the overbidding side: $67.2\%$ of reconstructed human bids lie strictly above value, and among bids that deviate from value at all, $92.2\%$ are overbids,\footnote{Direction shares are reported under the repository-canonical convention: the share of bids strictly above (below) value among \emph{all} bids, with the share among \emph{deviating} bids (the complement of exactly-truthful bids) in parentheses. An earlier draft reported $96.0\%$ human overbidding under a band-removal convention (deviations outside a $\pm2\%$ band of the benchmark), which Figure~\ref{fig:direction} retains; the qualitative reversal is invariant to the choice of convention.} consistent with the classic right-skewed bid distributions documented by \citet{kagel1993independent}, where most bidding mass lies above value.\footnote{In an SPSB auction with $5$ players, \citet{kagel1993independent} observed that the distribution of bids was right-skewed, with the majority of the bidding mass (67\%) representing over-bidding relative to private values. However, this figure appears inconsistent with their reported regression of bids on values; specifically, both the intercept and the coefficient exceed 1, which would typically imply a more pervasive pattern of over-bidding than the percentage suggests.} GPT-4o, by contrast, produces a predominantly \emph{left-skewed} distribution with most mass on underbidding---$74.1\%$ of bids lie strictly below value and only $16.7\%$ above ($81.6\%$ of deviating bids are underbids)---despite truthful bidding being a dominant strategy; it also places substantial probability mass at or near value ($29.2\%$ of bids within the $\pm2\%$ band of Figure~\ref{fig:direction}), reflecting a sizable fraction of exactly-truthful bids in our runs. The same reversal appears in the APV sealed-bid cell (humans $64.7\%$ overbid; GPT-4o $92.4\%$ underbid, under the figure's band convention). Humans err toward competitive overbidding under an incentive-compatible rule; GPT-4o errs toward conservatism. We record this as a declared divergence in the validity map below (Table~\ref{tab:validity-map}), and Section~\ref{sec:humans} shows why it strengthens, rather than undermines, the transferability of the lever ranking: the same design levers repair opposite-signed errors in both populations.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figure2_by_auction_type_10pct.png}
+    \caption{\textbf{Directional decomposition of deviations, humans vs.\ GPT-4o.} Share of underbids vs.\ overbids across auction formats after removing bids within a $\pm2\%$ band of the theoretical benchmark. Humans overbid where GPT-4o underbids in the strategy-proof sealed-bid formats---the direction divergence carried into Table~\ref{tab:validity-map} and Section~\ref{sec:humans}.}
+    \label{fig:direction}
+\end{figure}
+
+\subsection{The Winner's Curse in Common-Value Auctions}\label{sec:validation-curse}
+
+Common-value auctions provide a sharp test of whether bidders correctly condition on the adverse selection implicit in winning. In the canonical design of \citet{kagel1986winner}, each bidder observes a noisy private signal $x$ about a common value $x_0$; winning is ``bad news'' because, conditional on holding the highest of $n$ signals, the expected common value lies strictly below $x$, with the gap widening in $n$.\footnote{In the standard symmetric design, $\mathbb{E}[x_0 \mid X = x_{1:n}] = x - \frac{n-1}{n+1}\varepsilon$ away from boundary regions, where $\varepsilon$ controls signal noise---competition exacerbates adverse selection.} Bidders who neglect this conditioning overbid relative to $\mathbb{E}[x_0 \mid \text{win}]$ and earn negative profits---the classic \emph{winner's curse}. The laboratory evidence delivers two comparative statics: winner losses worsen as $n$ rises (e.g., approximately $-\$1.68$ with $n=4$ versus $-\$3.68$ with $n=7$ in \citeauthor{kagel1986winner}'s benchmark conditions), and formats that reveal more information during price discovery attenuate the curse relative to first-price sealed bidding \citep{levin1996revenue}. Table~\ref{tab:winners-curse} shows that GPT-4o bidders reproduce both. In common-value FPSB auctions, winners lose money on average in every treatment, losses grow monotonically with competition (mean winner profit $-2.54$ with 4 bidders down to $-5.55$ with 7), and the share of winners earning positive profits collapses from $24\%$ to $0\%$; one-sided tests reject nonnegative winner profit in all FPSB treatments \citep{kagel1986winner}.
+
+Under a common-value \emph{second-price} rule with the same information structure, the same comparative-static forces appear but the curse is attenuated: winners earn positive average profits with 4 bidders (mean $1.30$), roughly break even with 5, and suffer statistically significant losses only once competition is sufficiently intense ($n \ge 6$). LLM behavior thus displays a substantially stronger winner's curse in FPSB than in SPSB, mirroring the qualitative format ranking emphasized in the experimental literature \citep{levin1996revenue}.
+
+\begin{table}[ht]
+\centering
+\begin{tabular}{lccccc}
+\toprule
+\textbf{Auction} & \textbf{Bidders} & \textbf{Mean (Std.)} & \textbf{Median} & \textbf{\% Positive} & \textbf{$p$ (Profit $<0$)} \\
+\midrule
+FPSB & 4 & $-2.54$ (3.87) & $-3.00$ & 24.0\% & $<0.001^{***}$ \\
+FPSB & 5 & $-4.40$ (3.63) & $-4.00$ & 6.0\%  & $<0.001^{***}$ \\
+FPSB & 6 & $-5.46$ (3.82) & $-5.05$ & 4.0\%  & $<0.001^{***}$ \\
+FPSB & 7 & $-5.55$ (2.93) & $-5.30$ & 0.0\%  & $<0.001^{***}$ \\
+\midrule
+SPSB & 4 & $1.30$ (4.87)  & $1.00$  & 58.0\% & 0.967 \\
+SPSB & 5 & $0.07$ (4.35)  & $0.00$  & 46.0\% & 0.542 \\
+SPSB & 6 & $-2.82$ (3.50) & $-1.75$ & 18.0\% & $<0.001^{***}$ \\
+SPSB & 7 & $-2.83$ (2.78) & $-2.00$ & 12.0\% & $<0.001^{***}$ \\
+\bottomrule
+\end{tabular}
+\caption{Winner profit in common-value auctions with GPT-4o bidders. The last column reports one-sided $p$-values for the hypothesis that winner profit is negative. *** denotes $p < 0.001$.}
+\label{tab:winners-curse}
+\end{table}
+
+\subsection{Field Microstructure: eBay Closing Rules}\label{sec:validation-ebay}
+
+The validations above are anchored to laboratory data; our final behavioral check is anchored to the field. A hallmark of hard-close online auctions is \emph{bid sniping}: bidders delay their bids until the final moments of the auction to avoid triggering competitive responses. Sniping is widely observed on eBay and has long been studied as a behavioral and strategic departure from the simple ``bid-your-value'' logic implied by proxy bidding \citep{roth2002last}; it is potentially costly from a design standpoint because it compresses information revelation into the auction's final moments. The classic remedy is a \emph{soft-close} (auction-extension) rule: \citet{roth2002last} and \citet{ockenfels2006late} document far less sniping on early Amazon.com auctions (soft close) than on eBay (hard close), with Amazon bids spread throughout the auction. We implement a simplified eBay-style proxy-bidding environment---each bidder submits a maximum bid and the platform bids on her behalf at the second-highest bid plus an increment, giving the flavor of an open second-price auction---and vary the closing rule and the presence of a hidden reserve across four treatments (procedures in Appendix~\ref{app:ebay-process}).
+
+LLM bidders respond to these temporal incentives in the same direction as the field evidence. We measure the \emph{final-winning-bid time}: the last period in which the eventual winner changes her maximum bid, i.e., when the winner is effectively determined. Under the standard hard-close rule, GPT-4o bidders concentrate their decisive bid updates at the deadline: $63.3\%$ of winners in the baseline treatment place their final maximum-bid change on the scheduled last day ($50.0\%$ pooling the hard-close treatments), producing the deadline-spiked histogram in the left panel of Figure~\ref{fig:ebay-sniping}. Introducing a soft-close extension rule sharply attenuates this last-period concentration: the last-day share collapses to $7.6\%$, the distribution of final-winning-bid times shifts earlier (mean day $5.0$ versus $6.7$; Mann--Whitney $p = 3.5\times10^{-5}$, Kolmogorov--Smirnov $p = 7.2\times10^{-6}$), and a quarter of soft-close winners place their decisive bid on the \emph{first} day---bid-early-and-hold. Soft close de-incentivizes waiting and spreads competition earlier in time---precisely the mechanism emphasized in the human empirical literature. Both soft-close treatments show this attenuation relative to the hard close; layering a hidden reserve on top of the soft close does \emph{not} dampen last-period activity further (treatment-level detail in Appendix~\ref{app:ebay}). The companion hidden-reserve treatments show only limited behavioral and revenue sensitivity, consistent with the large-sample field evidence of \citet{einav2011learning}; we report those null results in Appendix~\ref{app:ebay}---together with a reserve audit showing that the simulated proxy-price rule never lifts the closing price to a met reserve, so the revenue null partly reflects a mechanical channel being disabled rather than bidder insensitivity alone---and a \TODO{Myerson-level reserve check (plan §6, nice-to-have)}.
+
+\begin{figure}[ht]
+    \centering
+    \begin{subfigure}[t]{0.495\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{ebay-winning-bid-non-closing.png}
+        \caption{Hard close (T1 $+$ T3 pooled, $N=120$).}
+        \label{fig:ebay-sniping-hard}
+    \end{subfigure}\hfill
+    \begin{subfigure}[t]{0.495\linewidth}
+        \centering
+        \includegraphics[width=\linewidth]{ebay-final-winning-closing.png}
+        \caption{Soft close (T2 $+$ T4 pooled, $N=119$).}
+        \label{fig:ebay-sniping-soft}
+    \end{subfigure}
+    \caption{\textbf{Final-winning-bid timing in simulated eBay-style auctions, IPV environment: hard close vs.\ soft close.} Final-winning-bid time is the last period in which the eventual winner changes her maximum bid. Under the standard (hard-close) rule, decisive bids concentrate on the scheduled final day (day 9: $63.3\%$ in the baseline treatment T1, $50.0\%$ pooled across hard-close treatments); under the soft-close (auction-extension) rule the day-9 share falls to $7.6\%$ and the distribution shifts substantially earlier (Mann--Whitney $p = 3.5\times10^{-5}$; Kolmogorov--Smirnov $p = 7.2\times10^{-6}$). Per-treatment CDFs appear in Appendix~\ref{app:ebay} (Figure~\ref{fig:ebay-cdf}).}
+    \label{fig:ebay-sniping}
+\end{figure}
+
+\subsection{Stability}\label{sec:validation-stability}
+
+Two ablations establish that the behaviors above are stable properties of the agents rather than artifacts of run structure or decoding noise. First, in a multi-round ablation with full history feedback, GPT-4o shows no cross-round learning over 15 rounds: mean FPSB SMAD is $0.2523$ in the first five rounds versus $0.2524$ in the last five ($t$-test $p = 0.997$; Mann--Whitney $p = 0.913$), with the SPSB comparison likewise null ($0.1282$ vs.\ $0.1447$, n.s.), and trend tests detect no drift (Appendix~\ref{app:learning}). This justifies the one-shot design used throughout and implies that the lever effects in Section~\ref{sec:ranking} cannot be attributed to within-session adaptation. Second, sampling-temperature effects on deviations are modest and non-monotonic across formats; $T=0.5$ is retained as a convention for comparability rather than for performance, and model-tier ablations (a frontier reasoning model and a capability floor) are reported alongside (Appendix~\ref{app:ablations}).
+
+\subsection{A Validity Map}\label{sec:validation-map}
+
+Table~\ref{tab:validity-map} collects the section's evidence into an explicit accounting of what transfers from human populations to LLM agents and what does not. Five phenomena transfer: the cross-mechanism difficulty ordering, the clock/OSP format effect, the winner's-curse comparative statics, the closing-rule response, and---on average across models---the menu-description null, though the menu case transfers with a caveat: the average effect is null, but individual models shift in both directions (Section~\ref{sec:ranking-descriptions}). Two phenomena do not transfer, and we declare them as the map's red cells: the \emph{direction} of deviations under strategy-proof sealed-bid rules (humans overbid; GPT-4o underbids) and the \emph{levels and distributional shape} of deviations (LLMs place a point mass at exactly truthful play that humans lack, and levels are not calibrated across populations).
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.55cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{1.75cm}}
+\toprule
+\textbf{Phenomenon} & \textbf{Human finding} & \textbf{LLM finding} & \textbf{Verdict} \\
+\midrule
+Cross-mechanism difficulty ranking & FPSB $\gg$ SPSB in SMAD (24.76\% vs.\ 5.65\%); harder formats harder everywhere & Same ordering (27.55\% vs.\ 8.69\%); ordering preserved across the battery (Fig.~\ref{fig:smad-comparison}) & Transfers ($\checkmark$) \\
+\addlinespace
+Clock/OSP format effect & Clock formats reduce deviations vs.\ sealed SPSB-APV: 3.54\% (AC), 5.83\% (AC-B) vs.\ 9.31\% \citep{li2017obviously,breitmoser2022obviousness} & Same direction, larger effect: 0.81\% (AC), 0.47\% (AC-B) vs.\ 10.73\% (Section~\ref{sec:ranking-extensive}) & Transfers ($\checkmark$) \\
+\addlinespace
+Winner's-curse comparative statics & CV-FPSB winner losses grow with $n$; attenuated under formats revealing more information \citep{kagel1986winner,levin1996revenue} & Mean winner profit $-2.54 \to -5.55$ as $n{:}\,4 \to 7$; \% positive $24\% \to 0\%$; SPSB attenuated (Table~\ref{tab:winners-curse}) & Transfers ($\checkmark$) \\
+\addlinespace
+Sniping / closing-rule response & Late bidding under hard close (eBay); attenuated under soft close (Amazon) \citep{roth2002last,ockenfels2006late} & Decisive bids concentrate at the deadline under hard close (63.3\% final-day share in T1); soft close collapses the share to 7.6\% (MW $p=3.5\times10^{-5}$; Fig.~\ref{fig:ebay-sniping}) & Transfers ($\checkmark$) \\
+\addlinespace
+Menu-description null & Menu restatement of SPSB leaves human bidding essentially unchanged \citep{gonczarowski2023strategyproofness} & Small and sign-mixed across the four models: null on average (placebo sign test $p=0.73$); slightly worse for Claude ($p=0.042$) and GPT-4o ($p=0.003$), null for Gemma ($p=0.94$), better for Gemini ($p<0.001$) (Section~\ref{sec:ranking-descriptions}) & Transfers on average ($\checkmark$), heterogeneous \\
+\addlinespace
+Deviation \emph{direction} (strategy-proof sealed bid) & Overbidding: 67.2\% of bids above value; 92.2\% of deviating bids (SPSB-IPV); 64.7\% of out-of-band deviations (APV) & Underbidding: 74.1\% of bids below value; 81.6\% of deviating bids (SPSB-IPV); 92.4\% (APV, band convention) & Diverges ($\times$) \\
+\addlinespace
+Deviation \emph{levels} and shape & Continuous, right-skewed bid distributions; little mass exactly at value & Point mass at truthful play (29.2\% within $\pm2\%$ in SPSB-IPV; 71.7\% in AC vs.\ 26.8\% for humans); levels not calibrated across populations & Diverges ($\times$) \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Validity map: which behavioral phenomena transfer from human experimental populations to LLM agents.} Human findings are from the cited experimental and field literatures via the moment-matched reconstructions of Section~\ref{sec:reconstruction}; LLM findings are from this section and Section~\ref{sec:ranking}. Verdicts are qualitative: transfers = same sign and comparative statics; diverges = opposite sign or uncalibrated levels. \TODO{Add a rank-concordance statistic with a bootstrap CI to the difficulty-ordering row (residual of E6; the other transferring rows now carry cell-level tests).}}
+\label{tab:validity-map}
+\end{table}
+
+The two red cells discipline everything that follows. Because deviation levels and directions do not transfer, the ranking in Section~\ref{sec:ranking} is never built on cross-population level comparisons: every lever is scored by the preservation index $\rho$, a within-model, within-domain ratio to that model's own baseline, which is invariant to both the sign and the scale of a population's characteristic error. And because transfer cannot be assumed, Section~\ref{sec:humans} treats it explicitly, anchoring each rung of the ranking to human evidence where it exists---where, as the map's top five rows already suggest, the levers move both populations in the same direction even when their baseline errors point opposite ways.

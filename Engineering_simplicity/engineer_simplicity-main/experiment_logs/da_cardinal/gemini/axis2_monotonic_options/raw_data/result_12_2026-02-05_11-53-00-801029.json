@@ -1,0 +1,155 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 66,
+            "x": 87,
+            "y": 68,
+            "z": 57
+        },
+        "Student B": {
+            "w": 67,
+            "x": 72,
+            "y": 61,
+            "z": 63
+        },
+        "Student C": {
+            "w": 63,
+            "x": 70,
+            "y": 54,
+            "z": 56
+        },
+        "Student D": {
+            "w": 52,
+            "x": 76,
+            "y": 52,
+            "z": 55
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 68,
+        "Student B": 72,
+        "Student C": 63,
+        "Student D": 55
+    },
+    "rankings": {
+        "Student A": [
+            "y",
+            "x",
+            "w",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my value. School x has the highest value ($87), and school y is second ($68). My priority at both x and y is high (2 and 1 respectively). I should rank these two first. Since I have priority 1 at y, I'll rank it higher than x, where I have priority 2.\n\nBetween w ($66) and z ($57), w is preferable due to its higher value. My priority at w is 1, and at z is 2. Therefore, w should be ranked higher than z.\n\nSo, my ranking should be: y > x > w > z.",
+        "Student B": "My goal is to maximize my outcome, considering both my value for each school and my priority rank at each school.\n\n*   **x vs. z:** I have a higher value for x ($72) than z ($63), and I have the highest priority (1) at both. Therefore, x is strictly better than z.\n\n*   **w vs. y:** I have a higher value for w ($67) than y ($61), but my priority at both is the same (2). Therefore, w is strictly better than y.\n\n*   **x vs. w:** I have a higher value for x ($72) than w ($67). Although I have priority 1 at x and priority 2 at w, the value difference is significant enough that I prefer x. Furthermore, given that most applicants appear to favor y > x > w > z, x is likely to be very competitive.\n\n*   **z vs. y:** I have a higher value for z ($63) than y ($61). Additionally, I have priority 1 at z and priority 2 at y. Therefore, z is strictly better than y.\n\nTherefore, my ranking should prioritize schools where I have high value and high priority. I also consider the popularity of schools based on the provided information about other applicants' preferences. This leads to the following ranking:\n\n1.  x (highest value and priority)\n2.  w (higher value than z and y, and ensures I have a better fallback option)\n3.  z (higher value than y, and higher priority)\n4.  y (lowest value and priority)",
+        "Student C": "My goal is to maximize my value while considering my priority rank at each school. My values are: w = $63, x = $70, y = $54, z = $56. My priorities are: w: 3, x: 3, y: 4, z: 4.\n\nI want to aim high, but also be realistic. x has the highest value ($70) and a priority of 3, so it's a good starting point. w has a slightly lower value ($63) but the same priority (3), so it's my second choice.\n\nz has a value of $56 and priority 4, and y has a value of $54 and priority 4. Since z has a higher value than y, I prefer z over y.\n\nTherefore, my ranking should be x > w > z > y.",
+        "Student D": "My goal is to maximize my value. School 'x' offers the highest value at $76, so it should be my top choice. Schools 'z' offers $55, which is the second highest value. Schools 'w' and 'y' both offer the same value ($52). However, I have a higher priority at school 'y' (3) than school 'w' (4). Therefore, I should rank 'y' higher than 'w'. Given the key insight that my options never shrink, I should rank the schools in decreasing order of value, and break ties using priority."
+    },
+    "truthfulness": {
+        "Student A": false,
+        "Student B": true,
+        "Student C": true,
+        "Student D": false
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student C",
+                    "Student B",
+                    "Student D"
+                ],
+                "y": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C",
+                "z": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.5
+}

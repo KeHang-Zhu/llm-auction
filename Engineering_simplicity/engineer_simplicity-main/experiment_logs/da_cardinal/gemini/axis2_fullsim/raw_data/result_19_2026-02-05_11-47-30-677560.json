@@ -1,0 +1,193 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 58,
+            "x": 74,
+            "y": 70,
+            "z": 52
+        },
+        "Student B": {
+            "w": 61,
+            "x": 72,
+            "y": 80,
+            "z": 68
+        },
+        "Student C": {
+            "w": 53,
+            "x": 71,
+            "y": 69,
+            "z": 53
+        },
+        "Student D": {
+            "w": 57,
+            "x": 75,
+            "y": 81,
+            "z": 54
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 70,
+        "Student B": 72,
+        "Student C": 53,
+        "Student D": 54
+    },
+    "rankings": {
+        "Student A": [
+            "y",
+            "x",
+            "w",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ],
+        "Student D": [
+            "y",
+            "x",
+            "w",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my outcome, considering both my values for each school and my priority at each school. The naive ranking would be x > y > w > z, based solely on my values. However, priority matters significantly in the deferred acceptance algorithm.\n\nLet's analyze the schools:\n\n*   **w:** My value is $58, and I have priority 1. This makes it a safe option, but not ideal if I can get x or y.\n*   **x:** My value is $74, but I have priority 2. Given that most applicants favor y > x > w > z, there's a good chance I'll be competing with someone with higher priority at x.\n*   **y:** My value is $70, and I have priority 1. This is potentially a very good option. It's slightly lower value than x, but my top priority might secure me a spot.\n*   **z:** My value is $52, and I have priority 2. This is the least desirable option.\n\nConsidering the likely preferences of other students (y > x > w > z), I should prioritize schools where I have a high priority. I will rank schools with priority 1 higher than schools with priority 2, even if the value is slightly lower.\n\nTherefore, I should rank y first, as I have priority 1 and a high value. Then, I should rank x, as it has the highest value, but I have priority 2. Following x, I should rank w, as I have priority 1 there, and it is better than z. Finally, I rank z last.\n\nBy ranking y first, I maximize my chances of getting into a good school where I have high priority. If I get rejected from y (unlikely given my priority), I move to x. If I get rejected from x, I move to w, where my priority 1 should secure me a spot. z is my safety net.",
+        "Student B": "My goal is to maximize my value, which means getting into the best school possible. My values are y > x > z > w. My priorities are x:1, z:1, w:2, y:2.\n\nSince most applicants favor y > x > w > z, I need to consider the competition.\n\n*   **If I rank y first:** I have priority 2 at y. Since most people like y, I might get rejected.\n*   **If I rank x first:** I have priority 1 at x. This is very attractive. I'm likely to get in.\n*   **If I rank z first:** I have priority 1 at z. This is also attractive, but z is less desirable than x.\n*   **If I rank w first:** I have priority 2 at w. I'm unlikely to get in, and w is not my best option.\n\nGiven the information, I want to secure x, since I have the highest priority there and x is my second-best option overall. I will rank x first.\n\nNext, I need to consider what happens if I get rejected from x (unlikely, but possible). I will rank y second, as it is my top choice and I might get lucky. If I get rejected from y, I will rank z, where I have priority 1. Finally, I will rank w last.\n\nThis strategy prioritizes securing x, while also giving me a chance at y if possible, and then a safety net at z.",
+        "Student C": "My goal is to maximize my value from the school I'm matched to. My values are x > y > w = z. However, I also need to consider my priority at each school. My priorities are w:3, x:3, y:4, z:4.\n\nGiven the information that most applicants favor y > x > w > z, I can anticipate some competition.\n\nLet's analyze different ranking strategies:\n\n*   **Ranking x first:** If I rank x first, I propose to x. My priority is 3. Since many students favor x, I might be rejected. If rejected, I'd propose to my next choice.\n*   **Ranking y first:** If I rank y first, I propose to y. My priority is 4. Since many students favor y, I might be rejected. If rejected, I'd propose to my next choice.\n*   **Ranking w first:** If I rank w first, I propose to w. My priority is 3. Since fewer students favor w, I might have a better chance of acceptance. If rejected, I'd propose to my next choice.\n*   **Ranking z first:** If I rank z first, I propose to z. My priority is 4. Since very few students favor z, I might have a good chance of acceptance, but the value is low.\n\nI want to balance my value and priority. Let's consider a few scenarios:\n\n1.  **x > y > w > z:** I propose to x (priority 3). If rejected, I propose to y (priority 4). If rejected, I propose to w (priority 3). If rejected, I get z (priority 4).\n2.  **y > x > w > z:** I propose to y (priority 4). If rejected, I propose to x (priority 3). If rejected, I propose to w (priority 3). If rejected, I get z (priority 4).\n3.  **x > w > y > z:** I propose to x (priority 3). If rejected, I propose to w (priority 3). If rejected, I propose to y (priority 4). If rejected, I get z (priority 4).\n4.  **w > x > y > z:** I propose to w (priority 3). If rejected, I propose to x (priority 3). If rejected, I propose to y (priority 4). If rejected, I get z (priority 4).\n\nI believe ranking x first is still the best strategy. Even if I get rejected from x, I can propose to w, which has the same priority as x but is less popular. This gives me a decent chance.",
+        "Student D": "My goal is to maximize my outcome given my preferences and priorities. My preferences are y > x > w > z. My priorities are w: 4, x: 4, y: 3, z: 3.\n\nSince most applicants favor y > x > w > z, and my priority at y is 3, I have a decent chance at getting into y. My priority at x is 4, which is not good, but x is still my second favorite. My priority at w and z is also 3, but I prefer w to z.\n\nLet's consider the ranking y > x > w > z.\n- Round 1: I propose to y. It's possible I get tentatively accepted.\n- If rejected from y, I propose to x. I may or may not be accepted there.\n- If rejected from x, I propose to w.\n- If rejected from w, I propose to z.\n\nLet's consider the ranking x > y > w > z.\n- Round 1: I propose to x. It's possible I get tentatively accepted.\n- If rejected from x, I propose to y. I may or may not be accepted there.\n- If rejected from y, I propose to w.\n- If rejected from w, I propose to z.\n\nSince my priority at both x and y are not great, it's better to put y first because I prefer y to x. If I put x first, I might get rejected from x and then y, and end up with w or z. If I put y first, I might get rejected from y, but then I go to x, which is still better than w or z.\n\nTherefore, the best ranking is y > x > w > z."
+    },
+    "truthfulness": {
+        "Student A": false,
+        "Student B": false,
+        "Student C": false,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student C",
+                    "Student B"
+                ],
+                "y": [
+                    "Student A",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "w": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student A",
+                "w": "Student C",
+                "z": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.25
+}

@@ -1,0 +1,159 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 42,
+            "x": 62,
+            "y": 47,
+            "z": 50
+        },
+        "Student B": {
+            "w": 53,
+            "x": 63,
+            "y": 54,
+            "z": 62
+        },
+        "Student C": {
+            "w": 60,
+            "x": 74,
+            "y": 56,
+            "z": 60
+        },
+        "Student D": {
+            "w": 43,
+            "x": 79,
+            "y": 53,
+            "z": 53
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "z",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 50,
+        "Student B": 63,
+        "Student C": 60,
+        "Student D": 53
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ],
+        "Student B": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my chances of getting into my most preferred school. I need to consider both my preferences and my priority rank at each school.\n\n*   **School x:** It's my top choice, but I only have priority rank 2. Given the applicant pool seems to prefer y > x > w > z, there's a good chance many others also prefer x and have higher priority.\n*   **School z:** It's my second choice, and I also have priority rank 2. Similar to x, I might be competing with many others.\n*   **School y:** It's my third choice, but I have priority rank 1. This is a significant advantage. Even if many applicants prefer y, I have a higher chance of getting in due to my priority.\n*   **School w:** It's my least preferred, but I have priority rank 1. However, since it's my least preferred, I'd rather risk not getting in anywhere than settling for w if a better option is possible.\n\nGiven the key insight that rejections only redirect, I should list my preferences honestly. Being rejected from x or z won't hurt my chances at y or w. Therefore, I should stick to my true preferences.",
+        "Student B": "My goal is to maximize my chances of getting into my most preferred school. My stated preferences are x > z > y > w, and my priorities at each school are w: 2, x: 1, y: 2, z: 1.\n\nSchool x is my top choice and I have the highest priority there (priority 1). This is ideal, so I should rank it first.\n\nSchool z is my second choice, and I also have the highest priority there (priority 1). This is also great, so I should rank it second.\n\nSchool y is my third choice, and I have priority 2 there. School w is my last choice, and I have priority 2 there as well. Since y is preferred over w, I should rank y before w.\n\nTherefore, the optimal ranking is x > z > y > w.",
+        "Student C": "My stated preferences are x > w > z > y. My priority ranks are w: 3, x: 3, y: 4, z: 4. The key insight is that rejections only redirect, never eliminate. This means that being rejected from a top choice doesn't hurt my chances at lower-ranked schools. Given that many applicants favor y > x > w > z, it's likely that x and w will be competitive. Since my priority rank at both x and w is 3, I will keep them at the top of my ranking. My priority rank at z and y is 4, so they are less likely to accept me compared to if my priority rank were 1 or 2. I will keep my ranking as x > w > z > y.",
+        "Student D": "My stated preferences are x > y > z > w. My priority ranks are w: 4, x: 4, y: 3, z: 3. The key insight is that rejections only redirect, never eliminate. This means being rejected from a school I ranked highly doesn't hurt my chances at schools ranked lower. I should stick to my true preferences. My priority rank at y and z are better than x and w so I might get accepted at y or z."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student A",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student D"
+                ],
+                "w": [
+                    "Student C"
+                ],
+                "z": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student D",
+                "w": "Student C",
+                "z": "Student A"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

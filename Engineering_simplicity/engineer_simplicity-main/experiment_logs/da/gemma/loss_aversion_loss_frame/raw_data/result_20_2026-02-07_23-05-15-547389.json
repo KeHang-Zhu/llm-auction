@@ -1,0 +1,170 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 63,
+            "x": 65,
+            "y": 60,
+            "z": 63
+        },
+        "Student B": {
+            "w": 55,
+            "x": 77,
+            "y": 44,
+            "z": 72
+        },
+        "Student C": {
+            "w": 71,
+            "x": 65,
+            "y": 59,
+            "z": 55
+        },
+        "Student D": {
+            "w": 67,
+            "x": 73,
+            "y": 61,
+            "z": 75
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "y",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 63,
+        "Student B": 77,
+        "Student C": 59,
+        "Student D": 75
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "z",
+            "y"
+        ],
+        "Student B": [
+            "x",
+            "z",
+            "w",
+            "y"
+        ],
+        "Student C": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My initial expected value is ${{ max_value }}. My ideal outcome is matching with school x. However, most applicants prefer y > x > w > z. This means x is likely highly competitive. School w is my second choice, and I have the highest priority at w, which is good. School z is okay, and y is my least preferred.\n\nGiven the competitive landscape, I need to balance my preferences with the likelihood of matching. If I rank x first, I risk being unmatched and losing my entire expected value. If I rank w first, I have a high chance of matching, but it's not my preferred outcome.\n\nConsidering that most applicants prefer y and x, w is likely to have spots available. Since I have the highest priority at w, it's a relatively safe bet. My strategy will be to rank w first. This guarantees a likely match, minimizing the risk of losing my entire expected value. Then I rank x, z and finally y. This is because even though I prefer x over w, the risk of being unmatched is too high.",
+        "Student B": "My best possible outcome is ${{ max_value }}. I strongly prefer x and z over w and y. However, most applicants prefer y > x > w > z. This means x and z are likely to be competitive, and I might not get them if I rely solely on my preference.\n\nMy priority at x is 1, meaning I'm the highest priority applicant there. This is a huge advantage. My priority at z is also 1, but it's likely more applicants also rank z highly. My priority at w and y are both 2, making them less attractive options.\n\nGiven the common applicant preference and my priorities, I believe my best strategy is to rank x as my #1 choice. If I don't get x, I'll be very disappointed. Z is my next best option, and I have a good chance of getting it. W is okay, but I'd rather not end up there. Y is my least preferred.\n\nI am willing to risk not getting my ideal school (x) because the potential loss of not getting matched at all (losing ${{ max_value }}) is much greater than the loss of being matched to w or y. I believe my #1 priority at x gives me a very good chance of securing it, and I should capitalize on that. I'm betting that enough people will apply to y to reduce competition for x.",
+        "Student C": "My initial expected value is high, and I risk losing it all if I remain unmatched. Given the information about other applicants' preferences (y > x > w > z), I believe schools w, x, and y will be highly competitive. School z is likely to be the least competitive.\n\nMy ranking is w > x > y > z. However, my priority at w and x is relatively low (3). This means I'm unlikely to get matched to either of those schools if other applicants rank them higher. School y is also competitive, and I am a lower priority there too. Therefore, I need to consider the risk of being unmatched.\n\nSince most applicants prefer y over w and x, y will likely fill its slots with those applicants first. W and X are also likely to be filled by applicants who rank them higher than y. I could try to \"game\" the system by ranking z higher, hoping to secure a match. However, this would mean accepting a significantly lower value.\n\nGiven my preference ordering and the information available, I will stick to my true preferences. I believe the risk of being unmatched is lower if I rank my preferred schools in order. Even if I don't get my top choice, I have a reasonable chance of getting x or y. If I rank z higher, I'm essentially giving up on w, x and y, and settling for a much lower value.",
+        "Student D": "My best possible outcome is matching to school z, with a value of ${{ max_value }}. My goal is to minimize potential loss. I know most applicants prefer y > x > w > z. This means z is likely to be less competitive. My ranking reflects my true preference (z > x > w > y), but I need to consider the matching dynamics.\n\nIf I rank truthfully, I have a good chance of getting z, which would result in a loss of ${{ max_value }} - value(z). However, there's a risk I won't get matched at all, leading to a loss of ${{ max_value }}.\n\nSince most applicants prefer y over z, and I'm ranked relatively low at z (3rd priority), I need to be realistic about my chances of getting z. Ranking x higher than z might increase my chances of getting matched *somewhere*, even if it's not my top choice. However, x is also very popular.\n\nGiven my low priority at w and x, and the general applicant preference, y is the least desirable option for me. I'm willing to risk not getting matched rather than being stuck with y.\n\nTherefore, I will stick with my true preferences, hoping that the lower demand for z will give me an edge. The potential loss from being unmatched is the same as the loss from being assigned y, but I'd rather take the chance of being unmatched than settle for my least preferred school."
+    },
+    "truthfulness": {
+        "Student A": false,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ],
+                "x": [
+                    "Student B"
+                ],
+                "w": [
+                    "Student A",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student D",
+                "x": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student D",
+                "x": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student D",
+                "x": "Student B",
+                "w": "Student A",
+                "y": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

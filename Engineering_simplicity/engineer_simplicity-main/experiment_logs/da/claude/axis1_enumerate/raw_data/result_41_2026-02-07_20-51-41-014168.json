@@ -1,0 +1,159 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 89,
+            "x": 51,
+            "y": 60,
+            "z": 49
+        },
+        "Student B": {
+            "w": 77,
+            "x": 50,
+            "y": 76,
+            "z": 69
+        },
+        "Student C": {
+            "w": 71,
+            "x": 48,
+            "y": 72,
+            "z": 69
+        },
+        "Student D": {
+            "w": 76,
+            "x": 49,
+            "y": 67,
+            "z": 68
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "y",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 89,
+        "Student B": 50,
+        "Student C": 72,
+        "Student D": 68
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "y",
+            "x",
+            "z"
+        ],
+        "Student B": [
+            "w",
+            "x",
+            "z",
+            "y"
+        ],
+        "Student C": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "w",
+            "z",
+            "y",
+            "x"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Key strategic considerations:\n1. My true preferences are w > y > x > z\n2. I have high priority at w (rank 1) and y (rank 1)\n3. Most applicants seem to favor y, which could make y competitive\n4. If many rank y first, my chances at w might improve\n\nStrategic reasoning:\n- Ranking y first might be risky due to high competition\n- Ranking w first leverages my high priority there\n- I want to balance my true preferences with strategic positioning\n- If I rank w first, I have a good chance of being accepted\n- Ranking x and z lower reduces potential competition at my top choices\n\nThe goal is to maximize my likelihood of getting a school I truly prefer while considering the probable strategies of other applicants.",
+        "Student B": "Strategic considerations:\n1. My true preference is w > y > z > x\n2. Most other applicants seem to favor y > x > w > z\n3. At w, I have 2nd priority\n4. At x, I have 1st priority\n5. At y, I have 2nd priority\n6. At z, I have 1st priority\n\nKey strategic insights:\n- If many students rank y highly, competition will be fierce\n- My 1st priority at x and z might give me an advantage\n- If I rank x higher than my true preference, I might secure a spot more easily\n- x might be less competitive due to others preferring y\n\nPotential game theory approach:\n- Slightly elevating x could improve my chances\n- Keeping z relatively high maintains an alternative option\n- Preserving w as top preference maintains my true preference signal",
+        "Student C": "Strategic considerations:\n1. My true preference is y > w > z > x\n2. However, I have low priority at y (4th), which means I'm unlikely to get y if many others rank it highly\n3. Most applicants seem to favor y and x, which further reduces my chances at y\n4. At w, I have a mid-range priority (3rd), which might give me a reasonable chance\n5. If I rank y first, I risk getting rejected and then having fewer good options\n6. By ranking w first, I might secure a more realistic match while still having backup options\n\nKey strategy: Adjust my ranking to maximize my likely match, balancing preference with realistic probability of acceptance",
+        "Student D": "Key strategic considerations:\n1. My true preferences are w > z > y > x\n2. My priority ranks are w:4, x:4, y:3, z:3\n3. Most applicants seem to prefer y > x > w > z\n\nStrategic insights:\n- At w and x (where I'm priority 4), competition will be high\n- At y and z (where I'm priority 3), I might have a better chance\n- Since most applicants prefer y and x, those schools will be very competitive\n- My best strategy is likely to rank truthfully, as strategic manipulation seems risky\n- By ranking w first, I signal my strongest preference\n- The lower priority at w means I might get rejected, so having z as backup makes sense\n\nThe deferred acceptance algorithm means my true preferences matter, and trying to game the system could backfire."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": false,
+        "Student C": false,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student A",
+                    "Student B",
+                    "Student D",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student B",
+                    "w"
+                ],
+                [
+                    "Student D",
+                    "w"
+                ],
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student B"
+                ],
+                "z": [
+                    "Student D"
+                ],
+                "y": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student B",
+                "z": "Student D",
+                "y": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.5
+}

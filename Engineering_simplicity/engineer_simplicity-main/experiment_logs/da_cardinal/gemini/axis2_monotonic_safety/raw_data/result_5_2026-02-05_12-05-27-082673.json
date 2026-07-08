@@ -1,0 +1,155 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 70,
+            "x": 64,
+            "y": 45,
+            "z": 53
+        },
+        "Student B": {
+            "w": 61,
+            "x": 63,
+            "y": 53,
+            "z": 63
+        },
+        "Student C": {
+            "w": 57,
+            "x": 80,
+            "y": 56,
+            "z": 62
+        },
+        "Student D": {
+            "w": 55,
+            "x": 73,
+            "y": 59,
+            "z": 43
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 70,
+        "Student B": 63,
+        "Student C": 62,
+        "Student D": 59
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "y",
+            "x",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "z",
+            "w",
+            "y"
+        ],
+        "Student C": [
+            "x",
+            "z",
+            "w",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my value. My raw preferences are w > x > z > y, based on the stated values. However, I need to consider my priority at each school and the preferences of other applicants.\n\nSchool w has a value of $70 and I have priority 1.\nSchool x has a value of $64 and I have priority 2.\nSchool y has a value of $45 and I have priority 1.\nSchool z has a value of $53 and I have priority 2.\n\nSince most applicants favor y > x > w > z, I should rank y higher to ensure I get matched to at least *something*. Since I have priority 1 at both w and y, they are my top choices. Since w has a higher value, I will rank w first.\n\nGiven the information, I should rank w first. If I get rejected from w, I move on to my next choice. I have priority 1 at y, and given the popularity of y, I should rank it second to ensure I have a good chance of getting in if I'm rejected from w.\n\nNext, I have to choose between x and z. x has a higher value ($64 vs $53), so I should rank x higher than z. I have priority 2 at both, so ranking x higher will give me the best chance of getting a higher value school.\n\nTherefore, my ranking is w > y > x > z.",
+        "Student B": "My values are: w = $61, x = $63, y = $53, z = $63.\nMy priorities are: w: 2, x: 1, y: 2, z: 1.\n\nI want to maximize my value. Both x and z have the highest value ($63). I have priority 1 at both. Since most applicants favor y > x > w > z, it's likely x and z will be competitive. I will rank x first, then z.\n\nNext, w has a value of $61 and priority 2. Finally, y has a value of $53 and priority 2. Therefore, I will rank w before y.\n\nMy complete ranking is x > z > w > y.",
+        "Student C": "I want to maximize my value. My values are: w = $57, x = $80, y = $56, z = $62. Therefore, I prefer x > z > w > y.\n\nMy priorities are: w: 3, x: 3, y: 4, z: 4.\n\nSince rejections only redirect and never eliminate, I should rank the schools purely based on my value, as my priority rank will only determine the *order* in which I'm considered, not *whether* I'm considered. So I should rank them x > z > w > y.",
+        "Student D": "My goal is to maximize my value by getting into the best school possible. My values are: x = $73, y = $59, w = $55, z = $43. Therefore, my preference based purely on value is x > y > w > z.\n\nHowever, my priority rank at each school also matters. My priorities are: w: 4, x: 4, y: 3, z: 3. A lower number indicates higher priority.\n\nI should rank the schools in decreasing order of value, but also consider my priority at each school. Since rejections only redirect and never eliminate, and I cannot be \"knocked out\" of a school that would have accepted me, I should still rank according to my true preferences. This is because being rejected from a higher-ranked school only means I'll be considered by the next school in my ranking.\n\nTherefore, I should rank the schools as x > y > w > z."
+    },
+    "truthfulness": {
+        "Student A": false,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student C",
+                    "Student B",
+                    "Student D"
+                ],
+                "w": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ],
+                "y": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A",
+                "z": "Student C",
+                "y": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 0.75
+}

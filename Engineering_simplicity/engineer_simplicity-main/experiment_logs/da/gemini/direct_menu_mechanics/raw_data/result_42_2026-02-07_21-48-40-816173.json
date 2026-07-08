@@ -1,0 +1,159 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 42,
+            "x": 62,
+            "y": 47,
+            "z": 50
+        },
+        "Student B": {
+            "w": 53,
+            "x": 63,
+            "y": 54,
+            "z": 62
+        },
+        "Student C": {
+            "w": 60,
+            "x": 74,
+            "y": 56,
+            "z": 60
+        },
+        "Student D": {
+            "w": 43,
+            "x": 79,
+            "y": 53,
+            "z": 53
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "z",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 50,
+        "Student B": 63,
+        "Student C": 60,
+        "Student D": 53
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ],
+        "Student B": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ],
+        "Student D": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "The goal is to get the best school possible given my preferences and the matching mechanism. The mechanism first determines my \"Obtainable Schools\" based on other students' rankings and school priorities, and then assigns me my highest ranked school among those obtainable.\n\nI should stick to my true preferences in my ranking. Here's why:\n\n*   **If I misrepresent my preferences, I risk getting a worse school.** Suppose I rank a school I don't really want (e.g., 'w') higher than a school I do want (e.g., 'x'). If 'w' is obtainable and 'x' is also obtainable, I'll be assigned to 'w' even though I would have preferred 'x'.\n\n*   **My priorities at the schools are already factored into the \"Obtainable Schools\" calculation.** The mechanism will consider my priority rank at each school when determining whether I can be matched there. Ranking a school higher won't magically improve my priority.\n\nSince most applicants favor y > x > w > z, and I have high priority at 'w' and 'y', I have a good chance of getting one of those. However, my preference is x > z > y > w. Therefore, I should rank them in that order.",
+        "Student B": "The mechanism guarantees I will get my best choice among my Obtainable Schools. My stated preferences are x > z > y > w. My priorities are: x: 1, z: 1, w: 2, y: 2.\n\nSince I have top priority at x and z, it's highly likely that x and z are in my Obtainable Schools. Given the information that most applicants favor y > x > w > z, it is likely that x will be very competitive.\n\nIf I report truthfully, I will get my best choice among my Obtainable Schools.\n\nIf I report x > z > y > w, then:\n- If x is obtainable, I get x.\n- If x is not obtainable, but z is, I get z.\n- If neither x nor z is obtainable, but y is, I get y.\n- If none of x, z, or y are obtainable, I get w.\n\nSince I have top priority at x and z, it is very likely I will get either x or z if I rank them high. I will stick to my true preferences since that is optimal under the conditions.",
+        "Student C": "The mechanism guarantees that I will receive my most preferred school among my \"Obtainable Schools\". Therefore, I need to consider how my ranking list affects my Obtainable Schools.\n\nMy true preferences are x > w > z > y.\n\n*   **Ranking x first:** If x is in my Obtainable Schools, I will get x. This is the best outcome.\n*   **Ranking w second:** If x is not in my Obtainable Schools, but w is, I will get w. This is better than getting z or y.\n*   **Ranking z third:** If neither x nor w are in my Obtainable Schools, but z is, I will get z. This is better than getting y.\n*   **Ranking y last:** If none of x, w, or z are in my Obtainable Schools, I will get y. This is the worst outcome.\n\nSince my priority at y and z is 4, and at x and w is 3, and since most applicants seem to favor y > x > w > z, there is a good chance I might get my top choices.\n\nTherefore, I should stick to my true preferences.",
+        "Student D": "My goal is to be matched with the best possible school given the mechanism. The mechanism first determines my \"Obtainable Schools\" based on other students' rankings and school priorities, and then matches me with my highest ranked school among those obtainable schools.\n\nSince most applicants favor y > x > w > z, and my priorities at y and z are higher than at x and w, it's likely that y and z are more \"obtainable\" than x and w. I should consider the possibility that I might not get x.\n\nI need to consider the following scenarios:\n\n* **Scenario 1: I get my first choice (x).** This is the best outcome, so I should keep x at the top.\n* **Scenario 2: I don't get x, but I get y.** This is also good.\n* **Scenario 3: I don't get x or y, but I get z.** This is better than w.\n* **Scenario 4: I don't get x, y, or z, and I'm stuck with w.** This is the worst outcome.\n\nGiven my priorities and the likely preferences of other students, it's possible that I might not get x. Since I prefer y > z > w, I should keep my ranking as x > y > z > w. There's no incentive to misreport my preferences. If I were to rank y higher than x, I would only get y if I was going to get x anyway. If I were to rank z higher than y, I would only get z if I was going to get x or y anyway.\n\nTherefore, I should submit my true preferences."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student A",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student D"
+                ],
+                "w": [
+                    "Student C"
+                ],
+                "z": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "y": "Student D",
+                "w": "Student C",
+                "z": "Student A"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

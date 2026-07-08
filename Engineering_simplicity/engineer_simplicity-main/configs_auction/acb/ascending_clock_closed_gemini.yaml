@@ -1,0 +1,39 @@
+experiment:
+  name: ascending_clock_apv_closed_gemini
+  version: V10
+  description: Ascending Clock Auction with Affiliated Private Values (Closed) - Gemini
+    2.0 Flash
+auction:
+  number_agents: 3
+  rounds: 1
+  use_survey: true
+  survey_price_points: 15
+rule:
+  seal_clock: clock
+  ascend_descend: ascend
+  price_order: second
+  private_value: "private"
+  open_blind: blind
+  closing: false
+  reserve_price: 0
+  special_name: affiliated_ac_closed.txt
+value:
+  common_range: [0, 29]
+  private_range: 49
+  increment: 0.5
+  seed_base: 1399  # 1399 for affiliated
+
+llm:
+  model: gemini-2.0-flash
+  service_name: google
+  temperature: 0.5
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/auctions/
+  include_payment_example: true
+execution:
+  repetitions: 40
+  parallel: true
+  max_workers: 4
+  output_dir: experiment_logs/gemini/ascending_clock_closed

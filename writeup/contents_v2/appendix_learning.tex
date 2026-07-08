@@ -1,0 +1,18 @@
+% ---------------------------------------------------------------------------
+% Appendix: Learning Effects in Repeated Play
+% Source: writeup/contents/appendix.tex:227-236 (verbatim-close; typo fixed)
+% NEW: closing sentences noting this ablation licenses the one-shot design for
+%   BOTH the fidelity battery and the lever/ranking experiments.
+% ---------------------------------------------------------------------------
+\section{Learning Effects in Repeated Play}\label{app:learning}
+
+To assess whether LLM agents exhibit learning or adaptation across rounds, we conduct a set of statistical tests comparing early-round behavior to late-round behavior and examining continuous trends over time. For the first-price sealed-bid (FPSB) auction, the mean SMAD in the first five rounds (0.2523) is essentially identical to that in the last five rounds (0.2524), with no detectable difference in either a t-test ($p = 0.9968$) or a Mann--Whitney U test ($p = 0.9131$). Trend analyses likewise show no evidence of systematic change: a linear regression yields a slope indistinguishable from zero ($p = 0.9886$) and a Spearman test finds no monotonic movement ($\rho = 0.0929$, $p = 0.7420$). Results are similar for the second-price sealed-bid (SPSB) auction. The comparison between the first and last five rounds reveals no significant difference (means 0.1282 vs.\ 0.1447; t-test $p = 0.3335$; Mann--Whitney $p = 0.1948$), and neither a linear trend test ($p = 0.3664$) nor a Spearman correlation test ($\rho = 0.3964$, $p = 0.1435$) indicates meaningful temporal structure. Taken together, across all specifications, we find no statistical evidence of learning effects, behavioral drift, or systematic changes in bidding deviations over the 15 rounds. LLM agents' deviation magnitudes remain remarkably stable throughout both FPSB and SPSB environments (Figure~\ref{fig:learning}).
+
+This stability is what licenses the one-shot design used throughout the paper: both the fidelity battery of Section~\ref{sec:validation} and the lever experiments underlying the ranking of Section~\ref{sec:ranking} run each auction (and each DA instance) as an independent single-shot repetition with freshly drawn values and no cross-instance feedback (Appendix~\ref{app:procedures}). Because deviations neither shrink nor grow with repetition, the treatment effects we report cannot be confounded by within-session adaptation, and none of the cross-lever comparisons depend on assumptions about learning dynamics.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[scale=0.45]{smad_rounds.png}
+    \caption{Repeated-play ablation: 15 consecutive rounds of first-price and second-price sealed-bid auctions with GPT-4o ($T=0.5$), where bidders observe the full outcome history of prior rounds. The y-axis is the scaled mean absolute deviation (SMAD) between actual and benchmark bids. Deviations show no trend in either format.}
+    \label{fig:learning}
+\end{figure}

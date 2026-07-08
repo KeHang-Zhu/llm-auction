@@ -1,0 +1,180 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 48,
+            "x": 67,
+            "y": 89,
+            "z": 51
+        },
+        "Student B": {
+            "w": 57,
+            "x": 71,
+            "y": 77,
+            "z": 50
+        },
+        "Student C": {
+            "w": 51,
+            "x": 57,
+            "y": 71,
+            "z": 48
+        },
+        "Student D": {
+            "w": 47,
+            "x": 64,
+            "y": 76,
+            "z": 49
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 89,
+        "Student B": 71,
+        "Student C": 51,
+        "Student D": 49
+    },
+    "rankings": {
+        "Student A": [
+            "y",
+            "x",
+            "z",
+            "w"
+        ],
+        "Student B": [
+            "y",
+            "x",
+            "w",
+            "z"
+        ],
+        "Student C": [
+            "y",
+            "x",
+            "w",
+            "z"
+        ],
+        "Student D": [
+            "y",
+            "x",
+            "z",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "The key to this mechanism is understanding that my ranking only affects which school I get *within* my \"Obtainable Schools\" set, and not what schools are in that set. Given my preferences (y > x > z > w), I want to rank the schools in that order. This ensures I get my most preferred school from the set of schools I could possibly be assigned to. Since my ranking doesn't change the set of schools I could be assigned to, there's no strategic advantage to misrepresenting my preferences.",
+        "Student B": "The key to this problem is understanding that my ranking only influences which school I get *within* my \"Obtainable Schools\" set. It *cannot* change what schools are in that set. Therefore, I should simply rank the schools according to my true preferences, as that will guarantee I get my most preferred school *among those I can actually get*.\n\nGiven my preferences are y > x > w > z, I should rank them in that order. There's no strategic advantage to misrepresenting my preferences because it won't change the set of schools I *could* get, only which one I *do* get from that set.",
+        "Student C": "The key to this mechanism is understanding that my ranking only affects which school I get *within* my \"Obtainable Schools\". It doesn't change what those schools *are*. Therefore, I should simply rank the schools according to my true preferences, since that will guarantee I get the best school possible from among those that are obtainable. I prefer y > x > w > z, so that's how I should rank them.",
+        "Student D": "The key to this problem is understanding that my ranking only affects which school I get *within* my \"Obtainable Schools\" set. It doesn't change what's *in* that set. Therefore, I should simply rank the schools according to my true preferences, because doing so guarantees I'll get the best school *possible* for me. Any attempt to strategically misrepresent my preferences could only result in me getting a worse school within my Obtainable Schools.\n\nMy true preferences are y > x > z > w."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "y": [
+                    "Student B",
+                    "Student D",
+                    "Student C",
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student B",
+                    "y"
+                ],
+                [
+                    "Student D",
+                    "y"
+                ],
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student D",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A",
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ],
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A",
+                "x": "Student B",
+                "z": "Student D",
+                "w": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

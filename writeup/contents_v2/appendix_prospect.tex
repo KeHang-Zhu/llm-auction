@@ -1,0 +1,71 @@
+% ---------------------------------------------------------------------------
+% Appendix: Preference-Framing Interventions (Family D)
+% Source: Engineering_simplicity/contents/appendix.tex:442-502 (reuse, adapted)
+% Role in merged paper: Family-D rungs at the bottom of the ranking (plan §4).
+% Figures resolve via \graphicspath to ../Engineering_simplicity/plots/.
+% Known fixes applied: grammar in the risk-priming sentence; "main text"
+% cross-references retargeted to the merged section labels.
+% ---------------------------------------------------------------------------
+\section{Preference-Framing Interventions}\label{app:prospect}
+
+In addition to the extensive-form, description, and reasoning-scaffold levers reported in the main text (Families A--C of Section~\ref{sec:framework}), we test a separate family of interventions---Family~D---inspired by prospect theory \citep{kahneman1979prospect} and behavioral departures from expected utility theory. These interventions do not scaffold strategic reasoning; instead, they reframe the payoff structure to test whether LLMs exhibit sensitivity to framing effects, loss aversion, the endowment effect, and risk attitudes. Because truthful play is a dominant strategy in both of our environments regardless of risk preferences, none of these framings should move a rational agent; expectations-based loss aversion has nonetheless been proposed as an explanation for seemingly dominated choices by humans in strategy-proof matching mechanisms \citep{dreyfuss2022expectations}, which makes the family a natural placebo-adjacent battery for our testbed. We test these framings across both domains (SPSB auctions and direct DA) with the same four model families as the main grid (GPT-4o, Claude 3.5 Haiku, Gemini 2.0 Flash, Gemma 27B). In the assembled ranking of Section~\ref{sec:ranking-synthesis}, Family~D populates the bottom rungs: the risk-averse persona is the worst lever we measure, with provisional preservation index $\rho \approx -0.76$ in auctions and $\rho \approx -3.5$ in DA (Table~\ref{tab:ranking}).
+
+\TODO{All Family-D cells below are point estimates from the ES runs (auction cells: IPV sealed-bid grid, seed 1299, $K=50$ auctions per cell; DA cells: 50 market instances per cell). E6 statistics (SEs, MW/Welch tests, Cohen's $d$, bootstrap CIs on $\rho$) and the harmonized re-runs (plan E3/E8) are pending; report SMAD alongside signed means when recomputed.}
+
+\subsection{Loss aversion and framing effects}\label{app:prospect-loss}
+
+We test five variants that reframe the payoff description while holding the mechanism and underlying payoffs constant:
+
+\begin{itemize}
+    \item \emph{Gain Frame}: Presents all outcomes as gains from zero (``you cannot lose money---you can only gain'').
+    \item \emph{Loss Frame}: Endows the agent with an initial amount equal to their maximum possible value, then presents outcomes as losses from this reference point (``Think carefully about what you might lose'').
+    \item \emph{Mixed Frame}: Explicitly decomposes each outcome into a GAIN component and a LOSE component, asking the agent to weigh both.
+    \item \emph{Endowment}: Gives the agent an initial endowment and frames payment as a deduction ``from your endowment,'' targeting the endowment effect.
+    \item \emph{WTA/WTP}: Asks the agent to compare their willingness-to-accept (selling price) with their willingness-to-pay (buying price), invoking the classic WTA--WTP gap.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{appendix_loss_aversion_auctions.pdf}
+    \caption{Loss-aversion and framing interventions in SPSB auctions (mean bid deviation from value, \$). Baseline SPSB in gray, intervention in color; dashed lines indicate means. None of the framing interventions consistently improve play relative to the SPSB baseline ($\mu = -2.67$). The loss frame ($\mu = -3.44$) and endowment ($\mu = -3.40$) worsen underbidding, while the gain frame ($\mu = -2.51$) and WTA/WTP ($\mu = -2.17$) show modest, inconsistent effects.}
+    \label{fig:prospect-loss-auctions}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{appendix_loss_aversion_da.pdf}
+    \caption{Loss-aversion and framing interventions in deferred acceptance (mean normalized Kendall-$\tau$ error, \%). Baseline direct DA in gray, intervention in color. The results are noisy and largely negative: most framing interventions worsen play relative to the baseline ($\mu = 4.2\%$), with WTA/WTP producing the worst outcomes ($\mu \approx 12.6\%$ across models with data). Claude 3.5 Haiku is particularly sensitive to these framings.}
+    \label{fig:prospect-loss-da}
+\end{figure}
+
+In auctions, the framing interventions do not produce consistent improvements. The loss frame and endowment interventions worsen underbidding (overall means of $\mu = -3.44$ and $-3.40$, compared to the SPSB baseline of $-2.67$), opposite to what a naive application of loss aversion would predict. The gain frame and WTA/WTP interventions produce small, model-dependent effects. In DA, the interventions are uniformly harmful, with WTA/WTP and endowment producing the largest increases in error.
+
+The overall picture is that prospect-theoretic framings do not improve play---and often worsen it. This contrasts with the levers in the strong tiers of the ranking (Section~\ref{sec:ranking}): contingent-reasoning scaffolds and safety-exposing mechanism descriptions produce large, consistent improvements. The difference is informative: the cognitive barrier in these mechanisms is not about how payoffs are framed, but about understanding the mechanism's strategic structure.
+
+\subsection{Risk-preference personas}\label{app:prospect-risk}
+
+We also test whether assigning explicit risk attitudes to LLMs changes behavior. Each intervention instructs the model to adopt a calibrated risk preference via a concrete coin-toss example (full persona text in Appendix~\ref{app:prompts}):
+
+\begin{itemize}
+    \item \emph{Risk Averse}: ``You would only pay \$4 for a coin toss worth \$0 or \$10 (expected value \$5).''
+    \item \emph{Risk Neutral}: ``You would pay \$5 for a coin toss worth \$0 or \$10.''
+    \item \emph{Risk Seeking}: ``You would pay \$6 for a coin toss worth \$0 or \$10 (expected value \$5).''
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{appendix_risk_preferences_auctions.pdf}
+    \caption{Risk-preference personas in SPSB auctions (mean bid deviation from value, \$). Risk aversion increases underbidding ($\mu = -4.71$), while risk-seeking dramatically shifts Claude 3.5 Haiku to overbidding ($\mu = +8.40$). Risk neutrality ($\mu = -1.82$) modestly improves play relative to the SPSB baseline ($\mu = -2.67$).}
+    \label{fig:prospect-risk-auctions}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth,height=0.85\textheight,keepaspectratio]{appendix_risk_preferences_da.pdf}
+    \caption{Risk-preference personas in deferred acceptance (mean normalized Kendall-$\tau$ error, \%). Risk aversion dramatically worsens play ($\mu \approx 18.8\%$, compared to baseline $4.2\%$). Risk neutrality and risk-seeking also worsen play, though less severely.}
+    \label{fig:prospect-risk-da}
+\end{figure}
+
+The risk interventions reveal that LLMs are highly responsive to persona-based instructions about risk attitudes, but that this responsiveness does not improve play. The risk-averse persona produces the most dramatic deterioration: in auctions, it increases underbidding from $\mu = -2.67$ to $-4.71$;\footnote{The per-model risk-averse cells reproduce from the imported pipeline (\texttt{writeup/auction-v2-numbers.txt}): Claude $-3.49$, Gemini $-2.94$, GPT-4o $-4.49$, Gemma $-7.86$, pooling to $-4.69$, which matches the $-4.71$ shown in Figure~\ref{fig:prospect-risk-auctions} up to rounding and cell-completion differences. \TODO{Finalize on the harmonized re-run (plan E3/E8); note the per-axis baseline-pooling caveat flagged in Section~\ref{sec:ranking}.}} in DA, it roughly quadruples the error rate ($\mu \approx 18.8\%$ against the $4.2\%$ baseline)---these two cells are the source of the bottom-rung $\rho$ values quoted above. The risk-seeking persona shifts Claude 3.5 Haiku to massive overbidding ($\mu = +8.40$), while the other models are less affected. Risk neutrality modestly improves auction play ($\mu = -1.82$) but worsens DA play. In aggregate, the models---while strategizing---are extremely susceptible to risk-preference priming.
+
+These results underscore that the LLMs' failures in strategy-proof mechanisms are not driven by implicit risk attitudes. Truthful play is dominant regardless of risk preferences in both environments, so the fact that risk-persona instructions change behavior at all confirms that the models do not understand the mechanism's incentive structure. The risk interventions change \emph{how} models deviate from truth-telling, but do not address \emph{why} they deviate in the first place. For the ranking, the practical reading is a warning: persona-style ``preference'' instructions---a common ingredient in deployed agent stacks---are not neutral wrappers, and the risk-averse persona in particular is the most reliably harmful lever in our entire battery.

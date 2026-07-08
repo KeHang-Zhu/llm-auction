@@ -1,0 +1,216 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 64,
+            "x": 71,
+            "y": 62,
+            "z": 76
+        },
+        "Student B": {
+            "w": 47,
+            "x": 81,
+            "y": 56,
+            "z": 83
+        },
+        "Student C": {
+            "w": 53,
+            "x": 80,
+            "y": 72,
+            "z": 68
+        },
+        "Student D": {
+            "w": 59,
+            "x": 85,
+            "y": 74,
+            "z": 77
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "x",
+        "Student B": "z",
+        "Student C": "w",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 71,
+        "Student B": 83,
+        "Student C": 53,
+        "Student D": 74
+    },
+    "rankings": {
+        "Student A": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ],
+        "Student B": [
+            "z",
+            "x",
+            "y",
+            "w"
+        ],
+        "Student C": [
+            "x",
+            "y",
+            "z",
+            "w"
+        ],
+        "Student D": [
+            "x",
+            "z",
+            "y",
+            "w"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My goal is to maximize my chances of getting into the best school possible, given my preferences and priority ranks. I need to consider not just my preferences but also my priority at each school.\n\n*   **z:** This is my top choice and I have a priority rank of 2.\n*   **x:** This is my second choice and I have a priority rank of 2.\n*   **w:** This is my third choice and I have a priority rank of 1.\n*   **y:** This is my last choice and I have a priority rank of 1.\n\nSince most applicants favor y > x > w > z, it's likely that z will be less competitive than it would be if the applicant pool favored it.\n\nComparing w and y, even though I prefer w over y, both have a priority rank of 1. However, given the applicant pool's preference, y might be more competitive.\n\nComparing z and x, I prefer z. I have a priority rank of 2 at both.\n\nTherefore, I will stick to my preference ordering.",
+        "Student B": "My goal is to maximize my chances of getting into the best school possible according to my preference: z > x > y > w. I also know my priority rank at each school: w: 2, x: 1, y: 2, z: 1.\n\nSchool z is my top choice and I have the highest priority (1) there. This is great!\n\nSchool x is my second choice and I also have the highest priority (1) there. This is also great!\n\nSchool y is my third choice and I have priority 2 there.\n\nSchool w is my last choice and I have priority 2 there.\n\nGiven my preferences and priorities, I should rank the schools in the order of my preference: z > x > y > w. The fact that most applicants favor y > x > w > z doesn't change my strategy. My priority at z and x are both 1, which is the best possible.",
+        "Student C": "My goal is to maximize my chances of getting into the best school possible according to my preference: x > y > z > w. The key insight is that being rejected from a school doesn't eliminate me from consideration at lower-ranked schools. This means I should simply state my true preferences. There's no strategic advantage to misrepresenting them.",
+        "Student D": "My goal is to get matched to the best school possible according to my preferences: x > z > y > w. My priority rank at each school is: w: 4, x: 4, y: 3, z: 3. The key insight is that rejections don't eliminate options; they simply move me down my preference list.\n\nSince my priority at x is 4 and at z is 3, and I prefer x to z, I should rank x first. If I get rejected from x, I'll automatically be considered at z.\n\nNext, I prefer z to y, and my priority at z is 3 while at y it is also 3. So I rank z second. If I get rejected from x and z, I'll automatically be considered at y.\n\nFinally, I prefer y to w, and my priority at y is 3 while at w is 4. So I rank y third and w last.\n\nTherefore, my ranking remains x > z > y > w."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "z": [
+                    "Student B",
+                    "Student A"
+                ],
+                "x": [
+                    "Student D",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student A",
+                    "z"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "z": [
+                    "Student D"
+                ],
+                "x": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "y": [
+                    "Student C",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 4,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "z": "Student B",
+                "x": "Student A",
+                "y": "Student D",
+                "w": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

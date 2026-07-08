@@ -1,0 +1,43 @@
+# FRONTIER battery cell — generated 2026-07 per plan/FRONTIER_RUNBOOK.md.
+# Cloned from configs_auction/sealedbid/spsb_apv_*.yaml; only the llm block and output_dir changed.
+
+experiment:
+  name: "spsb_apv"
+  version: "V10"
+  description: "Second-Price Sealed Bid with Affiliated Private Values"
+
+auction:
+  number_agents: 3
+  rounds: 1
+
+rule:
+  seal_clock: "seal"
+  price_order: "second"
+  private_value: "private"
+  open_blind: "open"
+  closing: false
+  reserve_price: 0
+  special_name: "private_second_price.txt"
+
+value:
+  common_range: [0, 29]
+  private_range: 49
+  increment: 0.1
+  seed_base: 1399  # 1399 for affiliated
+
+llm:
+  # VERIFY-MODEL-ID: confirm the exact Google API id (gemini-2.5-flash) is served
+  # through edsl's google service in the installed edsl version, before launching.
+  model: gemini-2.5-flash
+  service_name: google
+  temperature: 0.5
+prompt:
+  strategy_type: "plan_reflection"
+  prompt_dir: "Prompt/"
+  rule_template_dir: rule_template/auctions/
+
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 4
+  output_dir: "experiment_logs/gemini25flash/spsb"

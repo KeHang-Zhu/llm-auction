@@ -1,0 +1,197 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 46,
+            "x": 61,
+            "y": 68,
+            "z": 51
+        },
+        "Student B": {
+            "w": 60,
+            "x": 65,
+            "y": 76,
+            "z": 60
+        },
+        "Student C": {
+            "w": 45,
+            "x": 66,
+            "y": 76,
+            "z": 52
+        },
+        "Student D": {
+            "w": 54,
+            "x": 77,
+            "y": 74,
+            "z": 48
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "w"
+    },
+    "utilities": {
+        "Student A": 68,
+        "Student B": 65,
+        "Student C": 52,
+        "Student D": 54
+    },
+    "rankings": {
+        "Student A": [
+            "y",
+            "x",
+            "z",
+            "w"
+        ],
+        "Student B": [
+            "y",
+            "x",
+            "w",
+            "z"
+        ],
+        "Student C": [
+            "y",
+            "x",
+            "z",
+            "w"
+        ],
+        "Student D": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "My strategy considers both preference and priority:\n\n1. My top preference is school y, which is fortunate because I have the highest priority (rank 1) at y.\n2. My second choice is x, which is strategically sound because:\n   - It's my second most preferred school\n   - I have a decent (rank 2) priority at x\n3. z is my third choice, as it's lower in my preferences and I have a lower (rank 2) priority\n4. w is my least preferred, though I have top priority there\n\nThe Deferred Acceptance algorithm means my initial ranking could significantly impact my final match. By ranking y first, I maximize my chance of getting my top preference. Putting x second ensures I have a strong backup option if rejected from y.\n\nThe fact that most applicants favor y > x > w > z suggests competition will be high for y and x, making a strategic ranking crucial.",
+        "Student B": "In the Deferred Acceptance algorithm, my goal is to maximize my chances of getting into the best possible school given my preferences and priorities.\n\nMy true preference order is y > x > w > z, which means I most want y, then x, then w, and z is my least preferred.\n\nMy priority ranks are critical: \n- At x, I have top priority (1)\n- At z, I also have top priority (1)\n- At w and y, I have lower priority (2)\n\nThe top priority at x and z, combined with my preference for y and x, suggests I should rank y first (my top preference), then x (where I have top priority), then w, and z last.\n\nBy putting y first, I signal my strongest desire. By putting x second, I leverage my top priority there. Ranking w third keeps an option open, and z last reflects its low appeal.\n\nThis strategy balances my true preferences with my strategic positioning in the matching process.",
+        "Student C": "My strategy involves balancing my true preferences with strategic considerations:\n\n1. My true preference order is y > x > z > w, reflecting my personal school preferences.\n\n2. However, I need to consider my priority rank at each school:\n   - At y and z, I'm the lowest priority (rank 4)\n   - At x and w, I'm mid-priority (rank 3)\n\n3. Strategic insights:\n   - y is most preferred but hardest to get into\n   - x is my second preference and more realistic\n   - I want to maximize my chances of getting a good match\n\n4. Deferred Acceptance algorithm means I'll be redirected if rejected\n   - So I should rank schools in a way that gives me the best fallback options\n\n5. Proposed strategy: Rank schools in order of true preference, but be aware that lower-ranked schools might be more achievable",
+        "Student D": "My strategy considers both my personal preferences and strategic positioning:\n\n1. My true preference is x > y > w > z, which reflects my ideal outcome.\n\n2. However, I also need to consider my priority ranks and the likely competition:\n- At x, I'm priority 4 (lower chance)\n- At y, I'm priority 3 (moderate chance)\n- At w, I'm priority 4 (lower chance)\n- At z, I'm priority 3 (moderate chance)\n\n3. Strategic considerations:\n- Ranking x first maintains my top preference\n- Putting y second preserves my second-best option\n- Ranking w third gives me another potential match\n- z is least preferred, so goes last\n\n4. By maintaining my true preference order but being strategic about school priorities, I maximize my chances of getting a good match.\n\nThe key is balancing my personal preference with realistic matching probabilities in the Deferred Acceptance algorithm."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "y": [
+                    "Student A",
+                    "Student B",
+                    "Student C"
+                ],
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A",
+                "x": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student B",
+                    "y"
+                ],
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A",
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "y": [
+                    "Student D"
+                ],
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A",
+                "x": "Student B",
+                "z": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "w": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student A",
+                "x": "Student B",
+                "z": "Student C",
+                "w": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

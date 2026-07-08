@@ -1,0 +1,240 @@
+{
+    "mechanism_type": "osp",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 78,
+            "x": 66,
+            "y": 66,
+            "z": 78
+        },
+        "Student B": {
+            "w": 65,
+            "x": 63,
+            "y": 54,
+            "z": 70
+        },
+        "Student C": {
+            "w": 80,
+            "x": 74,
+            "y": 61,
+            "z": 60
+        },
+        "Student D": {
+            "w": 71,
+            "x": 72,
+            "y": 60,
+            "z": 73
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "x",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 78,
+        "Student B": 70,
+        "Student C": 74,
+        "Student D": 60
+    },
+    "osp_choices": {
+        "Student A": [
+            "w"
+        ],
+        "Student B": [
+            "z"
+        ],
+        "Student C": [
+            "w",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "y"
+        ]
+    },
+    "osp_history": [
+        {
+            "round": 0,
+            "choices": {
+                "Student A": "w",
+                "Student B": "z",
+                "Student C": "w",
+                "Student D": "z"
+            },
+            "reasoning": {
+                "Student A": "Given my preferences (w > z > x > y) and the general applicant preference (y > x > w > z), I should propose to my most preferred school, 'w'. While most applicants prefer other schools, there's a chance 'w' won't fill all its slots with those applicants. If I don't propose to 'w' now, I risk it being taken by someone else, and I'll be stuck with a less desirable option. This is a direct application of the Gale-Shapley algorithm's strategy for proposers \u2013 always propose to your most preferred choice.",
+                "Student B": "Given my preference ordering of z > w > x > y, and knowing that most applicants prefer y > x > w > z, I should choose the school I like best that is still available. Currently, all my preferred schools are available. Since I believe many applicants prefer y, and I prefer z, I should choose z now to maximize my chances of getting a school I like. Delaying could mean z is taken by someone else.",
+                "Student C": "Given my preference ordering of w > x > y > z, and the information that most applicants prefer y > x > w > z, I should choose my most preferred school, 'w', at this stage. This is because it's likely 'w' will be highly competitive and may not be available in later rounds. While many applicants prefer 'y', I am prioritizing my own preferences. If 'w' doesn't work out, I can consider 'x' in the next round. Choosing 'y' now would be suboptimal given my ranking.",
+                "Student D": "Given my preference ordering of z > x > w > y, and the information that most applicants prefer y > x > w > z, I should choose my most preferred school currently available, which is z. This is because most applicants don't want z, so my chances of being matched to z are higher than being matched to x, w, or y. Even though it seems counterintuitive to choose a school others dislike, the matching algorithm prioritizes stability, and I maximize my chances of a stable match by choosing my top choice when it's available. There's no point in trying to \"game\" the system by choosing a less preferred school hoping others will reject it; I should simply state my true preference."
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ],
+                [
+                    "Student D",
+                    "z"
+                ]
+            ],
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B"
+            },
+            "available_sets_before": {
+                "Student A": [
+                    "w",
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "Student B": [
+                    "w",
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "Student C": [
+                    "w",
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "Student D": [
+                    "w",
+                    "x",
+                    "y",
+                    "z"
+                ]
+            },
+            "available_sets_after": {
+                "Student A": [],
+                "Student B": [],
+                "Student C": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "Student D": [
+                    "w",
+                    "x",
+                    "y"
+                ]
+            }
+        },
+        {
+            "round": 1,
+            "choices": {
+                "Student C": "x",
+                "Student D": "x"
+            },
+            "reasoning": {
+                "Student C": "Given my preferences (w > x > y > z) and the available schools (x, y, z), my most preferred school is x. While I ultimately prefer w, it isn't available. The general applicant preference for y over x suggests y might be competitive, and I don't want to risk being left with z. Therefore, I will choose x. I am not considering future rounds or hypotheticals; I am simply choosing my best option *now* from the available choices.",
+                "Student D": "Given my preference ordering of z > x > w > y, and knowing that most applicants prefer y > x > w > z, I want to maximize my chances of getting my best possible outcome. Since z is not available, my best option is x. If I choose w or y now, I'm settling for a lower-ranked school and potentially blocking someone else who prefers it. There's a chance x will be taken by someone who prefers it more, but it's still my most preferred available option. I'm not going to second-guess the overall applicant pool's preferences beyond acknowledging the general trend; I need to act on *my* preferences in this round."
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "x"
+                ]
+            ],
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "x": "Student C"
+            },
+            "available_sets_before": {
+                "Student A": [],
+                "Student B": [],
+                "Student C": [
+                    "x",
+                    "y",
+                    "z"
+                ],
+                "Student D": [
+                    "w",
+                    "x",
+                    "y"
+                ]
+            },
+            "available_sets_after": {
+                "Student A": [],
+                "Student B": [],
+                "Student C": [],
+                "Student D": [
+                    "w",
+                    "y"
+                ]
+            }
+        },
+        {
+            "round": 2,
+            "choices": {
+                "Student D": "y"
+            },
+            "reasoning": {
+                "Student D": "Given my preferences (z > x > w > y) and the general applicant preference (y > x > w > z), I am currently choosing between w and y. While I prefer w over y, most applicants prefer y over w. If I choose w now, it's likely to remain my only option, as others will likely get their preferred schools first. Choosing y now, despite it being my least preferred of the available options, increases my chances of being matched to *something* rather than being unmatched. It's a strategic retreat to improve my overall chances of getting a match."
+            },
+            "rejections": [],
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "x": "Student C",
+                "y": "Student D"
+            },
+            "available_sets_before": {
+                "Student A": [],
+                "Student B": [],
+                "Student C": [],
+                "Student D": [
+                    "w",
+                    "y"
+                ]
+            },
+            "available_sets_after": {
+                "Student A": [],
+                "Student B": [],
+                "Student C": [],
+                "Student D": []
+            }
+        }
+    ],
+    "truthfulness": {
+        "Student A": false,
+        "Student B": true,
+        "Student C": true,
+        "Student D": false
+    },
+    "truthfulness_rate": 0.5
+}

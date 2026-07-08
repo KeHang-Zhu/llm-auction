@@ -1,0 +1,186 @@
+% ============================================================================
+% MERGED PAPER (v2): Benchmarking + Engineering Simplicity
+% Master file. Architecture per plan/plan.md (ranking-centric, Design B + grafts).
+% Build: pdflatex auction-v2 && bibtex auction-v2 && pdflatex auction-v2 && pdflatex auction-v2
+% ============================================================================
+% BUILD LOG (integrator pass, 2026-07-07 -- post-restructure merge)
+% - RESTRUCTURE STATUS: COMPLETE. DA demoted to appendix robustness domain
+%   (app:da, full lever grid + E7 menu variants + E9 decision-level accounting);
+%   Section 7 rewritten as ordinal-vs-cardinal (sec:humans-cardinal, tab:cardinal);
+%   traces subsection wired into Section 6 (sec:ranking-traces) with new
+%   appendix_traces (app:traces); all E3 menu/clock-framing cells four-model;
+%   F3 baseline-provenance declaration in 01/04; frontier tier rebuilt on the
+%   7 genuine gpt-5-mini cells (with_explanation tree disowned as GPT-4o).
+% - Compile status: CLEAN. 0 LaTeX errors; 0 undefined citations/references;
+%   0 multiply-defined labels; 0 bibtex errors/warnings.
+% - Output: 107 pages (auction-v2.pdf).
+% - Overfull hboxes: all >30pt fixed (worst remaining ~29.9pt, 04_design).
+% - Figures: all real; \MISSINGFIG count 0. New assets: ranking_forest.pdf,
+%   figure3_intervention_comparison.png (2x4, dollars), 4 eBay PNGs (200dpi,
+%   width-based sizing), da_vs_osp.png. fig3_forward_da.pdf is now orphaned
+%   (formerly in 06; app:da uses da_vs_osp.png instead) -- delete or adopt.
+% - \TODO count: 31, all deliberate. Pending-experiments (need runs/API keys):
+%   E2 IPV-clock re-run + clock K top-up (01/04/06/appendix_procedures);
+%   E4 Gemma fidelity battery (04/05/appendix_ablations); E8 harmonized
+%   baselines (04/appendix_ablations/appendix_prospect); frontier intervention
+%   battery, runbook at plan/FRONTIER_RUNBOOK.md (06/08/appendix_ablations);
+%   paraphrase robustness (08); eBay r in {70,85} re-run (appendix_ebay);
+%   traces cross-model FPSB/TPSB cells (06); E5/E10 CV-K pin (04).
+%   Pending-analysis (no new runs): reconstruction bootstrap bands
+%   (08/appendix_human/appendix_ablations); difficulty-row concordance stat
+%   (05); regenerate appendix2_model_comparison.png without the misattributed
+%   gpt-5-mini series (appendix_ablations); Myerson reserve check (05).
+%   Pending co-author decisions: trace-extension choice (appendix_traces);
+%   LLM-judge trace taxonomy (06); human-study cost verification (08);
+%   B3 template provenance footnote retained in 04 (naming history).
+% - Known cross-file conventions locked this pass: clock rung = the
+%   ascending_clock_closed cells (SMAD 1.4-5.2%, p<0.001 all four, d<=1.00);
+%   clock-framing B3 = intervention_proxy_breitmoser (SMAD 6.3-13.8%, sig 3/4,
+%   pooled rho +0.29); menu = sign-mixed, null on average (sign test p=0.73);
+%   direction shares = repo-canonical (human 67.2% overbid of all bids, 92.2%
+%   among deviators; GPT-4o 74.1% underbid, 81.6% among deviators), band
+%   convention only in fig:direction with footnotes; gpt-5-mini FPSB reported
+%   CSV-faithfully (RNE-consistent, +$0.002 vs b*; -$8.53 is vs value);
+%   OSP-DA zero rescoped per F4 everywhere; Claude Payoff-Safety endpoint
+%   +0.30 per logs (sign flag vs ES manuscript, footnoted in 06/app:traces);
+%   eBay T4-beyond-T2 dampening claim removed (honest non-finding in
+%   appendix_ebay); revenue null always paired with the disabled price-lift
+%   caveat; DA cross-model means declared unweighted.
+% - Known co-author decisions pending: (i) \ifanon build does not scrub the
+%   open-source-release sentence in intro P9 or the Disclosure paragraph below;
+%   (ii) star policy: tab:winners-curse keeps significance stars (tests vs. theory,
+%   not vs. reconstructed humans -- allowed under R8, flag for uniformity).
+% - Local TeX note: enumitem/bbm/algorithms/algorithmicx/courier installed to
+%   the user tree (~/Library/texmf) via tlmgr usermode from the TL2024 historic
+%   repo; required for this machine's BasicTeX to build the master.
+% ============================================================================
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+
+\input{math_commands.tex}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{url}
+\usepackage{bbm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  columns=fullflexible
+}
+\usepackage{hyperref}
+\setcitestyle{authoryear}
+
+% Figures live in several places during the draft stage.
+\graphicspath{{figures/}{../Engineering_simplicity/plots/}{../Engineering_simplicity/engineer_simplicity-main/plots/auctions/}{../Engineering_simplicity/engineer_simplicity-main/plots/da/}}
+
+% ---------------------------------------------------------------------------
+% Draft machinery
+% ---------------------------------------------------------------------------
+\newcount\Comments  % 0 suppresses notes-to-selves
+\Comments = 1
+\newcommand{\kibitz}[2]{\ifnum\Comments=1{\color{#1}{#2}}\fi}
+\definecolor{english}{rgb}{0.0, 0.5, 0.0}
+\newcommand{\dcpadd}[1]{\kibitz{english}{#1}}
+\newcommand{\dcp}[1]{\kibitz{teal}{[DCP: #1]}}
+\newcommand{\khz}[1]{\kibitz{red}{[Kehang: #1]}}
+\newcommand{\kerem}[1]{\kibitz{cyan}{[kerem: #1]}}
+\newcommand{\jeff}[1]{\kibitz{brown}{[jeff: #1]}}
+\newcommand{\avs}[1]{\kibitz{purple}{[avs: #1]}}
+% Pending-work flag: anything that awaits the harmonized re-runs (plan.md \S6)
+\newcommand{\TODO}[1]{\kibitz{red}{[TODO: #1]}}
+% Placeholder for a referenced figure whose asset is not yet regenerated
+\newcommand{\MISSINGFIG}[1]{\fbox{\parbox{0.9\linewidth}{\centering\vspace{2em}\textcolor{red}{\textbf{FIGURE PENDING:} #1}\vspace{2em}}}}
+
+% Anonymization toggle (plan.md R11): \anontrue for conference builds
+\newif\ifanon
+\anonfalse
+
+\title{What Makes Truth-Telling Obvious? An Empirical Ranking of Simplicity-Preserving Design for LLM Agents\ifanon\else\thanks{
+  \footnotesize
+  This research was made possible by a generous grant from Dropbox Inc.\ Thanks to Parker Whitfill and Kobi Gal for their helpful feedback. Author's contact information, code, and data will be available at \url{https://github.com/KeHang-Zhu/llm-auction}. Anand V.\ Shah and Kehang Zhu contributed equally to this work. John J.\ Horton is a co-founder of Expected Parrot Inc., which develops generative AI models for market research applications. The views expressed herein are those of the authors and do not necessarily reflect the views of the National Bureau of Economic Research.
+}\fi}
+
+\ifanon
+\author{Anonymous}
+\else
+\author{
+  Anand Shah$^{*}$\\
+  MIT \\
+  \and
+  Kehang Zhu$^{*}$\\
+  Harvard  \\
+  \and
+  Yanchen Jiang \\
+  Harvard \\
+  \and
+  Jeffrey G. Wang \\
+  Harvard \\
+  \and
+  Arif K. Dayi \\
+  Harvard \\
+  \and
+  John J. Horton \\
+  MIT \& NBER \\
+  \and
+  David C. Parkes \\
+  Harvard \\
+}
+\fi
+\date{
+Initial draft: May 30, 2024 \\
+Current version: \today
+}
+
+\begin{document}
+
+\maketitle
+
+\input{contents_v2/00_abstract}
+
+\newpage
+
+\input{contents_v2/01_intro}
+\input{contents_v2/02_related}
+\input{contents_v2/03_framework}
+\input{contents_v2/04_design}
+\input{contents_v2/05_validation}
+\input{contents_v2/06_ranking}
+\input{contents_v2/07_humans}
+\input{contents_v2/08_discussion}
+\input{contents_v2/09_conclusion}
+
+\paragraph{Disclosure.} Claude (Anthropic) was used to assist with plotting code, manuscript restructuring, and consistency review.
+
+\bibliographystyle{plainnat}
+\bibliography{auction_v2}
+
+\newpage
+\appendix
+\input{contents_v2/appendix_human}
+\input{contents_v2/appendix_procedures}
+\input{contents_v2/appendix_learning}
+\input{contents_v2/appendix_ablations}
+\input{contents_v2/appendix_prospect}
+\input{contents_v2/appendix_prompts}
+\input{contents_v2/appendix_traces}
+\input{contents_v2/appendix_da}
+\input{contents_v2/appendix_ebay}
+
+\end{document}
