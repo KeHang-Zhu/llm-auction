@@ -86,6 +86,11 @@ ES_MODEL_DIRS = {  # experiment_logs/<dir> -> canonical model id
     "gemini": "gemini-2.0-flash",
     "gemma": "google/gemma-3-27b-it",
     "gpt4o": "gpt-4o",
+    # frontier battery (plan/FRONTIER_RUNBOOK.md); runs routed via OpenRouter 2026-07-08
+    "gpt5mini": "gpt-5-mini",
+    "gemini25flash": "gemini-2.5-flash",
+    "claude_sonnet5": "claude-sonnet-5",
+    "gpt5": "gpt-5",
 }
 
 # ES paper's published pooled axis-baseline mean deviations (bid - value, $)
@@ -101,6 +106,23 @@ BID_COLS = ["model", "experiment", "source", "family", "group",
             "increment", "seed_base", "number_agents", "temperature",
             "run_id", "source_path"]
 
+# OpenRouter-routed runs (2026-07-08) carry provider-prefixed model ids in their
+# configs/CSVs; normalize to the canonical ids so cells pool with the incumbent
+# grids. (google/gemma-3-27b-it is already the canonical id — no alias needed.)
+MODEL_ALIASES = {
+    "openai/gpt-4o-2024-08-06": "gpt-4o",
+    "openai/gpt-5-mini": "gpt-5-mini",
+    "openai/gpt-5": "gpt-5",
+    "anthropic/claude-3.5-haiku-20241022": "claude-3-5-haiku-20241022",
+    "google/gemini-2.0-flash-001": "gemini-2.0-flash",
+    "google/gemini-2.5-flash": "gemini-2.5-flash",
+    "anthropic/claude-sonnet-5": "claude-sonnet-5",
+}
+
+
+def canon_model(m):
+    return MODEL_ALIASES.get(m, m)
+
 
 # ----------------------------------------------------------------------------
 # Loaders -> long bid-level DataFrame
@@ -109,7 +131,8 @@ def _rows_from_run_csv(csv_path: Path, source, family, group, experiment,
                        model_override=None):
     df = pd.read_csv(csv_path)
     out = pd.DataFrame({
-        "model": model_override if model_override else df["model"],
+        "model": (canon_model(model_override) if model_override
+                  else df["model"].map(canon_model)),
         "experiment": experiment,
         "source": source, "family": family, "group": group,
         "player_value": pd.to_numeric(df["player_value"], errors="coerce"),
@@ -143,7 +166,7 @@ def _rows_from_raw_json(json_path: Path, cfg: dict, source, family, group,
             if pidx >= len(values):
                 continue
             rows.append({
-                "model": llm["model"], "experiment": experiment,
+                "model": canon_model(llm["model"]), "experiment": experiment,
                 "source": source, "family": family, "group": group,
                 "player_value": values[pidx], "bid": entry.get("bid"),
                 "seal_clock": rule["seal_clock"],
@@ -378,8 +401,13 @@ def vs_baseline(dev, base_dev):
 # ----------------------------------------------------------------------------
 # Baseline mapping
 # ----------------------------------------------------------------------------
-AXIS_BASELINES = ["axis1_contingent_baseline", "axis2_forward_baseline",
-                  "axis3_beliefs_baseline"]
+# CORRECTED 2026-07-08: the V12 `axis2_forward_baseline` template was a two-stage
+# sealed-bid-as-clock-exit description, not a plain SPSB text (see
+# results/merged_ranking/_axis2_baseline_provenance.md). It is therefore a TREATED
+# cell: excluded from the pooled axis baseline and contrasted against the clean pool.
+AXIS_BASELINES = ["axis1_contingent_baseline", "axis3_beliefs_baseline"]
+AXIS_BASELINES_LEGACY = ["axis1_contingent_baseline", "axis2_forward_baseline",
+                         "axis3_beliefs_baseline"]
 
 
 def v12_suffix(exp):
@@ -413,10 +441,15 @@ def baseline_for(family, group, exp, cell_devs):
         core, suf = (exp, "") if family == "es_v12" else v12_suffix(exp)
         if core in AXIS_BASELINES:
             return None, None, True
+        if core == "axis2_forward_baseline":
+            # treated cell (two-stage clock-exit description): contrast vs clean pool
+            lbl, arr = pool(AXIS_BASELINES, suf)
+            return lbl, arr, False
         if core.startswith("axis1_"):
             lbl, arr = single("axis1_contingent_baseline" + suf)
         elif core.startswith("axis2_"):
-            lbl, arr = single("axis2_forward_baseline" + suf)
+            # axis-2 treatments: own-axis "baseline" is contaminated; use clean pool
+            lbl, arr = pool(AXIS_BASELINES, suf)
         elif core.startswith("axis3_"):
             lbl, arr = single("axis3_beliefs_baseline" + suf)
         elif core.startswith("loss_aversion") and core != "loss_aversion_baseline":
@@ -514,17 +547,19 @@ def main():
     pooled_rows = []
     for family, groups in [("es_v12", sorted(set(df_a["model"])))]:
         for g in groups:
-            arrs = [cell_devs[(family, g, nm)] for nm in AXIS_BASELINES
-                    if (family, g, nm) in cell_devs]
-            if arrs:
-                pooled_rows.append((family, g, "POOLED_axis_baseline",
-                                    np.concatenate(arrs)))
+            for label, blist in (("POOLED_axis_baseline", AXIS_BASELINES),
+                                 ("POOLED_axis_baseline_legacy", AXIS_BASELINES_LEGACY)):
+                arrs = [cell_devs[(family, g, nm)] for nm in blist
+                        if (family, g, nm) in cell_devs]
+                if arrs:
+                    pooled_rows.append((family, g, label, np.concatenate(arrs)))
     for suf in ("", "_first", "_third"):
-        arrs = [cell_devs[("v12r", "gpt-4o", nm + suf)] for nm in AXIS_BASELINES
-                if ("v12r", "gpt-4o", nm + suf) in cell_devs]
-        if arrs:
-            pooled_rows.append(("v12r", "gpt-4o", f"POOLED_axis_baseline{suf}",
-                                np.concatenate(arrs)))
+        for label, blist in ((f"POOLED_axis_baseline{suf}", AXIS_BASELINES),
+                             (f"POOLED_axis_baseline_legacy{suf}", AXIS_BASELINES_LEGACY)):
+            arrs = [cell_devs[("v12r", "gpt-4o", nm + suf)] for nm in blist
+                    if ("v12r", "gpt-4o", nm + suf) in cell_devs]
+            if arrs:
+                pooled_rows.append(("v12r", "gpt-4o", label, np.concatenate(arrs)))
     for family, g, name, dev in pooled_rows:
         rng = np.random.default_rng(SEED)
         mean_ci, smad_ci = boot_ci(dev, rng)
@@ -540,9 +575,14 @@ def main():
             "boot_ci_smad_lo": smad_ci[0], "boot_ci_smad_hi": smad_ci[1],
             "env": "private", "seal_clock": "seal",
             "price_order": {"": "second", "_first": "first", "_third": "third"}[
-                name.replace("POOLED_axis_baseline", "")],
+                name.replace("POOLED_axis_baseline", "").replace("_legacy", "")],
             "is_baseline": True,
-            "notes": "pooled axis1+axis2+axis3 baselines (derived cell)",
+            "notes": ("pooled axis1+axis3 baselines (derived cell; axis2_forward_baseline "
+                      "excluded as a treated clock-exit description, see "
+                      "results/merged_ranking/_axis2_baseline_provenance.md)"
+                      if "_legacy" not in name else
+                      "LEGACY pooled axis1+axis2+axis3 baselines (contains the treated "
+                      "axis2 clock-exit cell; comparison only)"),
         })
         cell_devs[(family, g, name)] = dev
 

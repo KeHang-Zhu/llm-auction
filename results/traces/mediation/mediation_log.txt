@@ -1,0 +1,45 @@
+Loaded trace_features.csv: 21990 rows; sealed second-price rows = 14073
+### SANITY CHECKS vs published (traces_summary.md + provenance note)
+  axis2_forward_onestep mean dev             got=-1.534  published=-1.530  OK
+  LEGACY pooled-of-three baseline |dev|      got=+3.271  published=+3.270  OK
+  onestep mean |dev|                         got=+1.953  published=+1.950  OK
+  spsb mean dev                              got=-2.670  published=-2.670  OK
+  worstcase 'worst_case' prevalence          got=+0.430  published=+0.430  OK
+  payoff_tree mean |dev|                     got=+1.293  published=+1.290  OK
+  axis2fb clock-exit lang claude-3-5-h       got=+0.173  published=+0.173  OK
+  axis2fb clock-exit lang gemini-2.0-f       got=+0.247  published=+0.247  OK
+  axis2fb clock-exit lang google/gemma       got=+0.153  published=+0.153  OK
+  axis2fb clock-exit lang gpt-4o             got=+0.000  published=+0.000  OK
+  axis2fb gemma mean dev                     got=-0.591  published=-0.590  OK
+  axis2fb gemini mean dev                    got=-6.121  published=-6.120  OK
+  corrected baselines clock-exit lang        got=+0.000  published=+0.000  OK
+
+Computing manipulation checks (full sample) ...
+Computing manipulation checks (deduplicated) ...
+
+2x2 dissociation (corrected baselines, full sample):
+  Payoff Safety          lang=no  (p=nan) bids=yes (p=0.0145) -> bids-only
+  Worst-case scaffold    lang=yes (p=0.0075) bids=no  (p=0.8141) -> language-only
+  Payoff Tree            lang=no  (p=0.8971) bids=yes (p=0.017) -> bids-only
+  Menu restatement       lang=no  (p=0.0025) bids=no  (p=0.6577) -> neither
+2x2 dissociation (PRE-correction conventions, for the diff):
+  Payoff Safety          bids p=0.0075 -> bids-only
+  Worst-case scaffold    bids p=0.8141 -> language-only
+  Payoff Tree            bids p=0.0745 -> neither
+  Menu restatement       bids p=0.7191 -> neither
+
+axis2_forward_baseline as treatment (per model, vs corrected baseline):
+  claude-3-5-haiku-20241022  clock-lang 0.00->0.17  dev +0.54->+0.37 (shift -0.18)
+  gemini-2.0-flash           clock-lang 0.00->0.25  dev -1.25->-6.12 (shift -4.87)
+  google/gemma-3-27b-it      clock-lang 0.00->0.15  dev -6.53->-0.59 (shift +5.94)
+  gpt-4o                     clock-lang 0.00->0.00  dev -2.94->-2.46 (shift +0.48)
+
+Computing Payoff-Safety mediation bound ...
+  mediated share 95% abs upper bound = 35.4% (corrected baseline; legacy 36.3%)
+
+Computing per-model consistency + calibration ...
+Pooled per-model consistency:
+  claude-3-5-haiku-20241022  dir=0.970 exact=0.410 corr=0.980 mean|d|=0.82
+  gemini-2.0-flash           dir=0.979 exact=0.972 corr=0.973 mean|d|=0.40
+  google/gemma-3-27b-it      dir=0.827 exact=0.891 corr=0.991 mean|d|=0.28
+  gpt-4o                     dir=0.978 exact=0.944 corr=0.985 mean|d|=0.21

@@ -366,7 +366,9 @@ Do NOT include any other text.
         survey = Survey(questions=[q_extract])
 
         # Use gpt-4o-mini for extraction
-        extract_model = Model("gpt-4o-mini", temperature=0)
+        extract_model = (Model("openai/gpt-4o-mini", temperature=0, service_name="open_router")
+                         if os.environ.get("OPEN_ROUTER_API_KEY") and not os.environ.get("OPENAI_API_KEY")
+                         else Model("gpt-4o-mini", temperature=0))  # route extraction via OpenRouter when only that key exists (2026-07-08)
         result = survey.by(extract_model).run()
         extracted = result.select("q_extract").to_list()[0]
 
@@ -1135,7 +1137,9 @@ class DA_OSP:
         Returns:
             str: Extracted school choice
         """
-        extract_model = Model("gpt-4o-mini", temperature=0)
+        extract_model = (Model("openai/gpt-4o-mini", temperature=0, service_name="open_router")
+                         if os.environ.get("OPEN_ROUTER_API_KEY") and not os.environ.get("OPENAI_API_KEY")
+                         else Model("gpt-4o-mini", temperature=0))  # route extraction via OpenRouter when only that key exists (2026-07-08)
 
         available_str = ", ".join(sorted(available))
         extraction_prompt = f"""Extract the school choice from this text. The student must choose ONE school from: {available_str}

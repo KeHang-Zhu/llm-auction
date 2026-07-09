@@ -302,6 +302,26 @@ recovers nearly all of it (SMAD $1.4$--$5.2\%$;
 Section~\ref{sec:ranking-extensive}). Words that borrow the clock's framing
 help; the clock itself helps far more.
 
+The rung comes with a measured warning about paraphrase sensitivity. A
+provenance audit of the legacy run grid (documented in the replication
+package) uncovered a \emph{second} clock-framing text that had been
+mislabeled as an axis-2 baseline cell: a two-stage description that presents
+the sealed bid as an ``exit price'' at which an ascending price clock would
+remove the bidder. Its manipulation check passes---clock-and-exit language
+appears in $14.3\%$ of treated traces against $0\%$ in the corrected
+baselines (wild-cluster $p = 0.002$)---but its behavioral effects, unlike
+the canonical clock-framing text above, are violently heterogeneous: it
+nearly fixes Gemma (mean deviation $-6.53$ to $-0.59$), sharply
+\emph{backfires} for Gemini ($-1.25$ to $-6.12$), and leaves Claude and
+GPT-4o unmoved, with GPT-4o inert in language as well as bids (zero echo of
+the framing), so that the pooled effect is a null that conceals offsetting
+model-level responses ($p = 0.88$ pooled). Two texts that expose the same
+clock analogy thus produce one rung that is universal in sign and one that
+is not---direct evidence that description effects are sensitive to wording
+in a way that extensive-form changes are not, and a caution against reading
+any single description cell, including ours, as \emph{the} effect of its
+family.
+
 \paragraph{Safety-exposing descriptions (B2): stating the invariant.}
 The safety-exposing sub-family does not restate the rules at all; it states
 the structural property of the mechanism that makes truth-telling safe. The
@@ -616,7 +636,14 @@ family~B is consistent: safety-exposing text (B2, pooled $\rho = +0.90$) and
 the invariance-carrying menu variant ($+0.65$) help; mechanical restatement
 (auction menu $-0.22$, mechanics-only DA menu $-1.67$) is null-to-harmful.
 The active ingredient of an effective description is not restating the
-mechanism but asserting the invariant that makes truth-telling safe.
+mechanism but asserting the invariant that makes truth-telling safe. The
+human experimental record, read through the same split, independently
+supports it: invariance-carrying descriptions improve human understanding
+and (modestly) behavior in matching mechanisms
+\citep{gonczarowski2024describing,katuscak2024simpler}, while
+mechanics-only descriptions of a strategy-proof mechanism have been found
+to \emph{reduce} truth-telling in the field \citep{guillen2018effectiveness}
+---the same backfire our mechanics-only cell produces.
 
 \paragraph{Within-tier domain flips and honest caveats.}
 We deliberately do not order levers within the strong tier, because the
@@ -630,11 +657,17 @@ space) or trusting that rejections are safe (DA, where the discrete misreport
 is a hedge against imagined rejection risk). Clock-framing, now estimated on
 all four models, is a reliable but modest member of the tier
 ($\rho = +0.29$ $[+0.17, +0.45]$). Three caveats from the concordance
-analysis qualify individual cells without moving any rung. First, Gemma's
-auction axis-2 baseline is anomalously good (SMAD $8.6\%$ vs.\ $20.7\%$
-pooled across its axes), so Gemma's negative auction marks for the safety,
-tree, and lookahead levers all flip sign when computed against the pooled
-baseline; we treat them as baseline noise, not lever backfires. Second,
+analysis qualify individual cells without moving any rung. First, what
+previously appeared as an anomalously good Gemma axis-2 baseline (SMAD
+$8.6\%$ vs.\ $20.7\%$ pooled across its axes) turns out to have a mechanical
+explanation: a provenance audit of the run templates shows the legacy
+``axis-2 baseline'' cell was not a plain SPSB description at all but a
+two-stage sealed-bid-as-clock-exit description---a clock-framing variant
+that Gemma responds to strongly (Section~\ref{sec:ranking-descriptions}).
+The pooled axis baseline used throughout therefore excludes that cell
+(axis-1 and axis-3 cells only), the axis-2 treatment contrasts are computed
+against the corrected pool, and the cell itself enters the description
+family as a treatment. Second,
 GPT-4o's matching-domain $\rho$ magnitudes are ratio-unstable because its
 direct-DA baseline error is only $1.0\%$, so small treatment errors produce
 extreme negative ratios (clipped in Figure~\ref{fig:ranking}); ranks are
@@ -659,7 +692,7 @@ Tier & Lever & Family & Theory tag & Auct.\ (\$) & DA (\%) & Pooled $\rho$ [95\%
 1 & Extensive form (AC-B clock / iterative DA) & A & OSP \citep{li2017obviously,ashlagi2018stable} & $-0.5$ & 0.0 & $+0.95$ [$+0.84, +1.00$] & AC $+0.62$ [$+0.39,+0.79$]; AC-B $+0.37$ [$-0.12,+0.72$] \\
 \midrule
 2 & Safety description & B2 & SP-exposing \citep{gonczarowski2023strategyproofness} & $-1.53$ & 0.2 & $+0.90$ [$+0.34, +1.00$] & --- (lab prediction) \\
-3$^{*}$ & Menu, invariance property (DA) & B1 & menu + invariant & --- & 1.8 & $+0.65$ [$-0.52, +0.95$] & --- (lab prediction) \\
+3$^{*}$ & Menu, invariance property (DA) & B1 & menu + invariant & --- & 1.8 & $+0.65$ [$-0.52, +0.95$] & $\surd$ agrees (sign) \citep{gonczarowski2024describing,katuscak2024simpler} \\
 2 & Payoff tree & C1 & contingent reasoning \citep{li2024designing} & $-1.13$ & 1.7 & $+0.63$ [$+0.23, +0.74$] & --- (lab prediction) \\
 2 & Clock-framing & B3 & OSP description \citep{breitmoser2022obviousness} & $-1.93^{\dagger}$ & --- & $+0.29$ [$+0.17, +0.45$] & $\surd$ agrees (sign) \\
 \midrule
@@ -668,7 +701,7 @@ Tier & Lever & Family & Theory tag & Auct.\ (\$) & DA (\%) & Pooled $\rho$ [95\%
 3 & Menu restatement (auction) & B1 & menu description \citep{gonczarowski2023strategyproofness} & $-2.09^{\dagger}$ & --- & $-0.22$ [$-0.77, +0.59$] & $\surd$ agrees on avg.\ ($-0.07$ [$-0.12,-0.02$]) \\
 4 & Second-order beliefs & C3 & strategic simplicity \citep{borgers2019strategically} & $-3.47$ & 9.1 & $-0.35$ [$-1.36, +0.03$] & --- (lab prediction) \\
 4 & First-order beliefs & C3 & strategic simplicity \citep{borgers2019strategically} & $-3.04$ & 5.1 & $-0.41$ [$-0.88, -0.04$] & --- (lab prediction) \\
-3$^{*}$ & Menu, mechanics only (DA) & B1 & menu, computation restated & --- & 6.9 & $-1.67$ [$-5.01, +0.57$] & --- (lab prediction) \\
+3$^{*}$ & Menu, mechanics only (DA) & B1 & menu, computation restated & --- & 6.9 & $-1.67$ [$-5.01, +0.57$] & $\surd$ agrees (backfire) \citep{guillen2018effectiveness} \\
 \midrule
 5 & Risk-averse persona & D & preference framing \citep{kahneman1979prospect} & App.~\ref{app:prospect} & App.~\ref{app:prospect} & $-1.82$ [$-5.73, -0.72$] & --- (lab prediction) \\
 \bottomrule
@@ -782,24 +815,35 @@ in Appendix~\ref{app:traces}.
 
 Most important for interpreting the ranking, the levers of
 Sections~\ref{sec:ranking-descriptions}--\ref{sec:ranking-scaffolds} produce
-a \emph{double dissociation} between stated reasoning and behavior
-(Table~\ref{tab:trace-dissociation}). \emph{Payoff Safety} (B2) moves bids
+a complete \emph{dissociation} between stated reasoning and behavior
+(Table~\ref{tab:trace-dissociation}): across every lever we test, language
+and bids never move together. \emph{Payoff Safety} (B2) moves bids
 substantially while leaving stated reasoning untouched: the invariant it
 asserts (``your bid determines \emph{if} you win, not \emph{what} you pay'')
 is echoed in zero of its 600 treated traces, and payment-rule rehearsal is
-flat relative to baseline ($3.5\%$ vs.\ $2.8\%$, $p = 0.66$); the plans keep
-the same shading rhetoric and simply shrink the shade to pennies (``I will
-bid \$31.9 to avoid overbidding,'' value \$32). The \emph{worst-case}
-scaffold (C1) does the opposite: it massively shifts stated reasoning
-(worst-case language rises from $2\%$ to $43\%$) while bids barely move. The
-\emph{Payoff Tree} moves both, and the \emph{menu} restatement moves
-neither, serving as the placebo row. A classical mediation analysis
-therefore fails at the first stage: whatever Payoff Safety does, it does not
-work by making agents verbalize why truth-telling is safe. Stated
-comprehension and behavioral improvement are separable outcomes, and our
-effective descriptions improve the latter without the former---which is why
-we describe them as changing behavior, not stated understanding, and why the
-traces should not be read as faithful mediators of the lever effects.
+flat relative to baseline ($2.8\%$ treated vs.\ $3.9\%$, $p = 0.60$); the
+plans keep the same shading rhetoric and simply shrink the shade to pennies
+(``I will bid \$31.9 to avoid overbidding,'' value \$32). The
+\emph{worst-case} scaffold (C1) does the opposite: it massively shifts
+stated reasoning (worst-case language rises from $2\%$ to $43\%$) while bids
+barely move ($3.24 \to 3.07$, $p = 0.81$). The \emph{Payoff Tree} is a
+second bids-only lever: it cuts mean $|b-v|$ from $3.20$ to $1.29$ while
+leaving payment-rule rehearsal exactly at its baseline rate ($33.0\%$ vs.\
+$32.7\%$, $p = 0.90$)---an earlier reading on which the tree also moved
+rule-rehearsal language was an artifact of the contaminated axis-2 baseline
+cell documented in Section~\ref{sec:ranking-synthesis}, whose clock
+narrative crowded out rule vocabulary. The \emph{menu} restatement moves
+neither, serving as the placebo row. Because the first stage is null for
+every verbalized-understanding measure, a classical mediation decomposition
+bounds the share of Payoff Safety's behavioral effect that could run through
+stated comprehension at roughly one third ($95\%$ upper bound $35\%$; point
+estimate $\approx 0$), under assumptions the within-treatment association
+(rule-rehearsing traces err \$1.5 less, CI $[-2.15,-0.56]$, non-causal)
+cannot tighten. Stated comprehension and behavioral improvement are
+separable outcomes, and our effective descriptions improve the latter
+without the former---which is why we describe them as changing behavior, not
+stated understanding, and why the traces should not be read as faithful
+mediators of the lever effects.
 \TODO{LLM-judge strategy taxonomy (trace option 1): validate the keyword
 dictionary against a judged taxonomy on a 100-trace human-labeled set before
 the ``2\% dominance recognition'' figure is made load-bearing.}
@@ -827,23 +871,27 @@ and Gemma with the frozen dictionary before claiming generality.}
 Lever (family) & target language & $\Delta$ vs.\ baseline &
 mean $|b-v|$ & baseline \\
 \midrule
-Payoff Safety (B2) & payment-rule rehearsal & $3.5\%\to 2.8\%$ &
-$1.95$ & $3.27$ \\
-Worst-case scaffold (C1) & worst-case rhetoric & $2\%\to 43\%$ &
-$3.07$ & $3.24$ \\
-Payoff Tree (C1) & rule rehearsal & $7.5\%\to 26.7\%$ &
-$1.29$ & $3.41$ \\
+Payoff Safety (B2) & payment-rule rehearsal & $3.9\%\to 2.8\%$ ($p=0.60$) &
+$1.95$ ($p=0.015$) & $3.20$ \\
+Worst-case scaffold (C1) & worst-case rhetoric & $2\%\to 43\%$ ($p=0.007$) &
+$3.07$ ($p=0.81$) & $3.24$ \\
+Payoff Tree (C1) & rule rehearsal & $33.0\%\to 32.7\%$ ($p=0.90$) &
+$1.29$ ($p=0.017$) & $3.20$ \\
 Menu restatement (B1) & --- & --- &
-$3.55$ & $3.11$ \\
+$3.55$ ($p=0.66$) & $3.20$ \\
 \bottomrule
 \end{tabular}
-\caption{Double dissociation between stated reasoning and bidding behavior
-(pooled over four models, sealed-bid second-price cells; cluster-robust tests
-in \texttt{results/traces/ols\_results.txt}). Payoff Safety improves bids
-without changing what agents say; the worst-case scaffold changes what agents
-say without improving bids. Baselines are the axis-specific baseline cells of
-each lever's own grid, per the convention of Section~\ref{sec:ranking}
-(hence the small variation across rows); under the dedicated-SPSB convention
+\caption{Dissociation between stated reasoning and bidding behavior
+(pooled over four models, sealed-bid second-price cells; wild-cluster
+bootstrap $p$-values clustered at the run level, with model-cluster
+permutation cross-checks and duplicate-trace robustness in
+\texttt{results/traces/mediation/}). No lever moves both columns: Payoff
+Safety and the Payoff Tree improve bids without changing what agents say;
+the worst-case scaffold changes what agents say without improving bids; the
+menu restatement moves neither. The baseline is the corrected pooled axis
+baseline (axis-1 and axis-3 cells only; the legacy axis-2 ``baseline'' cell
+was itself a clock-framed description and is analyzed as a treatment in
+Section~\ref{sec:ranking-descriptions}); under the dedicated-SPSB convention
 the Payoff Safety contrast is the $-2.67 \to -1.53$ of
 Section~\ref{sec:ranking-descriptions}. No language entry is reported for the
 menu row because the menu prompt replaces the ``second-highest'' vocabulary

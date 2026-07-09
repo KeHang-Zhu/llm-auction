@@ -1,0 +1,37 @@
+# E4 fidelity cell for Gemma-3-27B — cloned from the gpt5mini robustness battery, 2026-07-08; routed via OpenRouter.
+experiment:
+  name: ascending_clock_apv_gemma27b
+  version: V10
+  description: Ascending Clock Auction with Affiliated Private Values (Gemma-3-27B)
+auction:
+  number_agents: 3
+  rounds: 1
+rule:
+  seal_clock: clock
+  ascend_descend: ascend
+  price_order: second
+  private_value: affiliated
+  open_blind: open
+  closing: false
+  reserve_price: 0
+  special_name: affiliated_ac.txt
+value:
+  common_range: [0, 29]
+  private_range: 20
+  increment: 0.1
+  seed_base: 1399  # 1399 for affiliated
+
+llm:
+  model: google/gemma-3-27b-it
+  service_name: open_router
+  temperature: 0.5
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/V10/
+  include_payment_example: true
+execution:
+  repetitions: 40
+  parallel: true
+  max_workers: 4
+  output_dir: robustness_logs/V10/ascending_clock_apv_gemma27b
