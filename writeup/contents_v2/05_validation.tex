@@ -14,12 +14,34 @@ The results in this section establish that the testbed's behavioral responses to
 
 The experimental literature documents that human bidders deviate systematically from theoretical predictions across canonical auction environments, but that the \emph{severity} and \emph{direction} of mistakes depend strongly on the mechanism and the information environment. We therefore ask whether LLM agents (i) reproduce the same cross-mechanism ranking of ``difficulty'' that appears in human data, and (ii) make similar kinds of mistakes once we look beyond aggregate deviation magnitudes. Performance is measured by SMAD, the scaled mean absolute deviation of bids from the relevant theoretical benchmark (Section~\ref{sec:metrics}): the Bayes--Nash equilibrium bid function in first-price formats and truthful bidding in strategy-proof formats. We complement SMAD with a directional decomposition of deviations into underbidding and overbidding.
 
-Figure~\ref{fig:smad-comparison} summarizes the benchmark battery, with formats ordered by human SMAD so that mechanisms appear in decreasing order of measured difficulty for human bidders. The central pattern is that GPT-4o broadly reproduces the human ordering: mechanisms that are empirically harder for humans also generate larger deviations for the LLM. The sharpest comparison is between the two sealed-bid IPV payment rules, which hold the allocation rule fixed while changing only the mapping from bids to payments: human bidders exhibit FPSB SMAD of $24.76\%$ versus SPSB SMAD of $5.65\%$ (a $4.4\times$ difficulty gap), while GPT-4o shows $27.55\%$ versus $8.69\%$ (a $3.2\times$ gap). In the affiliated private-values (APV) environment, GPT-4o's sealed-bid second-price deviation ($10.73\%$) again sits close to the human level ($9.31\%$); the clock formats in the same figure, where the format effect is the object of interest rather than a validation moment, are analyzed as the top rung of the ranking in Section~\ref{sec:ranking-extensive}. That GPT-4o reproduces the qualitative ranking suggests it is sensitive to the additional strategic complexity introduced by paying one's own bid, and that the benchmark set captures genuine variation in strategic and cognitive difficulty. \TODO{Figure~\ref{fig:smad-comparison} is currently GPT-4o only; extend the fidelity battery to Gemma 27B (plan E4) and report the harmonized four-model cells after E8.}
+Figure~\ref{fig:smad-comparison} summarizes the benchmark battery, with formats ordered by human SMAD so that mechanisms appear in decreasing order of measured difficulty for human bidders. The central pattern is that GPT-4o broadly reproduces the human ordering: mechanisms that are empirically harder for humans also generate larger deviations for the LLM. The sharpest comparison is between the two sealed-bid IPV payment rules, which hold the allocation rule fixed while changing only the mapping from bids to payments: human bidders exhibit FPSB SMAD of $24.76\%$ versus SPSB SMAD of $5.65\%$ (a $4.4\times$ difficulty gap), while GPT-4o shows $27.55\%$ versus $8.69\%$ (a $3.2\times$ gap). In the affiliated private-values (APV) environment, GPT-4o's sealed-bid second-price deviation ($10.73\%$) again sits close to the human level ($9.31\%$); the clock formats in the same figure, where the format effect is the object of interest rather than a validation moment, are analyzed as the top rung of the ranking in Section~\ref{sec:ranking-extensive}. That GPT-4o reproduces the qualitative ranking suggests it is sensitive to the additional strategic complexity introduced by paying one's own bid, and that the benchmark set captures genuine variation in strategic and cognitive difficulty. The fidelity battery now also exists for Gemma 27B (Appendix~\ref{app:ablations}, Table~\ref{tab:gemma-fidelity}); its difficulty ordering is much flatter than GPT-4o's---Gemma is nearly as far from equilibrium in the strategy-proof formats as in first price---so the clean human-like ordering documented here for the anchor model is itself partly model-specific, a point the validity map records.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=0.82\linewidth]{figure1.png}
-    \caption{\textbf{Human vs.\ LLM bidding behavior across seven auction formats.} Blue bars: scaled mean absolute deviation (SMAD) between human bidding and the theoretical benchmark, computed from the moment-matched reconstructions of Section~\ref{sec:reconstruction}. Yellow bars: SMAD between GPT-4o agents and the same benchmark. Formats are ordered by human SMAD. LLM simulations use $N=3$ bidders.}
+    \includegraphics[width=0.82\linewidth]{figure1_bands.png}
+    \caption{\textbf{Human vs.\ LLM bidding behavior across seven auction formats,
+with reconstruction-uncertainty bands on the human anchors.}
+Blue bars: scaled mean absolute deviation (SMAD) between human bidding and the
+theoretical benchmark, computed from the moment-matched reconstructions of
+Section~\ref{sec:reconstruction}. Yellow bars: SMAD between GPT-4o agents and the
+same benchmark. Formats are ordered by human SMAD; LLM simulations use $N=3$
+bidders. Black whiskers on the human bars are $95\%$ Monte-Carlo
+reconstruction-uncertainty bands: for each source-paper calibration we re-draw
+$B=2000$ vectors of the mixture parameters
+$(p_{\text{eq}}, p_{\text{over}}, p_{\text{under}}, \lambda, \sigma, \delta)$
+within the ranges the reported source statistics admit and propagate each draw
+through the reconstruction (Appendix~\ref{app:human}). The bands are
+$[22.30, 27.25]$ (FPSB IPV, point $24.76$), $[4.46, 6.79]$ (SPSB IPV, $5.65$),
+$[6.78, 11.74]$ (SP-APV, $9.31$), $[2.00, 5.36]$ (AC, $3.54$), and
+$[2.30, 10.11]$ (AC-B, $5.83$). The FPSB $\gg$ SPSB difficulty ordering
+(ratio $95\%$ band $[3.54, 5.65]$) and the AC clock improvement over sealed SP-APV
+hold in $100\%$ of the re-draws; the AC-B closed-clock improvement holds in
+$92.6\%$ of re-draws, its wider band inherited from the large reported standard
+error on the Breitmoser--Schweighofer-Kodritsch mean absolute deviation.
+Common-value formats (marked $\star$) use a profit-based deviation metric and
+carry no reconstruction band. These are calibration bands, not sampling bands on
+human behavior; all comparisons remain at the level of orderings and
+comparative statics (Section~\ref{sec:reconstruction}).}
     \label{fig:smad-comparison}
 \end{figure}
 
