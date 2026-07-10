@@ -1,0 +1,155 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 64,
+            "x": 82,
+            "y": 75,
+            "z": 63
+        },
+        "Student B": {
+            "w": 69,
+            "x": 71,
+            "y": 70,
+            "z": 63
+        },
+        "Student C": {
+            "w": 62,
+            "x": 66,
+            "y": 68,
+            "z": 73
+        },
+        "Student D": {
+            "w": 68,
+            "x": 81,
+            "y": 66,
+            "z": 67
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "y",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "w"
+    },
+    "utilities": {
+        "Student A": 75,
+        "Student B": 71,
+        "Student C": 73,
+        "Student D": 68
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "y",
+            "w",
+            "z"
+        ],
+        "Student C": [
+            "z",
+            "y",
+            "x",
+            "w"
+        ],
+        "Student D": [
+            "x",
+            "w",
+            "z",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "This mechanism has the key property described (like a strategyproof deferred-acceptance/DA algorithm) where the set of obtainable schools is fixed regardless of my submitted ranking, and my ranking only determines which school within that obtainable set I actually receive. This is the defining feature of a strategyproof mechanism like Gale-Shapley Deferred Acceptance.\n\nGiven this, the optimal strategy is to truthfully report my actual preferences. Since misrepresenting my preferences cannot expand my obtainable set, and can only hurt me by potentially causing me to select a less-preferred school within that set (if I rank things out of true order), truth-telling weakly dominates any other strategy.\n\nMy true preference order is x > y > w > z. I will submit this truthfully, ignoring what other applicants prefer, since the mechanism's strategyproofness means their preferences don't change my best strategy.",
+        "Student B": "This mechanism has the key property described (likely a strategyproof mechanism like Deferred Acceptance), where the set of obtainable schools is fixed regardless of my submitted ranking, and truthful reporting guarantees I get my most preferred school among those obtainable. Since ranking cannot change my obtainable set but only determines which one I receive within that set, the optimal strategy is to rank truthfully according to my actual preferences. This ensures that whatever schools are obtainable to me, I receive the best one according to my true preference order.\n\nMy true preference is x > y > w > z, so I should submit this truthfully to guarantee the best outcome within my obtainable set.",
+        "Student C": "This mechanism has the key property described (similar to a deferred-acceptance/strategy-proof mechanism), meaning my Obtainable Schools set is fixed regardless of how I rank schools\u2014my ranking only determines which school within that set I receive. Since truth-telling is a dominant strategy in such mechanisms (it doesn't shrink my obtainable set, and only affects tie-breaking within it), I should rank according to my true preferences to guarantee I get my most preferred obtainable school.\n\nMy true preference order is z > y > x > w, so I will submit this truthfully.",
+        "Student D": "This mechanism has the property that the set of obtainable schools is fixed regardless of how I rank them\u2014my ranking only determines which obtainable school I get, by giving me my most-preferred one among those obtainable. This is characteristic of a strategy-proof mechanism (like deferred acceptance/Gale-Shapley), where truth-telling is a dominant strategy. Since misrepresenting my preferences cannot expand my set of obtainable schools and can only risk getting a worse outcome within that set, the optimal strategy is to simply report my true preferences.\n\nMy true preference ordering is x > w > z > y, so I will submit that."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student A",
+                    "Student B",
+                    "Student D"
+                ],
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "z": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student A",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student A"
+                ],
+                "w": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "z": "Student C",
+                "y": "Student A",
+                "w": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

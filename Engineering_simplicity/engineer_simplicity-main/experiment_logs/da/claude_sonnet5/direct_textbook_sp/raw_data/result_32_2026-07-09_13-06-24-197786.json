@@ -1,0 +1,174 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 73,
+            "x": 60,
+            "y": 43,
+            "z": 60
+        },
+        "Student B": {
+            "w": 72,
+            "x": 54,
+            "y": 55,
+            "z": 62
+        },
+        "Student C": {
+            "w": 67,
+            "x": 50,
+            "y": 56,
+            "z": 52
+        },
+        "Student D": {
+            "w": 60,
+            "x": 64,
+            "y": 52,
+            "z": 65
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "z",
+        "Student C": "y",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 73,
+        "Student B": 62,
+        "Student C": 56,
+        "Student D": 64
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "z",
+            "y"
+        ],
+        "Student B": [
+            "w",
+            "z",
+            "y",
+            "x"
+        ],
+        "Student C": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "The mechanism is strategy-proof, meaning truthful reporting is a dominant strategy regardless of others' submissions or my priorities. Since I have priority rank 1 at both w and y, and rank 2 at x and z, this doesn't change the optimal strategy - truth-telling remains dominant. My true preference ordering is w > x > z > y, so I should submit exactly this ranking without attempting to strategize based on others' preferences or my priority positions.",
+        "Student B": "Since the mechanism is strategy-proof, truth-telling is a dominant strategy regardless of others' preferences or my priorities. There's no benefit to strategic misrepresentation, so I should simply submit my true preference ordering: w > z > y > x.",
+        "Student C": "Since the mechanism is strategy-proof, truthfully reporting my preferences is a dominant strategy regardless of others' rankings or my priority positions. There's no benefit to misrepresenting my preferences, so I should submit my true ordering: w > y > z > x.",
+        "Student D": "Since the mechanism is strategy-proof, truthful reporting is a dominant strategy regardless of other applicants' preferences or my priority ranks. There's no benefit to strategic misrepresentation here - submitting my true preferences maximizes my expected outcome no matter what others do. My true preference ordering is z > x > w > y, so I should submit exactly that."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student A",
+                    "Student C",
+                    "Student B"
+                ],
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ],
+                [
+                    "Student B",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student C"
+                ],
+                "z": [
+                    "Student B"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "y": "Student C"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "z": "Student B",
+                "y": "Student C",
+                "x": "Student D"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

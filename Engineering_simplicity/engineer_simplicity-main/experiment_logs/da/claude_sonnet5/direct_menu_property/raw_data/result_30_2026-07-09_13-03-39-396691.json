@@ -1,0 +1,170 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 61,
+            "x": 71,
+            "y": 52,
+            "z": 62
+        },
+        "Student B": {
+            "w": 60,
+            "x": 59,
+            "y": 64,
+            "z": 63
+        },
+        "Student C": {
+            "w": 64,
+            "x": 68,
+            "y": 54,
+            "z": 79
+        },
+        "Student D": {
+            "w": 60,
+            "x": 67,
+            "y": 49,
+            "z": 76
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "x",
+        "Student B": "y",
+        "Student C": "w",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 71,
+        "Student B": 64,
+        "Student C": 64,
+        "Student D": 76
+    },
+    "rankings": {
+        "Student A": [
+            "x",
+            "z",
+            "w",
+            "y"
+        ],
+        "Student B": [
+            "y",
+            "z",
+            "w",
+            "x"
+        ],
+        "Student C": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ],
+        "Student D": [
+            "z",
+            "x",
+            "w",
+            "y"
+        ]
+    },
+    "reasoning": {
+        "Student A": "The mechanism described is strategy-proof: my own ranking cannot change the set of schools I could possibly be matched to (the \"Obtainable Schools\"), it only determines which one I receive from that set. Since my ranking only affects the selection within the achievable set, the optimal strategy is to rank the achievable schools in my true preference order to guarantee I get the best one available to me. Misrepresenting preferences could only cause me to select a worse school from within my obtainable set, never a better one outside it. Therefore, truthful reporting is weakly dominant regardless of others' rankings or priorities.\n\nMy true preference order is x > z > w > y, so I will submit this truthfully.",
+        "Student B": "Since the mechanism guarantees that I receive my highest-ranked school among my Obtainable Schools regardless of how I rank them, truth-telling is a dominant strategy\u2014there's no benefit to misrepresenting my preferences. My true preference order is y > z > w > x, and submitting this ensures that whichever schools are actually obtainable to me, I get the best one according to my genuine preferences. There's no strategic advantage to ranking differently since the ranking only affects selection within the obtainable set, not the set itself.",
+        "Student C": "This mechanism has the key property described (similar to a stable/deferred-acceptance matching mechanism), where truthful reporting is a dominant strategy\u2014the set of obtainable schools depends only on others' rankings and priorities, not on my own ranking. My ranking only determines which school I get among those obtainable to me. Since misrepresenting my preferences cannot expand my obtainable set and could only hurt me by causing me to select a worse school within that set, the optimal strategy is to rank truthfully according to my actual preferences.\n\nMy true preference order is z > x > w > y.",
+        "Student D": "The mechanism described is strategy-proof: my report cannot expand or shrink my Obtainable Schools set, it only determines which school within that set I receive (specifically, my most preferred one from that set). Since my true preferences are z > x > w > y, submitting this truthful ranking guarantees that I get the best possible school for me among those I could ever obtain. There is no incentive to misreport, since doing so could only cause me to select a worse school from my obtainable set (e.g., if I ranked y first but y isn't actually the best obtainable option for me, I'd get y instead of a better obtainable school). Truthful reporting weakly dominates any other strategy in such mechanisms."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student A"
+                ],
+                "z": [
+                    "Student C",
+                    "Student D"
+                ],
+                "y": [
+                    "Student B"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student A",
+                "z": "Student D",
+                "y": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "x": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student A",
+                "z": "Student D",
+                "y": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student A",
+                "z": "Student D",
+                "y": "Student B",
+                "w": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

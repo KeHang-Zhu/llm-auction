@@ -1,0 +1,197 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 69,
+            "x": 69,
+            "y": 62,
+            "z": 45
+        },
+        "Student B": {
+            "w": 63,
+            "x": 69,
+            "y": 62,
+            "z": 58
+        },
+        "Student C": {
+            "w": 62,
+            "x": 68,
+            "y": 57,
+            "z": 57
+        },
+        "Student D": {
+            "w": 76,
+            "x": 65,
+            "y": 65,
+            "z": 64
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 69,
+        "Student B": 69,
+        "Student C": 57,
+        "Student D": 65
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ],
+        "Student D": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Since the mechanism guarantees that my true ranking only determines which school I get among my obtainable set (not what's in that set), truth-telling is a dominant strategy\u2014this describes a strategy-proof mechanism like Deferred Acceptance. Misrepresenting my preferences cannot expand my obtainable set and could only lead me to receive a less preferred school within that set. Therefore, I should submit my true preference ordering: w > x > y > z.",
+        "Student B": "Since this mechanism (deferred acceptance / strategy-proof matching) guarantees that truthful reporting is optimal\u2014my ranking only affects which school I receive within my obtainable set, not what that set is\u2014I should simply report my true preferences. There's no strategic advantage to misrepresenting my preferences, and doing so could only hurt me by potentially causing me to miss out on a preferred obtainable school. My true preference ordering is x > w > y > z, so I'll submit that directly.",
+        "Student C": "Since this mechanism has a fixed obtainable set determined by others' rankings and priorities, and my own ranking cannot change that set\u2014only determine which obtainable school I get\u2014the strategy-proof approach is to rank truthfully. This ensures I get my most preferred school among those actually obtainable to me, without risk of strategic misranking backfiring.",
+        "Student D": "Since this mechanism guarantees that the Obtainable Schools set is fixed regardless of my ranking, and my ranking only determines which school within that set I receive, the strategy-proof approach is to rank truthfully. This is characteristic of mechanisms like the Deferred Acceptance (Gale-Shapley) algorithm, where truth-telling is a dominant strategy\u2014reporting my true preferences will always give me the best outcome available to me within my obtainable set, and misrepresenting preferences cannot improve my result and could only hurt me by causing me to miss out on a better obtainable school in favor of a worse one.\n\nGiven this, I should simply submit my true preference ordering: w > x > y > z."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student A",
+                    "Student D"
+                ],
+                "x": [
+                    "Student C",
+                    "Student B"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student D",
+                    "w"
+                ],
+                [
+                    "Student C",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "y": [
+                    "Student C",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student B",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student B",
+                "y": "Student D",
+                "z": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

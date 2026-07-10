@@ -1,0 +1,254 @@
+{
+    "mechanism_type": "osp",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 72,
+            "x": 58,
+            "y": 55,
+            "z": 59
+        },
+        "Student B": {
+            "w": 60,
+            "x": 55,
+            "y": 60,
+            "z": 59
+        },
+        "Student C": {
+            "w": 66,
+            "x": 61,
+            "y": 64,
+            "z": 62
+        },
+        "Student D": {
+            "w": 65,
+            "x": 72,
+            "y": 59,
+            "z": 59
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "y",
+        "Student C": "z",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 72,
+        "Student B": 60,
+        "Student C": 62,
+        "Student D": 72
+    },
+    "osp_choices": {
+        "Student A": [
+            "w"
+        ],
+        "Student B": [
+            "y"
+        ],
+        "Student C": [
+            "z"
+        ],
+        "Student D": [
+            "x"
+        ]
+    },
+    "osp_history": [
+        {
+            "node_path": [],
+            "remaining_students": [
+                "Student A",
+                "Student B",
+                "Student C",
+                "Student D"
+            ],
+            "remaining_schools": [
+                "w",
+                "x",
+                "y",
+                "z"
+            ],
+            "top_students": [
+                "Student A",
+                "Student B"
+            ],
+            "type": "yes_no_a",
+            "student": "Student A",
+            "candidate": "w",
+            "fallback": [
+                "w",
+                "x",
+                "y",
+                "z"
+            ],
+            "answer": "YES",
+            "reasoning": "Among the remaining schools (w, x, y, z), my preference ordering is w > z > x > y, so w is my top choice. Additionally, my priority at w is 1 (the highest), so I am safe to accept w now \u2014 other applicants preferring y > x > w > z does not change that I both most prefer w and have top priority there. Therefore I should answer YES and be matched to w immediately."
+        },
+        {
+            "node_path": [
+                "A:Student A:YES\u2192w"
+            ],
+            "remaining_students": [
+                "Student B",
+                "Student C",
+                "Student D"
+            ],
+            "remaining_schools": [
+                "x",
+                "y",
+                "z"
+            ],
+            "top_students": [
+                "Student B"
+            ],
+            "type": "serial_dictatorship",
+            "student": "Student B",
+            "choice": "y",
+            "available": [
+                "x",
+                "y",
+                "z"
+            ],
+            "reasoning": "Among the currently available schools (x, y, z), y is highest on my true preference list (w > y > z > x), so I prefer y now. I note that many applicants favor y (so competition is likely higher) and my priority at y is 2 (not the top priority), but the instruction is to choose the single most-preferred available school without conditioning on future steps, so I select y."
+        },
+        {
+            "node_path": [
+                "A:Student A:YES\u2192w",
+                "SD:Student B\u2192y"
+            ],
+            "remaining_students": [
+                "Student C",
+                "Student D"
+            ],
+            "remaining_schools": [
+                "x",
+                "z"
+            ],
+            "top_students": [
+                "Student C",
+                "Student D"
+            ],
+            "type": "yes_no_a",
+            "student": "Student C",
+            "candidate": "x",
+            "fallback": [
+                "x",
+                "z"
+            ],
+            "answer": "NO",
+            "reasoning": "Among the remaining schools x and z, my preference ordering (w > y > z > x) ranks z above x. Therefore x is not my most preferred among the remaining schools. The popularity/priority information does not change my personal ranking."
+        },
+        {
+            "node_path": [
+                "A:Student A:YES\u2192w",
+                "SD:Student B\u2192y"
+            ],
+            "remaining_students": [
+                "Student C",
+                "Student D"
+            ],
+            "remaining_schools": [
+                "x",
+                "z"
+            ],
+            "top_students": [
+                "Student C",
+                "Student D"
+            ],
+            "type": "yes_no_b",
+            "student": "Student D",
+            "candidate": "z",
+            "fallback": [
+                "x",
+                "z"
+            ],
+            "answer": "NO",
+            "reasoning": "My preference ordering is x > w > y > z. Between the two remaining schools (x and z), I strictly prefer x to z. Therefore z is not my most preferred among the remaining schools."
+        },
+        {
+            "node_path": [
+                "A:Student A:YES\u2192w",
+                "SD:Student B\u2192y"
+            ],
+            "remaining_students": [
+                "Student C",
+                "Student D"
+            ],
+            "remaining_schools": [
+                "x",
+                "z"
+            ],
+            "top_students": [
+                "Student C",
+                "Student D"
+            ],
+            "type": "final_pick_a",
+            "student": "Student C",
+            "choice": "z",
+            "available": [
+                "x",
+                "z"
+            ],
+            "reasoning": "Among the currently available schools (x and z), my true preference ordering ranks z above x (w > y > z > x), so I prefer z. I note my priority is lower at z (priority 4) than at x (priority 3), and most other applicants favor x over z, but I will not condition on future outcomes\u2014choosing the most preferred available school by my ranking."
+        },
+        {
+            "node_path": [
+                "A:Student A:YES\u2192w",
+                "SD:Student B\u2192y"
+            ],
+            "remaining_students": [
+                "Student C",
+                "Student D"
+            ],
+            "remaining_schools": [
+                "x",
+                "z"
+            ],
+            "top_students": [
+                "Student C",
+                "Student D"
+            ],
+            "type": "final_pick_b",
+            "student": "Student D",
+            "choice": "x",
+            "available": [
+                "x"
+            ],
+            "reasoning": "Only school x is currently available. My top preference overall is x, so I choose x. Although my priority at x (4) is not high and many applicants favor y, that does not change that x is the most preferred option among the available set."
+        }
+    ],
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "truthfulness_rate": 1.0
+}

@@ -1,0 +1,172 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 72,
+            "x": 58,
+            "y": 55,
+            "z": 59
+        },
+        "Student B": {
+            "w": 60,
+            "x": 55,
+            "y": 60,
+            "z": 59
+        },
+        "Student C": {
+            "w": 66,
+            "x": 61,
+            "y": 64,
+            "z": 62
+        },
+        "Student D": {
+            "w": 65,
+            "x": 72,
+            "y": 59,
+            "z": 59
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "y",
+        "Student C": "z",
+        "Student D": "x"
+    },
+    "utilities": {
+        "Student A": 72,
+        "Student B": 60,
+        "Student C": 62,
+        "Student D": 72
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "z",
+            "x",
+            "y"
+        ],
+        "Student B": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student C": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Because the mechanism is strategy-proof, truthful reporting is a dominant strategy: no misrepresentation of my ranking can give me a strictly better outcome regardless of how others rank schools. Although many applicants favor y > x > w > z, and I have high priority at w and y (w:1, y:1) and lower priority at x and z (x:2, z:2), that does not create an incentive to lie. Misranking (for example promoting y or x above my true top choice w) cannot improve my assignment in expectation or in any realized outcome under a strategy-proof mechanism. Therefore I should and will submit my true preference order: w most preferred, then z, then x, then y.",
+        "Student B": "Because the mechanism is strategy-proof, my dominant action is to report my true preferences. Misrepresenting cannot improve my assignment regardless of how others rank schools. My true preference ordering is w > y > z > x, so I should submit that order. Although many applicants favor y and x highly, and my priorities are w:2, x:1, y:2, z:1, strategic manipulation would not yield a better guaranteed outcome under a strategy-proof mechanism.",
+        "Student C": "The mechanism is strategy-proof, so truthful reporting is a dominant strategy: you cannot obtain a better outcome by misrepresenting your preferences regardless of what others do. Your true preference order is w > y > z > x, so you should submit that ranking.\n\nAlthough most applicants favor y > x > w > z and your priority is relatively lower at y and z (y:4, z:4) than at w and x (w:3, x:3), that only affects the probability of admission, not the optimal ranking strategy under a strategy-proof mechanism. Misreporting (for example to favor x or to game priorities) cannot improve your expected assignment, so list your true preferences.",
+        "Student D": "Because the mechanism is strategy-proof, I cannot get a better outcome by misrepresenting my preferences regardless of what others report. Therefore I should report my true ranking. Although many applicants prefer y > x > w > z and my priorities at w and x are lower (w:4, x:4) than at y and z (y:3, z:3), that does not create an incentive to rank a less-preferred school higher: honesty is a dominant strategy. So I submit my true preference order: x > w > y > z."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "w": [
+                    "Student B",
+                    "Student A",
+                    "Student C"
+                ],
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student B",
+                    "w"
+                ],
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "y": [
+                    "Student B",
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student D",
+                "y": "Student B"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "w": "Student A",
+                "x": "Student D",
+                "y": "Student B",
+                "z": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

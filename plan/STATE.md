@@ -1,130 +1,105 @@
 # STATE.md — auction-v2 merged paper: current state
 
-**Last updated:** 2026-07-07 (after the restructure + analysis cycle)
-**Paper:** `writeup/auction-v2.tex` → `auction-v2.pdf` — **107 pages, compiles clean**
-(0 errors, 0 undefined refs/citations, 0 duplicate labels, 0 missing figures).
-Build: `pdflatex auction-v2 && bibtex auction-v2 && pdflatex auction-v2 && pdflatex auction-v2` (verified from scratch).
-**Counts:** 31 `\TODO` flags (was 61), 0 `\MISSINGFIG` (was 4). Classification in the master's build-log comment block.
+**Last updated:** 2026-07-10 (Anand's Claude session: provenance corrections + full run cycle + integration)
+**Paper:** `writeup/auction-v2.tex` → `auction-v2.pdf` — compiles clean; page/TODO counts in the
+build-log comment block of the master (recounted at the final commit of this cycle).
+Build: `pdflatex auction-v2 && bibtex auction-v2 && pdflatex auction-v2 && pdflatex auction-v2`.
 
 ---
 
-## 1. Current architecture (after this cycle's restructure)
+## 1. What changed this cycle (2026-07-08 → 07-10)
 
-- **Main domain = auctions.** DA/matching moved to `appendix_da.tex` ("Robustness in a Second
-  Domain: Two-Sided Matching") per PI directive — main text carries a one-paragraph forward pointer.
-- **§1–4** intro / related / lever-space framework (H1–H3) / design (with baseline-declaration
-  paragraph and master calibration table).
-- **§5 Validation** vs human data + eBay field exhibit (all four eBay figures now real) + validity map.
-- **§6 The ranking** (auctions): extensive form → descriptions → scaffolds → synthesis
-  (tier table with pooled ρ [95% CI], Kendall's W, sign tests) + **new traces subsection**
-  (`sec:ranking-traces`, the double-dissociation result).
-- **§7 (`07_humans.tex`, retitled)** — "Ordinal Agreement and the Limits of Cardinal Calibration":
-  ordinal case (rung-by-rung human anchors) + the new cardinal analysis (tab:cardinal; verdict:
-  no single tuning works across mechanisms).
-- **§8 Discussion** (frontier scope conditions, traces implication, practitioner box, cost table),
-  **§9 Conclusion**.
-- **Appendices:** human reconstruction / procedures / learning / ablations (incl. new genuine
-  frontier table) / prospect–risk / prompts+inventory / **traces details (new)** / **DA robustness
-  (rebuilt)** / eBay (+reserve audit).
+### A. Provenance discovery that changed the analysis conventions (LOAD-BEARING — PI should ratify)
 
-## 2. Key results now in the paper (computed this cycle, seed 1299, all reproducible)
+The V12 `axis2_forward_baseline` template was never a plain SPSB baseline: git archaeology on the
+engineer_simplicity repo shows it was a **two-stage sealed-bid-as-clock-exit description**
+(Breitmoser-style clock-framing variant). Trace evidence is decisive (15–25% of claude/gemini/gemma
+plans in that cell reason about the clock/exit framing vs 0% in axis-1/axis-3 baselines); behavior
+too (it fixes Gemma, −6.5→−0.6, and wrecks Gemini, −1.25→−6.12). Full memo:
+`results/merged_ranking/_axis2_baseline_provenance.md`.
+
+**New canon** (implemented in `analysis/build_auction_cells.py`, `scripts/plots/ranking_forest.py`,
+`analysis/build_trace_mediation.py`, and all affected text):
+- Pooled axis baseline = **{axis1, axis3} only** (per-model means +0.54 / −1.25 / −2.94 / −6.53;
+  cross-model −$2.55). Legacy pool kept as `POOLED_axis_baseline_legacy` for comparison.
+- `axis2_forward_baseline` is analyzed as a **treated B3-variant cell** ("two-stage clock-exit
+  description") — reported in §6.2 as direct paraphrase-sensitivity evidence.
+- Axis-2 treatments (Payoff Safety, Payoff Tree) contrast against the corrected pool.
+
+**The correction strengthens the paper**: auction Kendall's W 0.43→**0.70** (p=0.004; pooled 0.81),
+T2>T3 sign test 7/8→**8/8**, Payoff Tree CI tightens to [+0.46,+0.68] with all-positive auction
+cells, and Gemma's "anomalous axis-2 baseline" is explained rather than waved at.
+
+### B. Corrected results now in the paper (all recomputed, seed 1299)
 
 | Finding | Where |
 |---|---|
-| Menu restatement ×4 models: sign-mixed, null on average (placebo sign test p=0.73); Gemini actually improves, GPT-4o worsens | §6.2, results/merged_ranking/auction_cells_summary.md |
-| Clock-framing ×4 models: improves all, significant 3/4, ρ=+0.29 [+0.17,+0.45] — modest, NOT ≈OSP (old GPT-4o-only claim corrected) | §6.2 |
-| True clock ×4 models: SMAD 1.4–5.2%, p<0.001 all | §6.1 |
-| SPSB baseline provenance RESOLVED: ES published numbers = dedicated spsb runs; axis baselines differ; both declared | §4 baseline declaration |
-| Tier structure: Kendall's W 0.49/0.90/0.69; 3 of 4 tier boundaries hold; baseline-vs-menu fails (4/8) — invariance-content story sharpened | §6.4, concordance.md |
-| DA: all published numbers reproduce; NEW: menu-property improves (4.2→1.8%), menu-mechanics worsens (4.2→6.9%), textbook-SP = 0.0% ×4 | app:da (E7 done) |
-| "Zero misreports" RESCOPED: exact for pick-protocol in 3/4 models (rule-of-three UBs ~0.9%); yes/no tree exposes Claude 24.1% Type-1 | app:da (E9 done) |
-| Traces double dissociation: Payoff Safety moves bids w/o changing stated reasoning; worst-case scaffold changes reasoning w/o moving bids; 53% shading intent, 2% dominance language | §6.5 + app:traces |
-| Cardinal verdict: NO single tuning aligns LLMs with humans across mechanisms; risk-seeking persona = only direction-fixer (SP/TP) but breaks FPSB; TPSB un-tunable | §7, results/cardinal/ |
-| Frontier (genuine gpt-5-mini): SPSB near-perfect (0.2% SMAD), FPSB ≈ exact RNE, TPSB fails (60% SMAD) — constraints migrate, don't vanish | §8 + app:ablations |
-| eBay: sniping + soft-close reproduce (MW p=3.5e-05); T4-further-dampens claim REMOVED (data contradicts); revenue null conditioned on disabled price-lift channel | §5.3 + app:ebay |
+| Traces: **complete dissociation, empty "both" cell** — Payoff Safety AND Payoff Tree are bids-only (tree's old "moves language" reading was contamination artifact); worst-case = language-only; menu = neither. B2 comprehension-mediated share ≤~35% (95% UB). | §6.5, tab:trace-dissociation, results/traces/mediation/ |
+| Clock-framing (B3) is **sign-mixed**: helps GPT-4o 12.1→6.3, Gemma 26.8→13.8, Claude 8.3→7.2 (p<0.001 each); **hurts Gemini 5.1→9.5** (p<0.001). Pooled ρ=+0.30 [−0.77,+0.52]. Human-anchor agreement 3/4 — never write "universal in sign". | §6.2, §7.1 |
+| Two clock-framing texts (canonical + the reclassified two-stage cell) both hurt Gemini, otherwise differ — measured paraphrase sensitivity, partially retires the paraphrase TODO | §6.2 |
+| Menu (auction, corrected baselines): Gemma +$2.03 toward truthful (p<0.001), GPT-4o −$1.16 away (Welch .013/MW .54), Claude marginal, Gemini null; placebo sign test p=0.73 | §6.2, §7.1, intro P5 |
+| Ranking ladder (corrected): OSP +0.97; safety +0.78; menu-invariance-DA +0.65; tree +0.59; clock-framing +0.30; lookahead −0.00; menu-auction −0.14; beliefs −0.35/−0.41; menu-mechanics-DA −1.67; risk-averse −1.82 | tab:ranking, fig:ranking, concordance.md |
+| **B2 "no human anchor" was false**: GHIT-2024's Menu-SP and Katuščák–Kittsteiner (Mgmt Sci 2024) test invariant-exposing descriptions (understanding ≫ behavior in GHIT; positive behavior in K&K); Guillén–Hakimov 2018 mechanics-backfire **anchors our menu-mechanics cell**; Masuda et al. 2022 = advice (type b), cited for the taxonomy. §7 prediction repositioned to: auction domain + magnitude. Memo: `results/merged_ranking/_b2_human_anchor_literature.md`. 4 bib entries added. | §2, §6.4, §7, tab:ranking anchors |
+| Reconstruction bootstrap bands on all 6 human anchors (all reproduce exactly; FPSB≫SPSB and clock orderings survive 100% of draws; **AC-B<SP-APV holds in only 92.6%** — disclosed). `figure1_bands` available. | app:human fragments in results/reconstruction_bands/ |
+| Cost table corrected: Li 2017 = 548 subjects across two experiments, ~$5.4K documented for the main one (the old "$15,000" was unsourced); GHIT-2024 payment details verified from the paper | tab:cost |
 
-**Direction-share convention fixed everywhere:** repo-canonical (humans overbid 67.2% of bids /
-92.2% among deviators), old 96%/81.3% band-convention figures footnoted where retained.
+### C. New experimental cells (all via OpenRouter; configs + logs committed)
 
-## 3. Data & assets produced this cycle
+- **E2 (IPV clock)**: `ascending_clock_ipv_closed` for **gpt-4o (K=50, SMAD 1.5%)** and **gemma
+  (K=44, 1.8%)** — clean IPV description+draws; identification survives. **claude-3.5-haiku and
+  gemini-2.0-flash are NOT servable on OpenRouter** (no active endpoints) — those two cells need
+  native keys (runbook §2 unchanged). NOTE: audit found the legacy acb clock cells are
+  *described-APV, drawn-IPV* (`private_value: "private"` + affiliated template) — §6.1 discloses.
+- **E4 (Gemma fidelity)**: 6 sealed formats, K=30 (`configs/robustness_gemma/`, logs in
+  `robustness_logs/*_gemma27b`). Gemma's difficulty ordering is much flatter than GPT-4o's
+  (FPSB 24.8 vs SPSB 19.9 SMAD; ratio 1.25 vs human 4.4) — fidelity ordering is model-specific.
+  Clock cells SKIPPED (per-tick mode ≈7h/cell; survey-vs-tick harmonization = native-key decision).
+- **Frontier grid ×4** (gpt-5-mini, gpt-5, claude-sonnet-5, gemini-2.5-flash): full auction
+  intervention battery + DA battery (DA: 3 models; gpt-5 DA skipped). Headlines: all ≈exactly
+  truthful at every sealed baseline; **menu restatement collapses claude-sonnet-5** (0→−$8.71,
+  SMAD 35.5%, d=−3.8) and degrades gemini-2.5-flash (2.3→9.1%); **true clock makes frontier play
+  worse** (sonnet-5 0.27→8.6% SMAD) — the top rung inverts at the frontier. §6.4 frontier
+  paragraph + app:ablations table. gpt-5 cells have reduced K=5–50 (model often omits
+  <PLAN> tags; unparseable reps dropped; spsb cell top-up may still be finishing).
+- Frontier DA: direct error 0–0.4% vs incumbents' 1–8%; OSP 0% (gemini-2.5 1.4% pick errors).
 
-- `results/merged_ranking/`: auction_cells.csv (294 cells, 45,909 bids), da_cells.csv (254 rows),
-  concordance.md, ranking_forest_data.csv, ebay_summary.md + ebay_figure_stats.json, frontier_summary.md
-- `results/cardinal/`: cardinal_grid.csv (95 cells), cardinal_summary.md, section7_evidence.tex
-- `results/traces/`: trace_features.csv (21,990 traces × 18 features), ols_results.txt,
-  traces_summary.md, BRAINSTORM.md, prevalence CSVs
-- `analysis/`: build_auction_cells.py, build_da_cells.py, build_cardinal_grid.py, build_trace_features.py
-- `scripts/plots/`: ranking_forest.py, intervention_comparison.py, regenerate_ebay_figures.py
-- `writeup/figures/`: ranking_forest.pdf (money figure), figure3_intervention_comparison.png (2×4),
-  4 eBay PNGs — all previously missing figures now exist with generating scripts
-- `recovered_logs/`: git-recovered V12 GPT-4o grid (7,356 files), Claude partial, eBay full grid
-  (7 treatment folders restored from commit 734c0e88). NOTE: `recovered_logs/experiment_logs_with_explanation`
-  is **GPT-4o, not gpt-5-mini** (config-verified) — never cite it as frontier data.
-- `Engineering_simplicity/engineer_simplicity-main/configs_{auction,da}/frontier/`: 56 ready-to-run
-  frontier configs (claude-sonnet-5, gpt-5-mini, gpt-5†, gemini-2.5-flash†; † = verify model ID)
-- `plan/FRONTIER_RUNBOOK.md`: exact commands, env keys, ~$75–120 estimated cost, fold-in instructions
+### D. Infrastructure (for whoever runs next)
 
-## 4. Remaining `\TODO`s (31), classified
+- `new/topup_runs.py` — reruns ONLY missing rep-ids of a config with per-rep retries (safe with
+  the builder's run-dir pooling; use instead of task_controller for partial cells). NOTE: it
+  detects completed reps from `raw_output__run{N}.jsonl` cache files, which are gitignored
+  (2026-07-10) — on a fresh clone it will think every rep is missing; the committed
+  `result_*.json`/CSVs are the data of record.
+- Frontier + E2 + E4 configs are OpenRouter-routed (`service_name: open_router`; canonical model
+  ids restored by `MODEL_ALIASES` in build_auction_cells.py). `OPEN_ROUTER_API_KEY` required;
+  ~$36 credit remained at last check.
+- DA extraction fallback patched (util_da.py): uses OpenRouter gpt-4o-mini when only that key exists.
+- **Fixed repo bug**: `configs/clock/01_07_..._gpt5mini.yaml` had `model: gpt-4-mini` (invalid) —
+  this is why the gpt-5-mini AC-B robustness cells were empty. Fixed; frontier clock cell supersedes.
+- Missing-template recovery: `axis2_forward_{onestep,tree,baseline}.txt` restored verbatim from
+  engineer_simplicity git (`89cf2896`); `private_ac_closed.txt` written for E2.
+- edsl pinned 1.0.6 in `.venv` (Python 3.12 via uv). gpt-5-mini/gpt-5 fail to emit <PLAN> tags on
+  some prompts (systematic for clock-framing) — cells flagged with reduced K rather than imputed.
 
-**Blocked on API keys (~19):**
-- Frontier intervention battery (configs + runbook ready; retires the §6/§8 scope-condition TODOs)
-- E2: IPV ascending clock ×4 models (the biggest remaining provenance caveat — current clock cells
-  are APV with mixed increments)
-- E4: Gemma 27B fidelity battery (+ regenerate appendix2_model_comparison.png, dropping the
-  misattributed gpt-5-mini series)
-- E8: harmonized SPSB re-run at pinned K; paraphrase robustness (3×2); eBay r∈{70,85} with the
-  price-lift bug fixed; traces cross-model FPSB/TPSB runs (BRAINSTORM option 3)
+## 2. Remaining open items
 
-**Analysis-only (~7):** reconstruction-uncertainty bootstrap bands on human anchors;
-Monte-Carlo bands in fig:smad-comparison; Myerson binding-frequency exhibit polish; minor PNG regens.
+**Needs native API keys (Kehang):** E2 claude/gemini incumbent clock cells; any harmonized
+incumbent re-runs (E8-style); Gemma fidelity clock cells (+ survey-vs-tick decision);
+gpt-5-mini/gpt-5 clock-framing cells if wanted (PLAN-tag parse issue, likely needs a prompt tweak).
 
-**Co-author decisions (~4-5):**
-1. **Traces next step** (see §5 below — PI decision requested)
-2. `\ifanon` build still doesn't scrub intro's open-source sentence + Disclosure paragraph
-3. Winner's-curse table significance stars (vs theory — allowed under R8, flag for uniformity)
-4. Cost-table dollar figures verification ($400 / $15,000 / $2,000)
-5. EC'26 #2577 status (gates any submission)
+**PI decisions (unchanged from last cycle):** EC'26 #2577 status; FPSB/TPSB intervention scope
+(plan §11 Q7); LLM-judge trace taxonomy (needs ~2–3 author-hours of human labels); ratify the
+axis-2 reclassification (§1A above) and the B2-literature repositioning.
 
-## 5. OPEN DECISION: reasoning traces next step (user asked for options)
+**Analysis nice-to-haves:** adopt `figure1_bands` in place of `figure1.png` (fragments ready);
+AC-B fragility footnote in §5/§7 (bands memo); paraphrase battery beyond the two clock-framing
+texts; sonnet-5 menu-break trace read (why does the menu wording break it? traces are in
+`experiment_logs/claude_sonnet5/intervention_menu/`).
 
-Baseline analysis + double dissociation are already IN the paper. `results/traces/BRAINSTORM.md`
-ranks six deeper options. **Recommended bundle: option 2 + option 1** (fold 4 into 2):
+## 3. History
 
-1. **LLM-judge strategy taxonomy** (~$20–50 API + 100-trace human validation set; 2–3 days) —
-  turns regexes into a defensible instrument; classifies all 22k traces into strategy types.
-2. **Formal mediation analysis of the double dissociation** (FREE, 1–2 days, existing CSV) —
-  manipulation-check table per lever + the "moves language / moves bids" 2×2 — the strongest
-  zero-new-data upgrade.
-3. Cross-model script-invariance (needs small API runs or recovered logs, ~$20).
-4. Stated-vs-revealed consistency metric (free, 1 day, foldable into 2).
-5. Early-warning classifier for large errors (medium; talk-demo value).
-6. Embedding clustering (low referee value; robustness appendix at best).
-
-## 6. Known caveats a referee could find (all disclosed in-text)
-
-- Clock cells are APV (not IPV as ES claimed); IPV clock re-run pending (E2).
-- Ranking's DA ρ values are ratio-unstable for GPT-4o (1.0% baseline) — clipped, ranks unaffected.
-- ~40% duplicate traces (temp-0.5 determinism) — dedup-robust, full-sample SEs optimistic.
-- eBay reserve channel partly mechanical (simulator never lifts price to met reserve).
-- 17% tied DA values — tie-robust τ provided; prior "misreports" for 3 models were tie artifacts.
-- Cross-model means are unweighted (stated in captions).
-
-## 7. Suggested next actions (in order)
-
-1. PI: read the 107pp PDF — priority: abstract, §6.4 (tier revision), §6.5 (traces), §7 (cardinal), app:da.
-2. PI: decide traces bundle (§5) and EC #2577 status.
-3. Export API keys → run `plan/FRONTIER_RUNBOOK.md` battery + E2 IPV clock + E4 Gemma (one command
-  each; ~$100–150 total) → `python3 analysis/build_auction_cells.py && build_da_cells.py` →
-  regenerate ranking figure (`scripts/plots/ranking_forest.py`) — retires ~19 TODOs.
-4. Free analysis: traces option 2 (mediation) + reconstruction bootstrap bands.
-5. Co-author circulation (STATE.md + PDF); then update CONVENTIONS.md §3 canon (now stale on
-  menu/clock-framing/direction conventions) before any further text edits.
-
-## 8. History
-
-- 2026-07-03: plan/plan.md written (3-design × 3-judge architecture selection; Design B chosen).
-- 2026-07-06: auction-v2 first full draft (86pp clean; 61 TODOs; 9 writers + integrator).
-- 2026-07-07: analysis cycle (6 agents: cells/DA/eBay/traces/cardinal + figures) + restructure
-  cycle (6 rewriters + integrator): DA→appendix, §7 rewrite, 30 TODOs resolved, all figures real,
-  107pp clean. Workflow runs: wf_d7c8f5c3 (plan), wf_5eed586b (draft), wf_d67d83b2 (analysis),
-  wf_5f5e35ef (restructure).
+- 2026-07-03/06/07: plan → first draft (86pp) → analysis+restructure cycles (107pp; Kehang's loop).
+- 2026-07-08/10: this cycle — axis-2 provenance correction, mediation re-analysis, reconstruction
+  bands, B2 literature repositioning, E2/E4/frontier batteries via OpenRouter, corrected-baseline
+  recomputation of the full ranking (W 0.70/0.90/0.81), frontier scope section, integration.
+  Checkpoint commit `5ec06a9`; final commit at end of cycle.

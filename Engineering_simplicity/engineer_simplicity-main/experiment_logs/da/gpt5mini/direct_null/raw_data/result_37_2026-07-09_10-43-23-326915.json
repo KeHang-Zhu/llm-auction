@@ -1,0 +1,197 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 69,
+            "x": 69,
+            "y": 62,
+            "z": 45
+        },
+        "Student B": {
+            "w": 63,
+            "x": 69,
+            "y": 62,
+            "z": 58
+        },
+        "Student C": {
+            "w": 62,
+            "x": 68,
+            "y": 57,
+            "z": 57
+        },
+        "Student D": {
+            "w": 76,
+            "x": 65,
+            "y": 65,
+            "z": 64
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "x",
+        "Student C": "z",
+        "Student D": "y"
+    },
+    "utilities": {
+        "Student A": 69,
+        "Student B": 69,
+        "Student C": 57,
+        "Student D": 65
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ],
+        "Student B": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ],
+        "Student C": [
+            "x",
+            "w",
+            "y",
+            "z"
+        ],
+        "Student D": [
+            "w",
+            "x",
+            "y",
+            "z"
+        ]
+    },
+    "reasoning": {
+        "Student A": "I prefer w > x > y > z. Under the usual student-proposing deferred-acceptance (DA) mechanism, truthfully reporting my preferences is a dominant strategy, so I should submit my true ranking.\n\nConsider priorities and others' preferences: many applicants favor y > x > w > z, so y will be highly contested. However, I have top priority (rank 1) at both w and y, and rank 2 at x and z. Because I already have highest priority at my most-preferred school w, there is no strategic advantage to misrepresenting preferences to chase a school that is more popular. Ranking any less-preferred school above a more-preferred one could only risk getting a worse match. Therefore I will submit my sincere ranking.",
+        "Student B": "I prefer x > w > y > z. With my top priority at x (rank 1) and many other applicants favoring y first, I have a strong chance at x but a weaker chance at y (my priority at y is 2). Under standard student-proposing deferred acceptance (the usual matching rule in these problems), it is strategy-proof for students to report their true preferences. Misrepresenting preferences (e.g., ranking y above x) could only risk losing a school I prefer and have higher priority for. Therefore I should submit my sincere ranking x > w > y > z.",
+        "Student C": "My true preference is x > w > y > z. I have relatively low priority at y and z (priority 4) and medium-low priority at x and w (priority 3). Since most applicants favor y > x > w > z, competition for y will be strong and my chance at y is especially low given my priority there.\n\nAssuming the common student-proposing deferred acceptance mechanism (which is strategyproof for students), I cannot improve my outcome by misrepresenting preferences: listing a less-preferred but more attainable school higher cannot get me a better final assignment than truthfully ranking by my real preferences. Therefore I should submit my true ranking: x first, then w, then y, then z. This both reflects my preferences and is optimal under DA given the priorities and competition.",
+        "Student D": "My true preference order is w > x > y > z. I note my priority ranks are worse at w and x (4) and slightly better at y and z (3), and that most applicants favor y first, so y will likely be oversubscribed. If the matching uses a strategy-proof mechanism like Deferred Acceptance (which is standard in these problems), the dominant strategy is to report my true preferences, so I should submit w > x > y > z. (If the mechanism were not strategy-proof\u2014e.g., classic Boston\u2014different strategic ranking might be appropriate, but no such mechanism was specified.)"
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "x": [
+                    "Student B",
+                    "Student C"
+                ],
+                "w": [
+                    "Student A",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "x"
+                ],
+                [
+                    "Student D",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "x": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ],
+                [
+                    "Student D",
+                    "x"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "y": [
+                    "Student C",
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A",
+                "y": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "x": "Student B",
+                "w": "Student A",
+                "y": "Student D",
+                "z": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}

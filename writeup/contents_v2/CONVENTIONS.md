@@ -62,14 +62,16 @@ file's prefix, e.g. `sec:design-da`). Appendix sections use `\section{...}\label
   n=5: −4.40 (3.63)/−4.00/6%; n=6: −5.46 (3.82)/−5.05/4%; n=7: −5.55 (2.93)/−5.30/0% (all p<.001).
   SPSB: +1.30 (4.87)/1.00/58% (p=.967); 0.07 (4.35)/0.00/46% (.542); −2.82 (3.50)/−1.75/18% (<.001);
   −2.83 (2.78)/−2.00/12% (<.001).
-- Menu restatement — CANON UPDATED (2026-07, ×4 models; supersedes the GPT-4o-only cell): sign-mixed,
-  null on average (placebo sign test p=0.73); Gemini improves (+$1.75, p<0.001), GPT-4o worsens
-  (−$1.32, p=0.003), Claude slightly worse (+$0.88, p=0.042), Gemma null (p=0.94). Frame as
-  "agreement with the human null on average, over sign-mixed model cells" — never a clean placebo.
-  (Legacy GPT-4o-only scaled cell −0.106 → −0.143, MW p=0.228 / Welch p=0.017 — historical only.)
-- Clock-framing — CANON UPDATED (2026-07, ×4 models; supersedes the GPT-4o-only d=−1.21 headline):
-  improves all four, significant 3/4 (Claude 9.5→7.2, GPT-4o 11.4→6.3, Gemma 20.7→13.8 SMAD%, each
-  p<0.001; Gemini 11.7→9.5, p=0.097); pooled ρ = +0.29 [+0.17, +0.45]. Modest, NOT ≈OSP.
+- Menu restatement — CANON (2026-07-10, ×4 models, CORRECTED axis1+axis3 baselines): sign-mixed,
+  null on average (placebo sign test 3/8, p=0.73); Gemma improves (+$2.03, p<0.001), GPT-4o worsens
+  (−$1.16, Welch p=0.013 / MW p=0.54 — report both), Claude marginally worse (+$0.82, Welch p=0.064
+  / MW p<0.001), Gemini null (p=0.56). Never a clean placebo. FRONTIER: menu BREAKS claude-sonnet-5
+  (0→−$8.71, SMAD 35.5%, d=−3.8) and degrades gemini-2.5-flash (2.3→9.1% SMAD); gpt-5/gpt-5-mini
+  unmoved. (Legacy GPT-4o-only scaled cell −0.106 → −0.143 — historical only.)
+- Clock-framing — CANON (2026-07-10, ×4 models, CORRECTED baselines): significant in all four but
+  SIGN-MIXED — helps GPT-4o 12.1→6.3, Gemma 26.8→13.8, Claude 8.3→7.2 (SMAD%, each p<0.001);
+  HURTS Gemini 5.1→9.5 (p<0.001; same model the two-stage clock-exit variant hurts). Pooled
+  ρ = +0.30 [−0.77, +0.52]. Human-anchor agreement: 3/4 families, never "universal in sign".
 - Learning ablation: FPSB SMAD first-5 0.2523 vs last-5 0.2524 (t p=0.997, MW p=0.913); SPSB 0.1282
   vs 0.1447 (n.s.).
 - Appendix tiers: gpt-5-mini mean SMAD 6.68%; Llama-3-8B 57.58% (worse than humans in 6/7 formats).
@@ -88,10 +90,15 @@ file's prefix, e.g. `sec:design-da`). Appendix sections use `\section{...}\label
   2.6→14.3); Gemini ≈ immune in both domains.
 - Safety descriptions: Payoff Safety −2.67 → −1.53 (Claude −0.49→−0.30, Gemini −1.63→−0.38,
   GPT-4o −3.28→−1.88, Gemma −5.27→−4.17); Rejection Safety 4.2% → 0.2%.
-- Provisional ρ (plan §4): OSP clock ≈0.8 / iterative DA 1.0; clock-framing ≈0.8 (GPT-4o only);
-  safety 0.43 auct / 0.95 DA; tree 0.58 / 0.60; menu ≈0 (MW) but slightly negative signed;
-  1st-order beliefs −0.14 / −0.21; lookahead −0.86 (DA); 2nd-order −0.30 / −1.17; risk-averse
-  persona −0.76 / ≈−3.5.
+- Pooled ρ CANON (2026-07-10, corrected baselines, from concordance.md — supersedes all
+  "provisional ρ" values): OSP +0.97 [+0.83,+1.00]; safety +0.78 [+0.39,+1.00]; menu-invariance-DA
+  +0.65 [−0.52,+0.95]; tree +0.59 [+0.46,+0.68]; clock-framing +0.30 [−0.77,+0.52]; lookahead
+  −0.00 [−2.12,+0.26]; menu-auction −0.14 [−1.00,+0.27]; 2nd-beliefs −0.35; 1st-beliefs −0.41;
+  menu-mechanics-DA −1.67; risk-averse −1.82.
+- Concordance CANON (corrected baselines): Kendall's W = 0.70 auctions (p=0.004), 0.90 DA
+  (p=4e-4), 0.81 pooled (p=8.4e-7). Sign tests: T1>T2 7/8 (p=0.070); T2>T3 8/8 (p=0.008);
+  T3-vs-T4 FAILS (4/8, p=1.0); T4>T5 8/8 (p=0.008). The axis-2 correction RAISED auction W from
+  0.43 to 0.70 — cite as evidence the contamination was noise-injecting.
 
 **PROVENANCE FLAGS (insert \TODO where these numbers appear):**
 - CLOCK ENVIRONMENT (updated 2026-07-08): the incumbent acb clock cells are *described-as-APV,

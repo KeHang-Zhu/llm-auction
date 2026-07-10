@@ -79,6 +79,30 @@ Iterative DA (OSP, pick protocol) & A & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0
 \label{tab:da-cells}
 \end{table}
 
+\subsection{Frontier Models: The Bounded-Rationality Regime Has Closed in Matching Too}\label{app:da-frontier}
+
+The auction-domain frontier battery (Appendix~\ref{app:ablations}) shows that reasoning models play the dominant-strategy sealed auction essentially perfectly. The matching domain tells the same story. Table~\ref{tab:da-frontier} reports a reduced DA grid---the plain-description, no-explanation, textbook, and iterative-OSP conditions---on the three servable frontier models (gpt-5-mini, claude-sonnet-5, gemini-2.5-flash; gpt-5's DA cells were deliberately not run). In direct elicitation the frontier models misreport at $0.0$--$0.4\%$, an order of magnitude below the canonical models' $1.0$--$7.6\%$ direct-DA baselines (Table~\ref{tab:da-cells}): claude-sonnet-5 is exactly truthful under every direct description, and gpt-5-mini and gemini-2.5-flash reach at most $0.4\%$ (in the no-explanation cell, the only condition that moves them at all). Under the iterative OSP protocol the sequence-level Kendall-$\tau$ error is $0.0\%$ for all three; the sole decision-level blemish is gemini-2.5-flash, which makes three strict pick errors in $210$ informative decisions ($1.4\%$)---the same observability caveat that applies to the canonical Gemma cell (Section~\ref{app:da-accounting}). The bounded-rationality regime that the lever ranking studies has therefore closed at the frontier in \emph{both} domains: where the dominant strategy is textbook---direct DA with a clear description, or a truthful sealed bid---frontier models need no design help, which is precisely why the ranking is estimated on the sub-frontier fleet that high-volume agentic deployments actually run.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llccc}
+\toprule
+& & \multicolumn{3}{c}{Mean Kendall-$\tau$ error, \% (truthful rate, \%)} \\
+\cmidrule(lr){3-5}
+Condition & Family & gpt-5-mini & claude-sonnet-5 & gemini-2.5-flash \\
+\midrule
+Direct, no explanation (\texttt{direct\_null}) & --- & $0.3$ ($99.0$) & $0.0$ ($100$) & $0.4$ ($97.5$) \\
+Menu, invariance property & B1 & $0.0$ ($100$) & $0.0$ ($100$) & $0.0$ ($100$) \\
+Textbook strategy-proofness & (advice) & $0.0$ ($100$) & $0.0$ ($100$) & $0.0$ ($100$) \\
+Iterative DA (OSP, pick protocol) & A & $0.0$ ($98.5$) & $0.0$ ($98.5$) & $0.0$ ($95.9$)$^{\ast}$ \\
+\bottomrule
+\end{tabular}
+\caption{Frontier DA cells: mean normalized Kendall-$\tau$ error (\%) with per-cell truthful rate in parentheses, recomputed from \texttt{results/merged\_ranking/da\_cells.csv} (\texttt{model\_folder} $\in$ \{\texttt{gpt5mini}, \texttt{claude\_sonnet5}, \texttt{gemini25flash}\}). Frontier direct-DA error is $0.0$--$0.4\%$, against $1.0$--$7.6\%$ for the canonical models' direct-DA baselines (Table~\ref{tab:da-cells}). Cells are $50$ markets except gpt-5-mini \texttt{direct\_null} ($25$) and \texttt{direct\_menu\_property} ($18$), and gemini-2.5-flash \texttt{direct\_null} ($20$) and OSP ($43$). gpt-5's DA cells were deliberately not run. $^{\ast}$Sequence-level $\tau=0.0\%$, but gemini-2.5-flash makes $3$ strict pick errors in $210$ informative decisions ($1.4\%$ pick-error rate), invisible to the $\tau$ metric---the observability caveat of Section~\ref{app:da-accounting}; gpt-5-mini and claude-sonnet-5 record zero pick errors in $251$ decisions each (rule-of-three $95\%$ upper bound $1.2\%$).}
+\label{tab:da-frontier}
+\end{table}
+
 \subsection{Descriptions in DA: The Invariance Content Is the Active Ingredient}\label{app:da-descriptions}
 
 The description cells (Family B; prompts in Appendix~\ref{app:prompts}) replicate, and sharpen, the auction-domain finding of Section~\ref{sec:ranking-descriptions}: what moves behavior is not additional text about the mechanism but text that states the \emph{invariance} making truthful play safe.

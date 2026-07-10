@@ -1,0 +1,40 @@
+experiment:
+  name: ascending_clock_ipv_closed
+  version: V10
+  description: Ascending Clock Auction with Independent Private Values (Closed) -
+    E2
+auction:
+  number_agents: 3
+  rounds: 1
+  use_survey: true
+  survey_price_points: 15
+rule:
+  seal_clock: clock
+  ascend_descend: ascend
+  price_order: second
+  private_value: private
+  open_blind: blind
+  closing: false
+  reserve_price: 0
+  special_name: private_ac_closed.txt
+value:
+  common_range:
+  - 0
+  - 1
+  private_range: 49
+  increment: 0.5
+  seed_base: 1299
+llm:
+  model: google/gemini-2.0-flash-001
+  temperature: 0.5
+  service_name: open_router
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/auctions/
+  include_payment_example: true
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 2
+  output_dir: experiment_logs/gemini/ascending_clock_ipv_closed

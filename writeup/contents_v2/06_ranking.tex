@@ -54,11 +54,15 @@ appear in what follows, and we fix them here once. \emph{Format-level}
 comparisons (sealed bid vs.\ clock) use the dedicated SPSB cells, with
 per-model mean deviations of $-0.49$ (Claude), $-1.63$ (Gemini), $-3.28$
 (GPT-4o), and $-5.27$ (Gemma)---cross-model mean $-\$2.67$.
-\emph{Presentation and scaffold} contrasts are tested against the
-axis-specific baselines run in the same grid as each treatment; their pooled
-per-model means are $+0.48$, $-2.88$, $-2.78$, and $-4.54$ (cross-model
-$-\$2.43$). The two conventions differ materially for Claude and Gemini, and
-both are recorded cell by cell in the replication file. The direct-revelation
+\emph{Presentation and scaffold} contrasts are tested against the pooled
+axis baselines run in the same grid as each treatment---with one correction
+made in this draft: a provenance audit showed that the legacy ``axis-2
+baseline'' cell was itself a treated clock-framing description
+(Section~\ref{sec:ranking-synthesis}), so the pool comprises the axis-1 and
+axis-3 baseline cells only, with per-model means of $+0.54$ (Claude),
+$-1.25$ (Gemini), $-2.94$ (GPT-4o), and $-6.53$ (Gemma)---cross-model
+$-\$2.55$. The two conventions differ materially for Claude, Gemini, and
+Gemma, and both are recorded cell by cell in the replication file. The direct-revelation
 DA baseline is a $4.2\%$ Kendall-$\tau$ error (unweighted cross-model mean;
 Appendix~\ref{app:da}). The comparative statistic is the preservation index
 $\rho$ of Section~\ref{sec:metrics}, computed within model $\times$ domain on
@@ -189,12 +193,21 @@ cannot be informational.\footnote{In a common- or affiliated-values setting,
 the clock format could improve play by revealing information about others'
 values through their dropout decisions. Under IPV, no such information
 exists, so the improvement must be purely cognitive.}
-\TODO{Environment audit (plan E2): the four-model clock cells above are the
-pipeline's \path{ascending_clock_closed} runs, whose configurations are APV
-(common component on $[0,29]$) rather than the IPV clock described in
-Table~\ref{tab:calibration-master}; a dedicated IPV clock re-run would close
-this labeling gap. The cells' statistics are final (seed 1299, merged
-dataset); only the environment label is at issue.}
+Two provenance notes complete this cell's accounting. The environment audit
+(plan E2) found that the legacy \path{ascending_clock_closed} runs pair an
+affiliated-values \emph{description} with independent private-value
+\emph{draws} (the configuration's value model sets the common component to
+zero), so the informational channel was already absent in the data---but the
+prompt and the environment disagreed. A dedicated clean IPV cell
+(\path{ascending_clock_ipv_closed}: IPV description, IPV draws, $\$0.5$
+tick, seed 1299, $K = 50$) now exists for GPT-4o and Gemma and reproduces
+the result exactly---SMAD $1.5\%$ (GPT-4o) and $1.8\%$ (Gemma) against
+sealed baselines of $12$--$27\%$---so the identification claim does not rest
+on the mislabeled cells. The matching cells for Claude 3.5 Haiku and Gemini
+2.0 Flash await native-API access (both model snapshots have been retired
+from the aggregator used for this draft's re-runs); given the exact
+replication in the two available families and the direction of every legacy
+cell, we do not expect the remaining two cells to change the rung.
 
 \paragraph{Robustness domain: school-choice matching.}
 The same extensive-form lever replicates in the matching domain.
@@ -288,19 +301,24 @@ conflated with the AC/AC-B formats of Section~\ref{sec:ranking-extensive}.
 The two rungs are empirically distinct cells in the merged dataset: the
 clock-framing cells record exactly one sealed bid per bidder per auction,
 while the true clock cells record per-tick stay/exit decisions
-(Appendix~\ref{app:prompts}). Across all four models, clock-framing improves
-play in the same direction (Figure~\ref{fig:ranking-framing}, bottom row):
-SMAD falls from $9.5\%$ to $7.2\%$ (Claude), $11.7\%$ to $9.5\%$ (Gemini),
-$11.4\%$ to $6.3\%$ (GPT-4o), and $20.7\%$ to $13.8\%$ (Gemma), with the
-shift significant for Claude, GPT-4o, and Gemma (Welch $p < 0.001$) and
-marginal for Gemini ($p = 0.097$). The lever is thus universal in sign and
-consistent with the human evidence that clock reframing increases truthful
-play \citep{breitmoser2022obviousness}---but it is a \emph{modest} rung:
-pooled $\rho = +0.29$ ($95\%$ CI $[+0.17, +0.45]$), recovering roughly a
-third of the gap to truthful play, where the true extensive-form clock
-recovers nearly all of it (SMAD $1.4$--$5.2\%$;
-Section~\ref{sec:ranking-extensive}). Words that borrow the clock's framing
-help; the clock itself helps far more.
+(Appendix~\ref{app:prompts}). Against the corrected pooled baselines
+(Section~\ref{sec:ranking-synthesis}), clock-framing moves play
+significantly in every model family but not always in the same direction
+(Figure~\ref{fig:ranking-framing}, bottom row): SMAD falls from $12.1\%$ to
+$6.3\%$ for GPT-4o and from $26.8\%$ to $13.8\%$ for Gemma---each
+roughly halving its deviation---and from $8.3\%$ to $7.2\%$ for Claude (all
+Welch $p < 0.001$), while Gemini moves the \emph{wrong} way, from $5.1\%$ to
+$9.5\%$ ($p < 0.001$). The sign agrees with the human evidence that clock
+reframing increases truthful play \citep{breitmoser2022obviousness} in three
+of the four families, and the exception is coherent rather than noisy:
+Gemini is also the one model that the two-stage clock-exit variant below
+sharply harms. Pooled, the rung is modest and dispersed---median
+$\rho = +0.30$ ($95\%$ CI $[-0.77, +0.52]$, the width driven by the Gemini
+reversal)---recovering, where it works, a third to a half of the gap to
+truthful play, where the true extensive-form clock recovers nearly all of it
+(SMAD $1.4$--$5.2\%$; Section~\ref{sec:ranking-extensive}). Words that
+borrow the clock's framing can help, and for some models help substantially;
+the clock itself helps every model, and helps far more.
 
 The rung comes with a measured warning about paraphrase sensitivity. A
 provenance audit of the legacy run grid (documented in the replication
@@ -315,12 +333,15 @@ nearly fixes Gemma (mean deviation $-6.53$ to $-0.59$), sharply
 \emph{backfires} for Gemini ($-1.25$ to $-6.12$), and leaves Claude and
 GPT-4o unmoved, with GPT-4o inert in language as well as bids (zero echo of
 the framing), so that the pooled effect is a null that conceals offsetting
-model-level responses ($p = 0.88$ pooled). Two texts that expose the same
-clock analogy thus produce one rung that is universal in sign and one that
-is not---direct evidence that description effects are sensitive to wording
-in a way that extensive-form changes are not, and a caution against reading
-any single description cell, including ours, as \emph{the} effect of its
-family.
+model-level responses ($p = 0.88$ pooled). The two texts agree on one
+regularity---both harm Gemini, the family most reactive to clock
+vocabulary---but otherwise produce different model-level profiles from the
+same clock analogy: the canonical framing helps three families, the
+two-stage variant helps only Gemma. This is direct evidence that
+description effects are sensitive to wording in a way that extensive-form
+changes are not (the true clock helps every model; Section~%
+\ref{sec:ranking-extensive}), and a caution against reading any single
+description cell, including ours, as \emph{the} effect of its family.
 
 \paragraph{Safety-exposing descriptions (B2): stating the invariant.}
 The safety-exposing sub-family does not restate the rules at all; it states
@@ -602,15 +623,19 @@ order, not a strict total order:
 \end{equation*}
 The concordance statistics now exist, and they support most---not all---of
 this structure. Treating each model $\times$ domain cell as a judge ranking
-the levers, Kendall's $W$ is $0.49$ in auctions ($p = 0.046$), $0.90$ in the
-matching domain ($p = 4 \times 10^{-4}$), and $0.69$ pooled over the eight
-cells and seven common levers ($p = 1.1 \times 10^{-5}$): the lever ordering
+the levers, Kendall's $W$ is $0.70$ in auctions ($p = 0.004$), $0.90$ in the
+matching domain ($p = 4 \times 10^{-4}$), and $0.81$ pooled over the eight
+cells and seven common levers ($p = 8.4 \times 10^{-7}$): the lever ordering
 is far from independent across models and domains, with the matching domain
-nearly unanimous and auctions noisier. Exact binomial sign tests on adjacent
-tiers confirm three of the four boundaries: the extensive form beats the
-strong presentation tier in $7/8$ cells ($p = 0.070$), the strong
-presentation tier beats the restatement tier in $7/8$ ($p = 0.070$), and the
-strategizing scaffolds beat the risk-averse persona in $8/8$ ($p = 0.008$).
+nearly unanimous. (These statistics are computed on the corrected baselines
+described below; correcting the contaminated axis-2 ``baseline'' cell
+\emph{raised} auction concordance from $0.43$ to $0.70$---the mislabeled
+treatment had been injecting noise into every axis-2 contrast.) Exact
+binomial sign tests on adjacent tiers confirm three of the four boundaries:
+the extensive form beats the strong presentation tier in $7/8$ cells
+($p = 0.070$), the strong presentation tier beats the restatement tier in
+$8/8$ ($p = 0.008$), and the strategizing scaffolds beat the risk-averse
+persona in $8/8$ ($p = 0.008$).
 The boundary that \emph{fails} is baseline-vs-menu against the strategizing
 scaffolds: restatements beat lookahead and beliefs in only $4/8$ cells
 ($p = 1.0$). The failure is informative rather than noise: the menu
@@ -674,9 +699,39 @@ extreme negative ratios (clipped in Figure~\ref{fig:ranking}); ranks are
 unaffected. Third, the iterative-DA $\rho = 1.0$ is censored by construction
 at the Kendall-$\tau$ level; the decision-level accounting of
 Appendix~\ref{app:da} bounds, rather than proves, perfect play.
-\TODO{Frontier interventions: gpt-5-mini currently has baseline mechanism
-cells only (Appendix~\ref{app:ablations}); no frontier intervention cells
-exist, so the ranking carries no frontier row. Runbook prepared.}
+\paragraph{The frontier: the ranking compresses, and parts of it invert.}
+The full lever grid now also exists for four frontier models (gpt-5-mini,
+gpt-5, Claude Sonnet 5, Gemini 2.5 Flash; Appendix~\ref{app:ablations}), and
+it turns the frontier scope condition from an extrapolation into a
+measurement. Three facts summarize it. First, \emph{the ranking's positive
+rungs have nothing left to do}: all four models bid essentially exactly
+truthfully at every sealed-bid baseline (mean deviations $0.00$--$0.30$,
+SMAD $0$--$2.3\%$), so the safety descriptions, payoff tree, and belief
+scaffolds leave play unchanged---the preservation index is undefined as
+$D(\text{baseline}) \to 0$, exactly the compression anticipated in
+Section~\ref{sec:discussion}. Second, \emph{the backfire rungs retain their
+teeth, heterogeneously}: the menu restatement---inert to slightly harmful in
+the incumbent grid---collapses Claude Sonnet 5 from exact truthfulness to a
+mean deviation of $-\$8.71$ (SMAD $35.5\%$, Cohen's $d = -3.8$,
+$p < 0.001$) and degrades Gemini 2.5 Flash (SMAD $2.3\% \to 9.1\%$,
+$p < 0.001$), while leaving gpt-5 and gpt-5-mini exactly truthful. A
+description with no incentive content can still break an otherwise perfect
+strategic reasoner, and which reasoner it breaks is not predictable from
+baseline capability. Third, \emph{the top rung inverts}: the ascending
+clock, which improves every incumbent model, makes frontier play
+\emph{worse} than its own sealed baseline (Claude Sonnet 5: SMAD $0.27\%$
+sealed vs.\ $8.6\%$ clock, $p<0.001$; gpt-5 and gpt-5-mini shift by
+$+0.3$--$0.6$, partly tick granularity)---once the cognitive problem is
+solved, the extensive-form lever's residual effect is interface friction,
+not simplification. The design lesson for mixed fleets is asymmetric:
+simplifying levers are (at worst) wasted on frontier agents, but
+presentation choices can still harm them, so the practitioner guidance of
+Section~\ref{sec:discussion}---expose invariants, avoid gratuitous
+restatements---remains binding even where the bounded-rationality regime
+has closed. (The gpt-5 column carries reduced cell sizes, $K = 5$--$50$:
+the model frequently omits the required response tags, and unparseable
+repetitions are dropped rather than imputed; Appendix~\ref{app:ablations}
+reports per-cell $n$.)
 
 \begin{table}[htbp]
 \centering
@@ -689,16 +744,16 @@ exist, so the ranking carries no frontier row. Runbook prepared.}
 \cmidrule(lr){5-6}
 Tier & Lever & Family & Theory tag & Auct.\ (\$) & DA (\%) & Pooled $\rho$ [95\% CI] & Human anchor \\
 \midrule
-1 & Extensive form (AC-B clock / iterative DA) & A & OSP \citep{li2017obviously,ashlagi2018stable} & $-0.5$ & 0.0 & $+0.95$ [$+0.84, +1.00$] & AC $+0.62$ [$+0.39,+0.79$]; AC-B $+0.37$ [$-0.12,+0.72$] \\
+1 & Extensive form (AC-B clock / iterative DA) & A & OSP \citep{li2017obviously,ashlagi2018stable} & $-0.5$ & 0.0 & $+0.97$ [$+0.83, +1.00$] & AC $+0.62$ [$+0.39,+0.79$]; AC-B $+0.37$ [$-0.12,+0.72$] \\
 \midrule
-2 & Safety description & B2 & SP-exposing \citep{gonczarowski2023strategyproofness} & $-1.53$ & 0.2 & $+0.90$ [$+0.34, +1.00$] & --- (lab prediction) \\
+2 & Safety description & B2 & SP-exposing \citep{gonczarowski2023strategyproofness} & $-1.53$ & 0.2 & $+0.78$ [$+0.39, +1.00$] & --- (lab prediction) \\
 3$^{*}$ & Menu, invariance property (DA) & B1 & menu + invariant & --- & 1.8 & $+0.65$ [$-0.52, +0.95$] & $\surd$ agrees (sign) \citep{gonczarowski2024describing,katuscak2024simpler} \\
-2 & Payoff tree & C1 & contingent reasoning \citep{li2024designing} & $-1.13$ & 1.7 & $+0.63$ [$+0.23, +0.74$] & --- (lab prediction) \\
-2 & Clock-framing & B3 & OSP description \citep{breitmoser2022obviousness} & $-1.93^{\dagger}$ & --- & $+0.29$ [$+0.17, +0.45$] & $\surd$ agrees (sign) \\
+2 & Payoff tree & C1 & contingent reasoning \citep{li2024designing} & $-1.13$ & 1.7 & $+0.59$ [$+0.46, +0.68$] & --- (lab prediction) \\
+2 & Clock-framing & B3 & OSP description \citep{breitmoser2022obviousness} & $-1.93^{\dagger}$ & --- & $+0.30$ [$-0.77, +0.52$] & $\surd$ agrees (sign, 3/4 models) \\
 \midrule
 3 & Baseline (SPSB / direct DA) & --- & --- & $-2.67$ & 4.2 & 0 & $\surd$ agrees \\
-4 & Forward planning (lookahead) & C2 & one-step simplicity \citep{pycia2023theory} & $-1.65^{\dagger\S}$ & 7.8 / 5.1 & $-0.02$ [$-2.31, +0.27$] & --- (lab prediction) \\
-3 & Menu restatement (auction) & B1 & menu description \citep{gonczarowski2023strategyproofness} & $-2.09^{\dagger}$ & --- & $-0.22$ [$-0.77, +0.59$] & $\surd$ agrees on avg.\ ($-0.07$ [$-0.12,-0.02$]) \\
+4 & Forward planning (lookahead) & C2 & one-step simplicity \citep{pycia2023theory} & $-1.65^{\dagger\S}$ & 7.8 / 5.1 & $-0.00$ [$-2.12, +0.26$] & --- (lab prediction) \\
+3 & Menu restatement (auction) & B1 & menu description \citep{gonczarowski2023strategyproofness} & $-2.09^{\dagger}$ & --- & $-0.14$ [$-1.00, +0.27$] & $\surd$ agrees on avg.\ ($-0.07$ [$-0.12,-0.02$]) \\
 4 & Second-order beliefs & C3 & strategic simplicity \citep{borgers2019strategically} & $-3.47$ & 9.1 & $-0.35$ [$-1.36, +0.03$] & --- (lab prediction) \\
 4 & First-order beliefs & C3 & strategic simplicity \citep{borgers2019strategically} & $-3.04$ & 5.1 & $-0.41$ [$-0.88, -0.04$] & --- (lab prediction) \\
 3$^{*}$ & Menu, mechanics only (DA) & B1 & menu, computation restated & --- & 6.9 & $-1.67$ [$-5.01, +0.57$] & $\surd$ agrees (backfire) \citep{guillen2018effectiveness} \\
@@ -721,7 +776,7 @@ family (tier 3); their measured positions straddle the ranking---the
 invariance-property variant performs like a tier-2 safety description, the
 mechanics-only variant like a tier-4 backfire (see text).
 $^{\dagger}$Intervention-grid cells tested against pooled-axis baselines
-(cross-model mean $-2.43$) rather than the dedicated SPSB cells ($-2.67$).
+(corrected pool: axis-1 and axis-3 cells only, cross-model mean $-2.55$; see the axis-2 provenance discussion above) rather than the dedicated SPSB cells ($-2.67$).
 $^{\S}$The auction C2 cell is a backward-induction \emph{framing} of the
 static sealed bid (SPSB has no true planning axis); it enters the pooled
 $\rho$ alongside the DA lookahead cells. Human anchor: $\surd$ = a human

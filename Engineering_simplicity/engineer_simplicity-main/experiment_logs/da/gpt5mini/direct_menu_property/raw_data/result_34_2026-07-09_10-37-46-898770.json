@@ -1,0 +1,193 @@
+{
+    "mechanism_type": "direct",
+    "global_ranking": "y > x > w > z",
+    "global_ranking_strategy": "fixed",
+    "values": {
+        "Student A": {
+            "w": 83,
+            "x": 63,
+            "y": 78,
+            "z": 73
+        },
+        "Student B": {
+            "w": 78,
+            "x": 62,
+            "y": 82,
+            "z": 63
+        },
+        "Student C": {
+            "w": 68,
+            "x": 54,
+            "y": 72,
+            "z": 64
+        },
+        "Student D": {
+            "w": 67,
+            "x": 59,
+            "y": 85,
+            "z": 81
+        }
+    },
+    "priorities": {
+        "Student A": {
+            "w": 1,
+            "x": 2,
+            "y": 1,
+            "z": 2
+        },
+        "Student B": {
+            "w": 2,
+            "x": 1,
+            "y": 2,
+            "z": 1
+        },
+        "Student C": {
+            "w": 3,
+            "x": 3,
+            "y": 4,
+            "z": 4
+        },
+        "Student D": {
+            "w": 4,
+            "x": 4,
+            "y": 3,
+            "z": 3
+        }
+    },
+    "matches": {
+        "Student A": "w",
+        "Student B": "y",
+        "Student C": "x",
+        "Student D": "z"
+    },
+    "utilities": {
+        "Student A": 83,
+        "Student B": 82,
+        "Student C": 54,
+        "Student D": 81
+    },
+    "rankings": {
+        "Student A": [
+            "w",
+            "y",
+            "z",
+            "x"
+        ],
+        "Student B": [
+            "y",
+            "w",
+            "z",
+            "x"
+        ],
+        "Student C": [
+            "y",
+            "w",
+            "z",
+            "x"
+        ],
+        "Student D": [
+            "y",
+            "z",
+            "w",
+            "x"
+        ]
+    },
+    "reasoning": {
+        "Student A": "Because the mechanism fixes the set of schools I could possibly be matched with (my \"Obtainable Schools\") regardless of how I rank them, my ranking cannot change which schools are obtainable. It only chooses which school I receive among that fixed set \u2014 specifically, the highest-ranked school from that set.\n\nGiven that, the dominant strategy is to rank the schools in my true preference order so that, once the obtainable set is realized, I get the most-preferred school within it. I prefer w > y > z > x.\n\nAdditional checks: many other applicants favor y > x > w > z, but that only affects which schools are in my obtainable set (which the problem states is fixed given others' rankings) \u2014 it does not change that I should list my true ordering. I also have top priority (priority 1) at w and y, so if either is in my obtainable set I will receive the higher-ranked of those two; since I prefer w to y, I put w first. Between z and x I prefer z, so z comes before x.",
+        "Student B": "Key property: the mechanism fixes a set of schools you could possibly be matched with (your Obtainable Schools) based on others' rankings and schools' priorities. Your submitted ranking cannot change which schools are in that set; it only determines which school you get among those obtainable (you receive your highest-ranked school in that set).\n\nGiven that, the best strategy is to list schools in true preference order, because you cannot make an unattainable school become obtainable by ranking it higher, nor make an obtainable school unobtainable by ranking it lower. You only influence which one of the obtainable schools you end up with \u2014 so you should put your true favorite among them first.\n\nNotes on context: many applicants favor y > x > w > z, so y is likely to be heavily demanded and may be unattainable for you (your priority at y is 2). You have top priority (1) at x and z, and lower priority (2) at w and y. Even if x or z are more likely obtainable for you, you still prefer y and w over x, so you should rank according to your true preferences.\n\nTherefore submit the truthful preference ordering: y > w > z > x.",
+        "Student C": "The mechanism guarantees that the set of schools I could possibly receive (\u201cObtainable Schools\u201d) is fixed by the other students\u2019 rankings and the schools\u2019 priorities; my ranking cannot change which schools are in that set. It only chooses, from that fixed set, the highest-ranked school on my submitted list.\n\nGiven that, the dominant/obvious strategy is to rank schools in true preference order. Doing so ensures that, whatever the (fixed) obtainable set turns out to be, I will receive the most-preferred school within that set. Trying to \u201cgame\u201d the order (e.g., promoting a less-preferred school to try to influence assignment) cannot expand the obtainable set and therefore cannot improve my outcome.\n\nNote: my priorities (w:3, x:3, y:4, z:4) and the fact most applicants favor y > x > w > z suggest y (and possibly x) may be oversubscribed relative to my priority, but since my ranking cannot change which schools are obtainable, I should still submit my true preference ordering so I get the best available school from the fixed obtainable set.",
+        "Student D": "The mechanism's key property says the set of schools I could possibly receive (my Obtainable Schools) is fixed given the other students' rankings and schools' priorities and does not depend on how I rank the schools. My ranking can only choose which school I get within that fixed set \u2014 specifically, I will be assigned my most-preferred school among the obtainable ones.\n\nGiven that, there is no advantage to misrepresenting my true preferences to try to change which schools are attainable (I cannot change that). The best strategy is to list my true preference order so that, if a more-preferred school in my obtainable set is available to me, I get it. Even though many others favor y > x > w > z (so y and x may be competitive), that doesn't change the conclusion: put the schools in my genuine preference order to ensure I receive the highest-ranked school that is actually obtainable for me."
+    },
+    "truthfulness": {
+        "Student A": true,
+        "Student B": true,
+        "Student C": true,
+        "Student D": true
+    },
+    "da_trace": [
+        {
+            "round": 0,
+            "proposals": {
+                "y": [
+                    "Student B",
+                    "Student C",
+                    "Student D"
+                ],
+                "w": [
+                    "Student A"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student B",
+                "w": "Student A"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "y"
+                ],
+                [
+                    "Student D",
+                    "y"
+                ]
+            ]
+        },
+        {
+            "round": 1,
+            "proposals": {
+                "w": [
+                    "Student C"
+                ],
+                "z": [
+                    "Student D"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student B",
+                "w": "Student A",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "w"
+                ]
+            ]
+        },
+        {
+            "round": 2,
+            "proposals": {
+                "z": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student B",
+                "w": "Student A",
+                "z": "Student D"
+            },
+            "rejections": [
+                [
+                    "Student C",
+                    "z"
+                ]
+            ]
+        },
+        {
+            "round": 3,
+            "proposals": {
+                "x": [
+                    "Student C"
+                ]
+            },
+            "tentative_matches": {
+                "y": "Student B",
+                "w": "Student A",
+                "z": "Student D",
+                "x": "Student C"
+            },
+            "rejections": []
+        }
+    ],
+    "truthfulness_rate": 1.0
+}
