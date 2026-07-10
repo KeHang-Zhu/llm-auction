@@ -103,3 +103,19 @@ texts; sonnet-5 menu-break trace read (why does the menu wording break it? trace
   bands, B2 literature repositioning, E2/E4/frontier batteries via OpenRouter, corrected-baseline
   recomputation of the full ranking (W 0.70/0.90/0.81), frontier scope section, integration.
   Checkpoint commit `5ec06a9`; final commit at end of cycle.
+
+## Addendum (2026-07-10, PM): frontier failure-mode autopsy
+
+Trace autopsies + one new cell resolved WHY the frontier breaks:
+- **Menu break = wrong-formula retrieval**: claude-sonnet-5's menu traces announce the
+  first-price equilibrium "(n-1)/n·v" and execute it flawlessly (−$8.71 ≈ −⅓E[v]), despite the
+  prompt stating the winner pays the highest rival bid. Re-classification of the game, not noise.
+- **"Clock inversion" = affiliation-language trigger, NOT the extensive form**: sonnet-5's clock
+  exits (75% early) invoke the winner's curse; a clean IPV-described rerun
+  (`experiment_logs/claude_sonnet5/ascending_clock_ipv_closed`, K=50) restores near-perfect play
+  (SMAD 8.6%→2.0%, early exits 75%→3%). One sentence of affiliation language costs eight SMAD
+  points by activating the wrong playbook. gpt-5/gpt-5-mini clock shifts are tick granularity.
+- Framing adopted in §6.4/§8/app:ablations: **frontier failure mode = retrieval selection**
+  (surface wording chooses which memorized playbook runs; wrong match executed flawlessly);
+  incumbents fail by under-computation, frontier models by mis-retrieval; obviousness is
+  reasoner-relative. Interpretation credit: Anand (2026-07-10 discussion).

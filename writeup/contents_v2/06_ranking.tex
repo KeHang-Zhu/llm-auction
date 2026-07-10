@@ -699,7 +699,7 @@ extreme negative ratios (clipped in Figure~\ref{fig:ranking}); ranks are
 unaffected. Third, the iterative-DA $\rho = 1.0$ is censored by construction
 at the Kendall-$\tau$ level; the decision-level accounting of
 Appendix~\ref{app:da} bounds, rather than proves, perfect play.
-\paragraph{The frontier: the ranking compresses, and parts of it invert.}
+\paragraph{The frontier: the ranking compresses, and the failures change kind.}
 The full lever grid now also exists for four frontier models (gpt-5-mini,
 gpt-5, Claude Sonnet 5, Gemini 2.5 Flash; Appendix~\ref{app:ablations}), and
 it turns the frontier scope condition from an extrapolation into a
@@ -714,16 +714,36 @@ teeth, heterogeneously}: the menu restatement---inert to slightly harmful in
 the incumbent grid---collapses Claude Sonnet 5 from exact truthfulness to a
 mean deviation of $-\$8.71$ (SMAD $35.5\%$, Cohen's $d = -3.8$,
 $p < 0.001$) and degrades Gemini 2.5 Flash (SMAD $2.3\% \to 9.1\%$,
-$p < 0.001$), while leaving gpt-5 and gpt-5-mini exactly truthful. A
-description with no incentive content can still break an otherwise perfect
-strategic reasoner, and which reasoner it breaks is not predictable from
-baseline capability. Third, \emph{the top rung inverts}: the ascending
-clock, which improves every incumbent model, makes frontier play
-\emph{worse} than its own sealed baseline (Claude Sonnet 5: SMAD $0.27\%$
-sealed vs.\ $8.6\%$ clock, $p<0.001$; gpt-5 and gpt-5-mini shift by
-$+0.3$--$0.6$, partly tick granularity)---once the cognitive problem is
-solved, the extensive-form lever's residual effect is interface friction,
-not simplification. The design lesson for mixed fleets is asymmetric:
+$p < 0.001$), while leaving gpt-5 and gpt-5-mini exactly truthful. The
+traces say exactly what broke: under the menu wording, Claude Sonnet 5
+announces that ``the standard first-price auction equilibrium bid is
+$(n-1)/n$ of my value'' and executes that formula flawlessly---its
+$-\$8.71$ is almost exactly the $-\tfrac{1}{3}\,\mathbb{E}[v] \approx
+-\$8.17$ the first-price rule implies---despite the prompt stating that
+the winner pays the highest \emph{rival} bid. The unfamiliar wording did
+not degrade its play into noise; it re-classified the game and retrieved
+the wrong textbook solution, executed perfectly. A description with no
+incentive content can still break an otherwise perfect strategic reasoner,
+and which reasoner it breaks is not predictable from baseline capability. Third, what first appears as an
+\emph{inversion of the top rung}---the ascending clock, which improves
+every incumbent model, makes Claude Sonnet 5 \emph{worse} than its own
+sealed baseline (SMAD $0.27\%$ sealed vs.\ $8.6\%$ clock, $p<0.001$, with
+$75\%$ of its exits more than a dollar early)---turns out on inspection to
+be the same retrieval failure as the menu cell, not a property of the
+extensive form. The clock cells inherit the legacy affiliated-values
+\emph{description} (Section~\ref{sec:ranking-extensive}), and Claude
+Sonnet 5's exit rationales explicitly invoke the winner's curse (``others'
+persistence signals possibly similar high values, risking overpayment''),
+a script that is correct in common-value clocks and irrelevant here, where
+the bidder knows its own value. Rerunning the same model on the clean
+IPV-described clock restores near-perfect play: SMAD $2.0\%$, early exits
+$3\%$, and marginal-reasoning traces (``price equals my value; drop'').
+One sentence of affiliation language costs an otherwise exactly-truthful
+model eight SMAD points by activating the wrong playbook---while the same
+sentence leaves the incumbent models' clock gains intact, because they have
+no winner's-curse script to misfire. (gpt-5 and gpt-5-mini shift by
+$+0.3$--$0.6$ on the clock, mostly tick granularity, with clean marginal
+reasoning in their traces.) The design lesson for mixed fleets is asymmetric:
 simplifying levers are (at worst) wasted on frontier agents, but
 presentation choices can still harm them, so the practitioner guidance of
 Section~\ref{sec:discussion}---expose invariants, avoid gratuitous
