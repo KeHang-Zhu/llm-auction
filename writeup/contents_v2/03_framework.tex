@@ -19,21 +19,21 @@ objects, and descriptions can be engineered to expose strategyproofness
 \citep{gonczarowski2023strategyproofness}; and the cognitive demands of a
 mechanism decompose into distinct axes---contingent reasoning, forward
 planning, and belief formation---that different designs tax differently
-\citep{li2024designing}. Our two domains are chosen to make this lever space
-fully operable. The SPSB auction and student-proposing deferred acceptance (DA)
-are both strategy-proof, and both are \emph{strategically simple} in the sense
+\citep{li2024designing}. The SPSB auction makes this lever space
+fully operable. It is strategy-proof, and \emph{strategically simple} in the sense
 of \citet{borgers2019strategically}---the dominant strategy is independent of
-beliefs entirely---yet neither direct form is obviously strategy-proof, and
-both admit OSP implementations: the ascending clock for the auction
-\citep{li2017obviously}, and, under Ergin-acyclic priorities
-\citep{ergin2002efficient}, an iterative query protocol for DA
-\citep{ashlagi2018stable}. That wedge between strategy-proofness on paper and
-obviousness in play is the identifying variation the levers act on. The
-division of labor between the domains is fixed up front: auctions are the
-paper's main domain, and every lever family is evaluated there in the main
-text (Section~\ref{sec:ranking}); the matching domain replays the full grid as
-a robustness and generalization check, reported in Appendix~\ref{app:da} and
-cited in the main text where it sharpens an auction result.
+beliefs entirely---yet its direct form is not obviously strategy-proof, and it
+admits an OSP implementation: the ascending clock
+\citep{li2017obviously}. That wedge between strategy-proofness on paper and
+obviousness in play is the identifying variation the levers act on. Auctions are
+the paper's domain, and every lever family is evaluated there in the main text
+(Section~\ref{sec:ranking}). One lever---the description of a fixed
+mechanism---is additionally probed in a supplementary school-choice matching
+experiment (student-proposing deferred acceptance under Ergin-acyclic
+priorities \citep{ergin2002efficient,ashlagi2018stable}), reported in
+Appendix~\ref{app:da}, where the menu description can be unbundled into its
+invariance content and its mechanics; we draw on it in the main text only where
+it sharpens the descriptions result.
 
 We organize the levers into three main families---\textbf{A} (extensive form),
 \textbf{B} (descriptions), and \textbf{C} (cognitive scaffolds)---plus an
@@ -60,13 +60,8 @@ made on-path, one information set at a time. The ascending clock auction is the
 canonical example---it is OSP where SPSB is not, and it is additionally
 \emph{one-step simple} in the sense of \citet{pycia2023theory}: comparing
 ``stay one more tick'' against ``exit now'' suffices at each price, with no
-backward induction over the price trajectory. Our Family~A levers are the
-ascending clock (in open AC and closed AC-B variants; Section~\ref{sec:design})
-and the iterative OSP implementation of DA, in which applicants answer a
-sequence of accept/reject queries rather than submitting a rank-order list
-(\emph{iterative DA}, versus one-shot \emph{direct DA}). To our knowledge, no
-prior experiment---human or artificial---has tested the OSP implementation of
-DA; Appendix~\ref{app:da} reports the first.
+backward induction over the price trajectory. Our Family~A lever is the
+ascending clock, in open AC and closed AC-B variants (Section~\ref{sec:design}).
 
 \paragraph{Family B: Mechanism descriptions.}
 The second family holds the extensive form fixed and changes only the words.
@@ -119,19 +114,14 @@ over unobserved opponent moves---``calculating payoffs for each profile of
 opponent bids'' \citep{li2024designing}. Our \emph{Payoff Tree} scaffold
 performs this construction for the agent, laying out the explicit tree of
 payoff contingencies (win and pay the second-highest bid; lose and pay
-nothing), in both domains. It says what \emph{happens} under each action, never
+nothing). It says what \emph{happens} under each action, never
 what to \emph{do}. \textbf{(C2) Forward planning}: \citet{pycia2023theory}
 formalize limited foresight over an agent's own future decision points. A
 one-shot sealed bid has no such axis---there are no future own moves to plan
-over---so C2 scaffolds are deployed only in the matching domain (results in
-Appendix~\ref{app:da}), where the DA algorithm processes the
-submitted ranking through multiple internal rounds of proposals and rejections,
-giving lookahead a natural (if, under strategy-proofness, strategically
-irrelevant) place to bind. We test one-step and two-step \emph{lookahead}
-prompts that invite the agent to simulate rejection chains before reporting.
-\textbf{(C3) Belief formation}: since both mechanisms are strategy-proof,
-optimal play is independent of beliefs about opponents---this is precisely
-strategic simplicity \citep{borgers2019strategically}. First-order (``what do
+over---so forward planning has no place to bind in our auction domain and does
+not enter the ranking. \textbf{(C3) Belief formation}: since the mechanism is
+strategy-proof, optimal play is independent of beliefs about opponents---this
+is precisely strategic simplicity \citep{borgers2019strategically}. First-order (``what do
 you expect the others to do?'') and second-order (``what do the others think
 \emph{you} will do?'') belief scaffolds are therefore irrelevant to a
 participant who has understood dominance. Their inclusion is deliberately
@@ -156,20 +146,18 @@ Appendix~\ref{app:prospect}.
 Lever (family) & Domain & Theoretical anchor & Ex-ante prediction \\
 \midrule
 Ascending clock, AC/AC-B (A) & Auction & \citet{li2017obviously}; \citet{pycia2023theory} & Largest improvement \\
-Iterative DA (A) & DA & \citet{ashlagi2018stable}; \citet{ergin2002efficient} & Largest improvement \\
 \addlinespace
 Menu restatement (B1) & Auction, DA\textsuperscript{a} & \citet{gonczarowski2023strategyproofness} & Weak/none (human behavioral null) \\
-Payoff / Rejection Safety (B2) & Auction; DA & \citet{gonczarowski2023strategyproofness}; \citet{vickrey1961counterspeculation} & Improvement, approaching OSP \\
+Payoff / Rejection Safety (B2) & Auction & \citet{gonczarowski2023strategyproofness}; \citet{vickrey1961counterspeculation} & Improvement, approaching OSP \\
 Clock-framing (B3) & Auction & \citet{breitmoser2022obviousness} & Improvement, approaching OSP \\
 \addlinespace
-Payoff Tree (C1) & Auction, DA & \citet{li2024designing} & Improvement (axis binds) \\
-Lookahead, 1- and 2-step (C2) & DA only (appendix) & \citet{pycia2023theory} & Irrelevant at best; backfire risk \\
-Beliefs, 1st/2nd order (C3) & Auction, DA & \citet{borgers2019strategically} & Inert if dominance understood; any effect diagnoses mis-strategizing \\
+Payoff Tree (C1) & Auction & \citet{li2024designing} & Improvement (axis binds) \\
+Beliefs, 1st/2nd order (C3) & Auction & \citet{borgers2019strategically} & Inert if dominance understood; any effect diagnoses mis-strategizing \\
 \addlinespace
-Risk / loss framings (D) & Auction, DA & \citet{kahneman1979prospect} & Payoff-irrelevant; inert for a rational agent (Appendix~\ref{app:prospect}) \\
+Risk / loss framings (D) & Auction & \citet{kahneman1979prospect} & Payoff-irrelevant; inert for a rational agent (Appendix~\ref{app:prospect}) \\
 \bottomrule
 \end{tabular}
-\caption{The lever space. Every lever holds the outcome rule fixed; families differ in what else they hold fixed (Family A changes the extensive form; B changes only the description; C changes only the invited reasoning; D changes only the induced preferences). Predictions are stated ex ante from the cited theory. Auction cells are reported in the main text (Section~\ref{sec:ranking}); matching cells are the generalization check (Appendix~\ref{app:da}). Verbatim prompt texts and the old-to-new label mapping appear in Appendix~\ref{app:prompts}. \textsuperscript{a}\,In the matching domain the menu description is deployed in two variants---invariance-property and mechanics-only---to separate the menu format from its invariance content (Appendix~\ref{app:da}).}
+\caption{The lever space. Every lever holds the outcome rule fixed; families differ in what else they hold fixed (Family A changes the extensive form; B changes only the description; C changes only the invited reasoning; D changes only the induced preferences). Predictions are stated ex ante from the cited theory. All lever cells are reported in the auction main text (Section~\ref{sec:ranking}); the menu description is additionally probed in a supplementary matching experiment (Appendix~\ref{app:da}). Verbatim prompt texts and the old-to-new label mapping appear in Appendix~\ref{app:prompts}. \textsuperscript{a}\,In the matching experiment the menu description is deployed in two variants---invariance-property and mechanics-only---to separate the menu format from its invariance content (Appendix~\ref{app:da}).}
 \label{tab:framework-levers}
 \end{table}
 
@@ -215,21 +203,20 @@ practitioner can pull.
 
 \paragraph{H3 (Scaffolds are axis-specific; belief scaffolds are diagnostic).}
 A Family~C scaffold helps only on the axis where the mechanism's cognitive
-demand actually binds. Concretely: (i) C1 (contingent reasoning) should help in
-both domains, because case-by-case reasoning over opponent profiles is the core
-demand of both non-OSP formats \citep{li2024designing}; (ii) C2 (forward
-planning) has no axis to relax in a one-shot sealed bid and, in DA, scaffolds
-reasoning about algorithm dynamics that strategy-proofness renders irrelevant;
-(iii) C3 (beliefs) should be exactly inert, because dominant strategies are
-belief-free \citep{borgers2019strategically}. The diagnostic content of H3 is
-in its failure modes. Any measured effect of a belief scaffold---in either
-direction---is evidence that the agent is not playing the dominant strategy but
-treating the interaction as a Bayesian game, forming beliefs about competitors
-and best-responding to them. Likewise, scaffolds that activate strategic
-simulation without resolving it (lookahead in DA, beliefs anywhere) hand the
-agent material to strategize with; if the agent has not internalized
-strategy-proofness, we predict such scaffolds \emph{backfire}, and most
-severely for the weakest reasoners. Backfiring is thus not an embarrassment for
+demand actually binds. Concretely: (i) C1 (contingent reasoning) should help,
+because case-by-case reasoning over opponent profiles is the core
+demand of the non-OSP sealed-bid format \citep{li2024designing}; (ii) C2 (forward
+planning) has no axis to relax in a one-shot sealed bid, so it does not enter
+the auction ranking; (iii) C3 (beliefs) should be exactly inert, because
+dominant strategies are belief-free \citep{borgers2019strategically}. The
+diagnostic content of H3 is in its failure modes. Any measured effect of a
+belief scaffold---in either direction---is evidence that the agent is not
+playing the dominant strategy but treating the interaction as a Bayesian game,
+forming beliefs about competitors and best-responding to them. Belief scaffolds
+that activate strategic simulation without resolving it hand the agent material
+to strategize with; if the agent has not internalized strategy-proofness, we
+predict such scaffolds \emph{backfire}, and most severely for the weakest
+reasoners. Backfiring is thus not an embarrassment for
 the taxonomy but its theoretically expected signature: a designer's lever space
 contains anti-levers, and knowing which is which is part of the ranking this
 paper delivers (Section~\ref{sec:ranking}).

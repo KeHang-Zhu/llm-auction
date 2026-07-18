@@ -10,11 +10,9 @@
 Our design crosses the lever families of Section~\ref{sec:framework} with the
 canonical strategy-proof auction domain---second-price sealed bidding and its
 clock implementations---and four LLM families, plus one field-inspired
-environment (a stylized eBay marketplace) that serves validation only. A second
-strategy-proof domain, school choice under student-proposing deferred
-acceptance, replicates the design end-to-end and serves as a generalization
-check on the ranking; its design is summarized below
-(Section~\ref{sec:design-da}) and its implementation and results are reported
+environment (a stylized eBay marketplace) that serves validation only. A
+supplementary school-choice matching experiment (student-proposing deferred
+acceptance), used to unbundle the menu description, is described and reported
 in Appendix~\ref{app:da}. The unit
 of observation throughout is a fully specified, seed-reproducible \emph{market
 instance}: a draw of values (or preferences), a mechanism, a description, and a
@@ -168,50 +166,16 @@ deliberately minimal and descriptive, so that behavior is not steered by
 didactic instruction. Full rules, treatments, and procedures appear in
 Appendix~\ref{app:ebay}.
 
-\subsubsection{Deferred acceptance (generalization domain)}\label{sec:design-da}
+\subsubsection{Supplementary matching experiment}\label{sec:design-da}
 
-The matching domain replicates the auction design end-to-end in a school-choice
-environment in which LLMs play the role of students; because the paper's main
-domain is auctions, we summarize the design here and defer the full
-implementation---priority orders, prompt skeletons, and the query
-algorithm---to Appendix~\ref{app:da}. Each market instance comprises four
-students and four schools with unit capacity: large enough to admit meaningful
-strategic considerations (competition for popular schools and priority
-asymmetries), small enough that the full DA trace can be logged and every
-outcome audited. Valuations are affiliated, $v_{i,s} = c_s +
-\varepsilon_{i,s}$, with a school-level common component $c_s \sim
-\mathrm{Unif}[40,70]$ and independent student--school shocks
-$\varepsilon_{i,s} \sim \mathrm{Unif}[0,20]$ \citep{klijn2019static}; a
-student's \emph{true preference ranking} is the descending sort of her
-valuations. Schools rank students by fixed, Ergin-acyclic priority orders
-\citep{ergin2002efficient}---acyclicity being the condition under which a
-sequential-query implementation of DA can be made obviously strategy-proof
-\citep{ashlagi2018stable}. All students additionally observe a fixed ``global
-popularity'' ranking that proxies common beliefs about demand. Because DA is
-strategy-proof for the proposing side \citep{roth1982economics}, beliefs about
-others' demand should not change any report; the fixed signal exists to give
-belief-directed misreporting room to express itself---and to give the belief
-scaffolds of Family~C3 something concrete to amplify.
-
-Each instance is elicited under two protocols, mirroring the auction domain's
-sealed-bid/clock pair. Under \emph{direct DA}---the strategy-proof
-baseline---each student submits a complete rank-order list in a single shot,
-and student-proposing DA runs on the submitted rankings with the true school
-priorities. Under \emph{iterative DA}---the Family~A lever in matching---no
-full ranking is ever submitted: the mechanism queries students sequentially
-with yes/no offers over individual schools, following the OSP tree
-construction of \citet{ashlagi2018stable}, and reduces to serial dictatorship
-(a single pick from the remaining schools) when only one top-priority student
-remains. Within each repetition we query one LLM instance per student with a
-self-contained scenario prompt bundling the student's identity, priorities,
-the popularity signal, the mechanism rules, and any treatment text, with
-chain-of-thought \citep{wei2022chain} elicited through structured reasoning
-and decision tags. For each treatment condition and mechanism we run $K=50$
-independent repetitions (fresh value draws; priorities and popularity signal
-fixed), logging a complete JSON record per instance---raw responses, parsed
-decisions, and the full DA trace---for exact replay and audit. The priority
-orders, both prompt skeletons, and Algorithm~1 (the query protocol) appear in
-Appendix~\ref{app:da} and Appendix~\ref{app:prompts}.
+A supplementary school-choice matching experiment---student-proposing deferred
+acceptance in a $4\times4$ market with Ergin-acyclic priorities
+\citep{ergin2002efficient,ashlagi2018stable}, in which LLMs play the role of
+students submitting rank-order lists---probes the descriptions lever outside the
+auction laboratory, unbundling the menu description into its invariance content
+and its mechanics. Because it is not a co-equal domain, we defer its full
+specification---environment, priority orders, prompt skeletons, elicitation
+protocol, and results---to Appendix~\ref{app:da}, which reports it end to end.
 
 % ---------------------------------------------------------------------------
 % Master calibration table (plan section 5.4)
@@ -236,7 +200,7 @@ Clock, APV & AC, AC-B & as APV above & tick \$0.5 & 3 & 50$^{c}$ & canonical fou
 Clock, IPV & AC-B & as IPV above & tick \$0.5 & 3 & 50$^{d}$ & canonical four$^{d}$ \\
 Sealed bid, CV & FPSB, SPSB & $V\sim U[20,29]$;\; $s_i = V+\eta_i$, $\eta_i\sim U[-20,20]$ & bid grid \$0.1 & 4--7 & ---$^{e}$ & GPT-4o \\
 eBay (validation) & proxy bidding; closing rule $\times$ reserve & $v_i \sim U[0,99]$ & raise/hold max bid & 3 & 30$^{e}$ & GPT-4o \\
-Matching (DA)$^{f}$ & direct; iterative (OSP) & $v_{i,s}=c_s+\varepsilon_{i,s}$;\; $c_s\sim U[40,70]$, $\varepsilon_{i,s}\sim U[0,20]$ & rank-order list / yes--no & $4\times4$ & 50 & canonical four \\
+Matching (DA)$^{f}$ & direct (menu descriptions) & $v_{i,s}=c_s+\varepsilon_{i,s}$;\; $c_s\sim U[40,70]$, $\varepsilon_{i,s}\sim U[0,20]$ & rank-order list & $4\times4$ & 50 & canonical four \\
 \bottomrule
 \end{tabular}}
 \par\smallskip
@@ -248,8 +212,7 @@ $K=30$--$40$.}
 $^{b}$\,Canonical four = GPT-4o (2024-08-06, anchor), Claude 3.5 Haiku
 (2024-10-22), Gemini 2.0 Flash, Gemma 27B; appendix tiers = Llama-3-8B
 (capability floor) and the frontier tier gpt-5-mini, gpt-5, claude-sonnet-5,
-and gemini-2.5-flash (full lever grid; the three servable of these also run
-the DA grid, gpt-5 excepted), Appendix~\ref{app:ablations}. Gemma ran the
+and gemini-2.5-flash (full lever grid), Appendix~\ref{app:ablations}. Gemma ran the
 six-format sealed-bid fidelity battery (Table~\ref{tab:gemma-fidelity}); its
 two ascending-clock cells are pending native-key runs.
 $^{c}$\,Clock $K$: the newer clock cells (the harmonized IPV-clock cells and
@@ -265,8 +228,8 @@ native keys. (The legacy imported clock cells are APV with mixed increments,
 $^{e}$\,eBay: $K=30$ runs per treatment cell, verified from the recovered
 logs (29 for the soft-close $r=60$ cell; Appendix~\ref{app:ebay}).
 \TODO{Pin $K$ for the CV cells from the recovered run logs (E5/E10).}
-$^{f}$\,Generalization domain: design summary in
-Section~\ref{sec:design-da}; implementation details, Algorithm~1, and results
+$^{f}$\,Supplementary matching experiment (menu-description split): design
+summary in Section~\ref{sec:design-da}; implementation details and results
 in Appendix~\ref{app:da}.
 \end{minipage}
 \end{table}
@@ -274,12 +237,11 @@ in Appendix~\ref{app:da}.
 \subsection{Treatments}\label{sec:design-treatments}
 
 The treatment grid crosses the lever families of Section~\ref{sec:framework}
-with the two strategy-proof domains. Family~A (extensive form) is implemented
+with the auction domain. Family~A (extensive form) is implemented
 as a change of \emph{mechanism}: the ascending clock replaces the sealed-bid
-interface in auctions, and the iterative query protocol replaces direct
-revelation in DA, with value draws, allocation and payment rules, model, and
+interface, with value draws, allocation and payment rules, model, and
 temperature all held fixed. Families~B and~C are implemented as \emph{prompt
-treatments} on the sealed-bid and direct-DA baselines: each treatment modifies
+treatments} on the sealed-bid baseline: each treatment modifies
 only the rule-explanation block of the prompt while holding the value
 distribution, bidder identities, payment rules, and the structured response
 format fixed, so that any behavioral change is attributable to the description
@@ -325,19 +287,15 @@ changing its extensive form.
 \end{itemize}
 
 \paragraph{Family C: reasoning scaffolds.}
-Three sub-families scaffold a mode of reasoning without revealing the dominant
+Two sub-families scaffold a mode of reasoning without revealing the dominant
 strategy. \textbf{C1, contingent reasoning} (the \emph{Payoff Tree}): the
 prompt lays out the explicit decision tree of outcomes---win versus lose paths
-in auctions, accept versus reject branches in DA---telling the agent \emph{what
-happens} under each action, not what to do; run in both domains. \textbf{C2,
-forward planning} (one- and two-step \emph{lookahead}): the prompt asks the
-agent to simulate the algorithm's future rounds before acting. C2 runs in DA
-only: DA's underlying algorithm processes the submitted ranking dynamically
-through rounds of proposals and rejections, giving forward planning a natural
-place to bind, whereas the sealed-bid auction has no analogous internal
-dynamics. \textbf{C3, belief formation} (first- and second-order beliefs): the
+in the auction---telling the agent \emph{what happens} under each action, not
+what to do. \textbf{C3, belief formation} (first- and second-order beliefs): the
 prompt directs attention to what opponents will do, or to what opponents think
-the agent will do; run in both domains.
+the agent will do. (Forward planning, C2 in the taxonomy of
+Section~\ref{sec:framework}, has no axis in a one-shot sealed bid and therefore
+does not enter the auction grid.)
 
 \paragraph{Family D: preference framings.}
 Prospect-theory-inspired personas (risk aversion, loss aversion, endowment
@@ -399,7 +357,7 @@ and agents do not receive feedback across instances. We adopt this design to
 minimize reliance on cross-instance learning and long-term adaptation, which
 remains unreliable for language models \citep{dong2024survey}. This choice is
 distinct from whether a mechanism is \emph{iterative within} an instance: clock
-auctions and iterative DA still unfold over multiple within-instance steps, but
+auctions still unfold over multiple within-instance steps, but
 we do not run repeated markets with feedback by default. In
 Appendix~\ref{app:learning}, we run a repeated-auction ablation in which
 bidders observe outcomes from prior instances; consistent with the motivation
@@ -422,15 +380,14 @@ Each experiment proceeds as follows, repeated for $K$ independent repetitions:
     \texttt{<REASON>}\,\ldots\,\texttt{</REASON>} /
     \texttt{<DECISION>}\,\ldots\,\texttt{</DECISION>} in DA, where the action
     tag contains a numeric bid (sealed bid), a stay/exit decision (clock), an
-    increase/hold decision (eBay), a rank-order list (direct DA), or a yes/no
-    answer (iterative DA).
+    increase/hold decision (eBay), or a rank-order list (direct DA).
     \item \textbf{Parallel elicitation and parsing.} We query the LLM for each
     agent using separate API calls in parallel, and parse the action from the
     action tag using a deterministic regex-based extractor.
     \item \textbf{Outcome computation.} Given the submitted actions, we
     determine allocations and payments mechanically---winner and price under
     the auction rules, or the final matching by executing student-proposing DA
-    (or the query protocol) with the true school priorities.
+    with the true school priorities.
 \end{enumerate}
 Unless otherwise noted, auction settings use $n=3$ bidders, and each
 configuration is repeated $K$ times with independent seeds
@@ -542,24 +499,6 @@ be consequential: under deferred acceptance, a single misreport can cascade
 through rejection chains and alter the final matching for $\Theta(n)$
 participants \citep{dubins1981machiavelli}.
 
-\paragraph{Misreports under the iterative protocol.}
-The iterative DA protocol never elicits a full rank-order list, so $\kappa$
-cannot be computed directly. Instead we classify each revealed yes/no answer
-against the student's true preferences: a \emph{Type-1 misreport} (false
-rejection) answers NO when the queried school is in fact the most preferred
-among the remaining set; a \emph{Type-2 misreport} (false acceptance) answers
-YES when a more preferred school is still available. The iterative error rate
-is the share of misreports among revealed decisions. Because applicants may
-not be asked to reveal their entire rank-order lists, we count misreports from
-the smaller set of revealed preferences: a measured error rate of zero
-therefore bounds only the \emph{observable} component of behavior---models
-could still be making cognitive errors that never surface because the protocol
-never queries them. This observability caveat travels with every use of the
-iterative-DA result in this paper. Formal per-node definitions, the per-model
-decision-level accounting, rule-of-three upper confidence bounds for cells
-with zero observed misreports, and a comparison of the pick-based and yes/no
-query implementations appear in Appendix~\ref{app:da}.
-
 \paragraph{Baseline declaration.}
 Two baseline families appear in the auction analysis, and we fix their use
 once. \emph{Cross-format} comparisons---sealed bid versus clock, the OSP rung
@@ -596,10 +535,10 @@ it inherits.
 \paragraph{Tier-claim discipline.}
 We pre-commit to reporting the ranking as a \emph{tier structure} (a partial
 order over levers), not a strict total order. Adjacent tiers are separated
-only where pairwise sign tests across the model$\times$domain cells support
+only where pairwise sign tests across the model cells support
 the separation; concordance of the full ordering across cells is summarized by
 Kendall's $W$ with bootstrap confidence intervals; and within-tier reversals
-across domains (e.g., contingent scaffolds versus safety descriptions) are
+(e.g., contingent scaffolds versus safety descriptions) are
 reported as findings, not smoothed away. Section~\ref{sec:ranking-synthesis}
 implements this discipline.
 
@@ -612,12 +551,12 @@ report both tests because description levers can move dispersion without
 moving the mean (and vice versa), and the two tests can disagree in exactly
 those cases. Where an error rate of exactly zero is observed, we report
 one-sided rule-of-three upper confidence bounds rather than declaring
-perfection (Appendix~\ref{app:da}). Concordance of the lever ordering across
-model$\times$domain cells (Kendall's $W$ with bootstrap confidence intervals),
+perfection. Concordance of the lever ordering across
+model cells (Kendall's $W$ with bootstrap confidence intervals),
 adjacent-tier sign tests, and the double-bootstrap intervals for the pooled
 preservation indices are reported in Section~\ref{sec:ranking-synthesis}.
-Knife-edge cells (e.g., near-zero error rates under Rejection Safety and
-iterative DA) are topped up to $K=100$ before adjacent rungs are declared
+Knife-edge cells (e.g., near-zero error rates under the safety descriptions)
+are topped up to $K=100$ before adjacent rungs are declared
 separated.
 
 \subsection{Human Benchmark Reconstruction}\label{sec:reconstruction}

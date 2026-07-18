@@ -20,12 +20,11 @@
 
 This section delivers the paper's central product: an empirical ranking of the
 design levers of Section~\ref{sec:framework} by how well each preserves
-dominant-strategy play. Auctions are the main domain throughout. Every lever
-family is additionally replicated in a school-choice matching domain
-(deferred acceptance) as a robustness and generalization check; that
-replication is reported in Appendix~\ref{app:da} and enters the main text
-only through summary statistics and the pooled ranking of
-Section~\ref{sec:ranking-synthesis}. We proceed in three passes over the
+dominant-strategy play. Auctions are the domain throughout; one lever---the
+menu description---is additionally probed in a supplementary school-choice
+matching experiment (deferred acceptance) reported in
+Appendix~\ref{app:da}, drawn on below where it sharpens the descriptions
+result. We proceed in three passes over the
 lever taxonomy. Section~\ref{sec:ranking-extensive} evaluates the
 extensive-form lever (family~A): replacing the sealed-bid auction with an
 ascending clock. This is the lever for which simplicity theory makes its
@@ -39,17 +38,15 @@ itself (Table~\ref{tab:ranking} and Figure~\ref{fig:ranking}), and
 Section~\ref{sec:ranking-traces} closes the section by reading the agents'
 own stated reasoning against their realized bids.
 
-Throughout, $D(L,d,m)$ denotes the deviation of model $m$ from
-dominant-strategy play in domain $d$ under lever $L$: for auctions, the mean
+Throughout, $D(L,m)$ denotes the deviation of model $m$ from
+dominant-strategy play under lever $L$: the mean
 bid deviation from value (bid $-$ value, in dollars), with the scaled mean
 absolute deviation (SMAD; normalizer $E[b^{*}] = \$24.5$,
-Section~\ref{sec:metrics}) reported in parallel; for the matching domain, the
-normalized Kendall-$\tau$ error in percent. Every cell-level statistic
+Section~\ref{sec:metrics}) reported in parallel. Every cell-level statistic
 below---bootstrap confidence intervals (2{,}000 draws, seed 1299),
 Mann--Whitney and Welch tests, Cohen's $d$---is computed from the merged
 run-level dataset in the replication package
-(\path{results/merged_ranking/auction_cells.csv},
-\path{results/merged_ranking/da_cells.csv}). Two auction baseline conventions
+(\path{results/merged_ranking/auction_cells.csv}). Two auction baseline conventions
 appear in what follows, and we fix them here once. \emph{Format-level}
 comparisons (sealed bid vs.\ clock) use the dedicated SPSB cells, with
 per-model mean deviations of $-0.49$ (Claude), $-1.63$ (Gemini), $-3.28$
@@ -62,10 +59,8 @@ baseline'' cell was itself a treated clock-framing description
 axis-3 baseline cells only, with per-model means of $+0.54$ (Claude),
 $-1.25$ (Gemini), $-2.94$ (GPT-4o), and $-6.53$ (Gemma)---cross-model
 $-\$2.55$. The two conventions differ materially for Claude, Gemini, and
-Gemma, and both are recorded cell by cell in the replication file. The direct-revelation
-DA baseline is a $4.2\%$ Kendall-$\tau$ error (unweighted cross-model mean;
-Appendix~\ref{app:da}). The comparative statistic is the preservation index
-$\rho$ of Section~\ref{sec:metrics}, computed within model $\times$ domain on
+Gemma, and both are recorded cell by cell in the replication file. The comparative statistic is the preservation index
+$\rho$ of Section~\ref{sec:metrics}, computed within model on
 the absolute-deviation scale and pooled as the median across cells:
 $\rho = 1$ is perfect preservation of dominant-strategy play, $\rho = 0$ no
 effect, and $\rho < 0$ a lever that \emph{backfires}. Because $\rho$ is
@@ -93,20 +88,12 @@ removes, across all four model families.
     \centering
     \includegraphics[width=\textwidth]{fig1_osp_comparison.pdf}
     \caption{Comparing base (non-OSP) and OSP mechanisms across four model
-    families. \emph{Left column (main domain):} distribution of bid
+    families. Distribution of bid
     deviations from value ($\text{bid} - \text{value}$) in second-price
-    sealed-bid (gray) and ascending clock (colored) auctions. \emph{Right
-    column (robustness domain):} normalized Kendall $\tau$ distance (fraction
-    of pairwise ranking swaps) in direct-revelation DA (gray) and iterative,
-    OSP DA (colored); the matching domain is analyzed in
-    Appendix~\ref{app:da} and appears here only because the two domains share
-    the figure. Dashed lines indicate means. All models deviate from truthful
-    play in the non-OSP formats; OSP implementations correct toward
-    truth-telling. The iterative-DA $0.0\%$ is exact at the Kendall-$\tau$
-    level for all four models, but decision-level accounting shows it is
-    protocol-specific: zero observable misreports for three of four models in
-    the pick-based protocol, with model-specific failures appearing in a
-    yes/no implementation (Appendix~\ref{app:da}).}
+    sealed-bid (gray) and ascending clock (colored) auctions. Dashed lines
+    indicate means. All models deviate from truthful
+    play in the non-OSP sealed-bid format; the ascending clock corrects toward
+    truth-telling.}
     \label{fig:osp-comparison}
 \end{figure}
 
@@ -203,31 +190,15 @@ prompt and the environment disagreed. A dedicated clean IPV cell
 tick, seed 1299, $K = 50$) now exists for GPT-4o and Gemma and reproduces
 the result exactly---SMAD $1.5\%$ (GPT-4o) and $1.8\%$ (Gemma) against
 sealed baselines of $12$--$27\%$---so the identification claim does not rest
-on the mislabeled cells. The matching cells for Claude 3.5 Haiku and Gemini
+on the mislabeled cells. The remaining IPV-clock cells for Claude 3.5 Haiku and Gemini
 2.0 Flash await native-API access (both model snapshots have been retired
 from the aggregator used for this draft's re-runs); given the exact
 replication in the two available families and the direction of every legacy
 cell, we do not expect the remaining two cells to change the rung.
 
-\paragraph{Robustness domain: school-choice matching.}
-The same extensive-form lever replicates in the matching domain.
-Student-proposing deferred acceptance is strategy-proof for the proposing
-side \citep{roth1982economics}, yet all four models misreport their
-rank-order lists in the direct-revelation format (cross-model mean
-Kendall-$\tau$ error $4.2\%$); an iterative query protocol that implements
-the same matching in an OSP manner \citep{ashlagi2018stable}---to our
-knowledge the first experimental test of an OSP implementation of DA with any
-kind of agent---drives the observed error to $0.0\%$ for all four models,
-with decision-level accounting showing zero misreports for three of the four
-in the pick-based protocol (rule-of-three $95\%$ upper bounds below $1\%$)
-and model-specific failures emerging only in a yes/no tree implementation.
-The full design, error accounting, observability caveats, and all treatment
-cells for the matching domain appear in Appendix~\ref{app:da}.
-
 \paragraph{The bridge: which margin does the work?}
 In summary, LLMs deviate from dominant-strategy play in the sealed-bid
-strategy-proof auction---and, in the robustness domain, in direct DA---and
-OSP implementations of the same mechanisms substantially correct these
+strategy-proof auction, and the OSP ascending clock substantially corrects these
 deviations. As a design lesson, however, the extensive-form result is coarse,
 because OSP changes several things at once: it changes the game tree, it
 coarsens the action space to simple binary or menu choices, and it makes the
@@ -287,8 +258,8 @@ null \emph{on average} \citep{gonczarowski2023strategyproofness,
 gonczarowski2024describing}, with the caveat that the average conceals
 genuine model-level heterogeneity---a point the human experiments, run on a
 single population, cannot speak to. The menu family turns out to be more
-interesting in the matching domain, where it splits into two sub-variants
-with opposite effects; we return to this in
+interesting in the supplementary matching experiment, where it splits into two
+sub-variants with opposite effects; we return to this in
 Section~\ref{sec:ranking-synthesis}.
 
 \paragraph{Clock-framing (B3): describing the bid as a clock exit.}
@@ -352,7 +323,7 @@ strategy-proofness of the second-price auction concerns being
 you pay. This inspires our \emph{Payoff Safety} intervention for the auction
 setting: ``Think of your bid as setting your maximum price. Your bid
 determines IF you win, not WHAT you pay. If you win, you pay what others bid,
-not what you bid.'' Its analogue in the matching domain, \emph{Rejection
+not what you bid.'' Its analogue in the supplementary matching experiment, \emph{Rejection
 Safety}, states the property that made deferred acceptance preferable to the
 Boston mechanism in practice \citep{abdulkadirouglu2003school}: ``Rejections
 only redirect, never eliminate. Your ranking determines the \emph{order} in
@@ -379,14 +350,7 @@ baseline---though that baseline is anomalously low relative to Gemma's other
 baselines, a caveat we quantify in Section~\ref{sec:ranking-synthesis}. For
 comparison, the ascending clock achieves $\mu \approx -0.5$
 (Section~\ref{sec:ranking-extensive}); the description closes roughly half
-the gap. The matching-domain results are even more striking:
-\emph{Rejection Safety} cuts the direct-DA error from $4.2\%$ to $0.2\%$
-across models---comparable to the full OSP implementation's $0.0\%$---and a
-plain textbook statement of strategy-proofness achieves $0.0\%$ for all four
-models. At the decision level, the OSP protocol's $0.0\%$ is exact for three
-of four models with rule-of-three $95\%$ upper bounds below $1\%$, so the
-margin between the OSP form and the one-sentence description is real but
-thin; the full error accounting is in Appendix~\ref{app:da}.
+the gap.
 
 That a brief description of a mechanism's incentive properties can nearly
 replicate OSP's effect---without changing the extensive form---is a
@@ -409,8 +373,8 @@ so the large effects of B2 cannot be attributed to generic prompt
 sensitivity---but it is a noisier placebo than a single-population experiment
 would suggest. What the effective descriptions share, and the restatement
 lacks, is that they \emph{assert} the invariant that makes truth-telling safe
-rather than leaving the agent to derive it. The matching domain sharpens this
-reading to a within-family contrast, discussed in
+rather than leaving the agent to derive it. The supplementary matching
+experiment sharpens this reading to a within-family contrast, discussed in
 Section~\ref{sec:ranking-synthesis}: a menu description that adds the
 invariance statement behaves like a safety description, while a menu
 description that merely restates the computation backfires.
@@ -418,15 +382,12 @@ description that merely restates the computation backfires.
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{fig5_mechanism_description.pdf}
-    \caption{Safety-exposing descriptions (B2). \emph{Top row (main
-    domain):} \emph{Payoff Safety} in second-price auctions (``your bid
-    determines IF you win, not WHAT you pay''). \emph{Bottom row (robustness
-    domain, Appendix~\ref{app:da}):} \emph{Rejection Safety} in deferred
-    acceptance (``rejections only redirect, never eliminate''). Baseline in
-    gray, intervention in color; dashed lines indicate means. Both
-    interventions improve play dramatically; Rejection Safety nearly matches
-    the full OSP result of Figure~\ref{fig:osp-comparison}, reducing mean
-    error from $4.2\%$ to $0.2\%$.}
+    \caption{Safety-exposing description (B2): \emph{Payoff Safety} in
+    second-price auctions (``your bid determines IF you win, not WHAT you
+    pay''), across the four model families. Baseline in
+    gray, intervention in color; dashed lines indicate means. The intervention
+    improves play in every model, closing roughly half the gap to the full OSP
+    result of Figure~\ref{fig:osp-comparison}.}
     \label{fig:descriptions}
 \end{figure}
 
@@ -475,20 +436,16 @@ intervention presents the agent with the explicit decision tree of outcomes:
 ``PATH A: your bid exceeds others $\to$ you WIN, and pay the second-highest
 bid. PATH B: your bid falls below $\to$ you LOSE, and pay nothing. Key
 insight: your bid determines which path you are on, not the payment in Path
-A.'' (The matching-domain analogue walks the agent through DA's
-proposal-rejection tree; Appendix~\ref{app:da}.)
+A.''
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth]{fig2_contingent.pdf}
     \caption{Contingent reasoning: \emph{Payoff Tree} intervention (C1).
-    \emph{Top row (main domain):} second-price auction bid deviations
-    ($\text{bid}-\text{value}$); baseline SPSB in gray, intervention in
-    color. \emph{Bottom row (robustness domain, Appendix~\ref{app:da}):}
-    deferred acceptance Kendall $\tau$ errors; baseline direct DA in gray,
-    intervention in color. The payoff-tree scaffold consistently improves
-    play across models in both domains, roughly halving the distance from
-    truthful.}
+    Second-price auction bid deviations
+    ($\text{bid}-\text{value}$) across the four model families; baseline SPSB
+    in gray, intervention in color. The payoff-tree scaffold consistently
+    improves play across models, roughly halving the distance from truthful.}
     \label{fig:contingent}
 \end{figure}
 
@@ -497,11 +454,9 @@ to $\mu = -1.13$, roughly halving the distance from truthful play
 (Figure~\ref{fig:contingent}). The improvement is consistent across models:
 GPT-4o moves from $-3.28$ to $-0.86$, Gemma from $-5.27$ to $-2.34$, and
 Gemini from $-1.63$ to $-0.53$; Claude, already close to truthful ($-0.49$),
-is the one model showing null improvement. The same scaffold replicates in
-the matching domain, where it cuts the direct-DA error from $4.2\%$ to
-$1.7\%$ with improvement in all four models (Appendix~\ref{app:da}). In both
-domains the scaffold closes roughly half the gap to the OSP benchmark (clock
-$\mu \approx -0.5$; iterative DA $0\%$) without changing the extensive form.
+is the one model showing null improvement. The scaffold closes roughly half
+the gap to the OSP benchmark (clock $\mu \approx -0.5$) without changing the
+extensive form.
 
 Laying out the payoff tree does not tell models \emph{what} to do; it tells
 them \emph{what happens} under each action. This is precisely the cognitive
@@ -509,44 +464,9 @@ gap between OSP and non-OSP mechanisms: in OSP mechanisms the extensive form
 makes the payoff-relevant contingencies visible at each decision point,
 whereas in non-OSP mechanisms the agent must construct them herself. The
 \emph{Payoff Tree} scaffold does this construction for the agent, and the
-consistent improvement across models and domains suggests that the
+consistent improvement across models suggests that the
 difficulty of constructing payoff-relevant contingencies is a real constraint
 that binds on LLM agents.
-
-\subsubsection{Forward planning (C2): lookahead backfires}
-\label{sec:ranking-forward}
-
-\citet{pycia2023theory} formalize a notion of limited forward planning that
-has become central to the theory of simple mechanisms: a mechanism is
-\emph{one-step simple} if the dominant strategy emerges from considering only
-the immediate next step, without full backward induction. The sealed-bid
-auction is a static game with a single decision node, so forward planning has
-no natural axis there; the scaffold's native test bed is the matching domain,
-where DA's underlying algorithm processes the submitted ranking dynamically
-through rounds of proposals and rejections, and models may attempt to reason
-through those rounds when deciding what to submit. We therefore evaluate the
-forward-planning scaffolds---a \emph{One-Step Lookahead} prompt (``If you are
-rejected from your first choice, which school would you propose to next?
-Does this affect how you should rank schools?'') and a \emph{Two-Step}
-extension---primarily in the robustness domain, with a backward-induction
-framing of the static sealed bid included in the auction grid for
-completeness (Appendix~\ref{app:prompts}).
-
-Where contingent reasoning helped, forward planning hurts.
-\emph{One-Step Lookahead} worsens direct-DA play from $\mu = 4.2\%$ to
-$7.8\%$ across models; \emph{Two-Step} worsens it to $5.1\%$, with the damage
-concentrated in GPT-4o (from $1.0\%$ to $4.8\%$) and Gemma (from $2.6\%$ to
-$12.7\%$), while Claude and Gemini are largely unaffected (distributions and
-per-model cells in Appendix~\ref{app:da}). Our hypothesis is that the
-scaffold activates strategic thinking about the algorithm without resolving
-it. If models recognized that the mechanism is strategy-proof, forward
-planning would be irrelevant---the dominant strategy does not depend on what
-happens after a rejection. But because models do not fully appreciate
-strategy-proofness, prompting them to simulate rejection dynamics gives them
-\emph{material to strategize with}, not the ability to strategize well: they
-second-guess their truthful reports, and the weaker models, with less
-capacity to resolve the reasoning they have been prompted to undertake,
-suffer the most.
 
 \subsubsection{Belief formation (C3): making opponents salient}
 \label{sec:ranking-beliefs}
@@ -560,7 +480,7 @@ formation should therefore be irrelevant at best. But if models are already
 treating these mechanisms as Bayesian games, attempting to best-respond to
 perceived competition rather than playing the dominant strategy, then making
 beliefs more salient could amplify mistakes. We test two levels of belief
-scaffolding in both domains: \emph{First-Order Beliefs} (``What do you expect
+scaffolding: \emph{First-Order Beliefs} (``What do you expect
 the other players to do? \ldots Does this affect what you should do?'') and
 \emph{Second-Order Beliefs} (``What do the other players think YOU will do?
 \ldots And does that, in turn, affect what you should do?'').
@@ -568,11 +488,9 @@ the other players to do? \ldots Does this affect what you should do?'') and
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=\textwidth,height=0.82\textheight,keepaspectratio]{fig4_beliefs.pdf}
-    \caption{Belief-formation interventions (C3). \emph{Top two rows (main
-    domain):} second-price auction bid deviations under first-order and
-    second-order belief scaffolds. \emph{Bottom two rows (robustness domain,
-    Appendix~\ref{app:da}):} deferred acceptance Kendall $\tau$ errors under
-    the same scaffolds. Baseline distributions in gray, interventions in
+    \caption{Belief-formation interventions (C3): second-price auction bid
+    deviations under first-order and second-order belief scaffolds, across the
+    four model families. Baseline distributions in gray, interventions in
     color. Belief scaffolds almost uniformly worsen play, with second-order
     beliefs causing the most damage. Gemini is the notable exception, showing
     near-immunity to belief scaffolding.}
@@ -583,13 +501,10 @@ Belief scaffolding almost uniformly worsens play
 (Figure~\ref{fig:beliefs}). In auctions, \emph{First-Order Beliefs} moves the
 cross-model mean deviation from $\mu = -2.67$ to $-3.04$ and
 \emph{Second-Order Beliefs} to $-3.47$: models prompted to think about
-opponents shade further below value, undercutting perceived competition. The
-matching domain replicates the pattern ($4.2\%$ to $5.1\%$ and $9.1\%$
-respectively; Appendix~\ref{app:da}). Interestingly, Gemini is almost
-completely immune to belief scaffolding in both domains---in DA it even shows
-small improvements---while Gemma, which moves from $2.6\%$ to $14.3\%$ error
-under \emph{Second-Order Beliefs} in DA, appears most susceptible to this
-failure mode. These results suggest that LLM reasoning styles are not
+opponents shade further below value, undercutting perceived competition.
+Interestingly, Gemini is almost completely immune to belief scaffolding, while
+Gemma is the most susceptible to this failure mode. These results suggest that
+LLM reasoning styles are not
 monolithic; the heterogeneity across model families in susceptibility to
 belief-based reasoning may itself be relevant to mechanism design when
 markets serve diverse artificial agents.
@@ -597,10 +512,9 @@ markets serve diverse artificial agents.
 \subsection{The Ranking Assembled}\label{sec:ranking-synthesis}
 
 Table~\ref{tab:ranking} assembles the preceding cells into the paper's
-central object. For each lever we report the raw deviations---auctions in
-the main columns, the matching domain as the compact robustness column---and
+central object. For each lever we report the raw auction deviations and
 the preservation index $\rho$ (Section~\ref{sec:metrics}), computed within
-model $\times$ domain and pooled as the median across the available cells,
+model and pooled as the median across the available cells,
 with $95\%$ confidence intervals from a double bootstrap that resamples cells
 and propagates each cell's own bootstrap uncertainty (2{,}000 draws, seed
 1299). Because $\rho$ is computed against each model's own baseline, the
@@ -611,25 +525,22 @@ much of each model's own deviation a lever removes.
 Our pre-committed reading of the data is a \emph{tier structure}---a partial
 order, not a strict total order:
 \begin{equation*}
-\underbrace{\text{A}}_{\substack{\text{extensive form:}\\ \text{clock, iterative DA}}}
+\underbrace{\text{A}}_{\substack{\text{extensive form:}\\ \text{ascending clock}}}
 \;\succ\;
 \underbrace{\{\text{B2},\,\text{B3},\,\text{C1}\}}_{\substack{\text{safety descriptions,}\\ \text{clock-framing, payoff tree}}}
 \;\succ\;
 \underbrace{\text{baseline} \,\approx\, \text{B1}}_{\text{menu restatement}}
 \;\succ\;
-\underbrace{\{\text{C2},\,\text{C3}\}}_{\substack{\text{lookahead,}\\ \text{belief scaffolds}}}
+\underbrace{\text{C3}}_{\substack{\text{belief}\\ \text{scaffolds}}}
 \;\succ\;
 \underbrace{\text{D-averse.}}_{\substack{\text{risk-averse}\\ \text{persona}}}
 \end{equation*}
 The concordance statistics now exist, and they support most---not all---of
-this structure. Treating each model $\times$ domain cell as a judge ranking
-the levers, Kendall's $W$ is $0.70$ in auctions ($p = 0.004$), $0.90$ in the
-matching domain ($p = 4 \times 10^{-4}$), and $0.81$ pooled over the eight
-cells and seven common levers ($p = 8.4 \times 10^{-7}$): the lever ordering
-is far from independent across models and domains, with the matching domain
-nearly unanimous. (These statistics are computed on the corrected baselines
-described below; correcting the contaminated axis-2 ``baseline'' cell
-\emph{raised} auction concordance from $0.43$ to $0.70$---the mislabeled
+this structure. Treating each model as a judge ranking the levers, Kendall's
+$W$ is $0.70$ in auctions ($p = 0.004$): the lever ordering is far from
+independent across models. (This statistic is computed on the corrected
+baselines described below; correcting the contaminated axis-2 ``baseline''
+cell \emph{raised} auction concordance from $0.43$ to $0.70$---the mislabeled
 treatment had been injecting noise into every axis-2 contrast.) Exact
 binomial sign tests on adjacent tiers confirm three of the four boundaries:
 the extensive form beats the strong presentation tier in $7/8$ cells
@@ -670,19 +581,15 @@ mechanics-only descriptions of a strategy-proof mechanism have been found
 to \emph{reduce} truth-telling in the field \citep{guillen2018effectiveness}
 ---the same backfire our mechanics-only cell produces.
 
-\paragraph{Within-tier domain flips and honest caveats.}
-We deliberately do not order levers within the strong tier, because the
-internal order flips across domains: the payoff tree beats the safety
-description in $3/4$ auction cells, while the safety description beats the
-tree in $4/4$ matching cells. We present this as domain-dependence
-\emph{within} a stable tier rather than as noise: a natural reading is that
-which second-tier lever binds hardest depends on whether the local difficulty
-is constructing payoff-relevant contingencies (auctions, with a fine action
-space) or trusting that rejections are safe (DA, where the discrete misreport
-is a hedge against imagined rejection risk). Clock-framing, now estimated on
+\paragraph{Within-tier order and an honest caveat.}
+We deliberately do not order the safety description and the payoff tree within
+the strong tier: their pooled preservation indices ($\rho = +0.78$ and
+$+0.59$) have overlapping confidence intervals, and the payoff tree beats the
+safety description in only $3/4$ of the auction cells, so the data do not
+support a strict order between them. Clock-framing, now estimated on
 all four models, is a reliable but modest member of the tier
-($\rho = +0.29$ $[+0.17, +0.45]$). Three caveats from the concordance
-analysis qualify individual cells without moving any rung. First, what
+($\rho = +0.29$ $[+0.17, +0.45]$). One caveat from the concordance
+analysis qualifies individual cells without moving any rung: what
 previously appeared as an anomalously good Gemma axis-2 baseline (SMAD
 $8.6\%$ vs.\ $20.7\%$ pooled across its axes) turns out to have a mechanical
 explanation: a provenance audit of the run templates shows the legacy
@@ -692,13 +599,7 @@ that Gemma responds to strongly (Section~\ref{sec:ranking-descriptions}).
 The pooled axis baseline used throughout therefore excludes that cell
 (axis-1 and axis-3 cells only), the axis-2 treatment contrasts are computed
 against the corrected pool, and the cell itself enters the description
-family as a treatment. Second,
-GPT-4o's matching-domain $\rho$ magnitudes are ratio-unstable because its
-direct-DA baseline error is only $1.0\%$, so small treatment errors produce
-extreme negative ratios (clipped in Figure~\ref{fig:ranking}); ranks are
-unaffected. Third, the iterative-DA $\rho = 1.0$ is censored by construction
-at the Kendall-$\tau$ level; the decision-level accounting of
-Appendix~\ref{app:da} bounds, rather than proves, perfect play.
+family as a treatment.
 \paragraph{The frontier: the ranking compresses, and the failures change kind.}
 The full lever grid now also exists for four frontier models (gpt-5-mini,
 gpt-5, Claude Sonnet 5, Gemini 2.5 Flash; Appendix~\ref{app:ablations}), and
@@ -785,7 +686,7 @@ Tier & Lever & Family & Theory tag & Auct.\ (\$) & DA (\%) & Pooled $\rho$ [95\%
 $D$ = mean deviation from dominant-strategy play: bid $-$ value in dollars
 for auctions (cross-model mean over GPT-4o, Claude 3.5 Haiku, Gemini 2.0
 Flash, Gemma 27B), normalized Kendall-$\tau$ error in percent for the
-matching robustness domain (Appendix~\ref{app:da}; lookahead entries are
+supplementary matching experiment (Appendix~\ref{app:da}; lookahead entries are
 one-/two-step). $\rho = 1 - D(\text{lever})/D(\text{baseline})$ on the
 absolute-deviation scale, computed within model $\times$ domain against the
 baseline conventions of Section~\ref{sec:ranking}; pooled value = median over

@@ -1,5 +1,41 @@
 # STATE.md — auction-v2 merged paper: current state
 
+## Addendum (2026-07-18): DA/eBay narrowing + interaction scope (Anand's Claude session)
+
+Scope decisions this session (Anand; interaction scope flagged for Kehang to bless):
+- **eBay → demoted to one appendix paragraph.** Cut from main text (validation subsection +
+  summary-table sniping row + intro clause). `appendix_ebay.tex` is now a single bonus
+  field-microstructure robustness para (sniping 63.3%→7.6% under soft close). Full treatment-level
+  timing / hidden-reserve analysis dropped from the paper.
+- **DA → reduced to a menu-content-split appendix only.** `appendix_da.tex` trimmed from ~257 lines
+  to ~one page: keeps ONLY the description finding (Rejection Safety 4.2%→0.2%; invariance-property
+  menu 4.2%→1.8% vs mechanics-only menu 4.2%→6.9%; textbook-statement ceiling; null; cardinal
+  robustness), as a replication of §ranking-descriptions in a second strategy-proof mechanism. CUT:
+  DA-as-co-equal-domain (environment/protocol, direct-vs-iterative main result, frontier-in-matching,
+  DA ranking, Kendall-τ decision accounting, iterative-OSP algorithm, reproducibility) → Kehang's
+  blogpost. Main-text DA-domain prose demoted to pointers in abstract/intro/design/humans/discussion/
+  conclusion. `\label{app:da}` preserved (44 refs). **Paper compiles clean, ZERO undefined refs.**
+- **Interactions now in scope** (irreducible-jointness thesis) — see STORY.md "The jointness must be
+  irreducible" (flagged for Kehang's blessing). +X now +X AND +n battery.
+
+### ⚠️ REMAINING HANDOFF (data regeneration — cannot be done by prose editing; needs the pipeline)
+The DA cut is complete in PROSE, but three DATA-DERIVED exhibits still bake in DA cells and need
+regeneration to become auction-only. They compile fine (no dangling refs) but the NUMBERS still
+integrate DA as a co-equal ranking domain:
+1. **`tab:ranking`** (central ranking table, 06_ranking.tex): still has a "DA (%)" column, an
+   iterative-DA entry in the tier-1 extensive-form row, and a Pooled ρ column computed over
+   auction+DA cells. Regenerate auction-only (or keep only the two menu-split DA rows).
+2. **`fig:ranking`** (`ranking_forest.pdf`): marks are "each model×domain cell (shape=domain)";
+   Panel B (Kendall-τ rank agreement) bakes in DA. Regenerate from auction cells. Script:
+   `scripts/plots/ranking_forest.py`.
+3. **Adjacent-tier sign-test denominators** in `sec:ranking-synthesis` prose: still read "7/8",
+   "8/8", "4/8" over the eight model×domain (auction+DA) cells. Recompute to "/4" auction-only.
+   (Standalone DA/pooled Kendall-W claims — "0.90 matching", "0.81 pooled over eight cells" — were
+   already removed; only these embedded sign-test counts remain.)
+Everything else (prose, appendix, refs) is DONE and clean.
+
+---
+
 **Last updated:** 2026-07-10 (Anand's Claude session: provenance corrections + full run cycle + integration)
 **Paper:** `writeup/auction-v2.tex` → `auction-v2.pdf` — compiles clean; page/TODO counts in the
 build-log comment block of the master (recounted at the final commit of this cycle).
