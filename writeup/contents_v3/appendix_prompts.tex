@@ -1,0 +1,360 @@
+% ---------------------------------------------------------------------------
+% Appendix: Prompt Library and Intervention Inventory (v3 adaptation).
+% Changes from v2: refs retargeted to v3 labels (sec:theory, sec:map-*,
+% app:heterogeneity); eBay references removed (environment out of scope);
+% the desc_clock_framing inventory row corrected to the canonical sign-mixed
+% result (the v2 row said "large improvement in every model", contradicting
+% CONVENTIONS §3); axis2_forward_baseline split out as a reclassified treated
+% cell; Panel-B statuses updated to match the v3 scope (app:da reports the
+% description cells only). Prompt texts remain verbatim from the templates
+% actually sent to the models (including their typos); non-ASCII glyphs are
+% transliterated.
+% ---------------------------------------------------------------------------
+\section{Prompt Library and Intervention Inventory}\label{app:prompts}
+
+This appendix documents the prompt templates behind every design lever used in the paper, organized by the taxonomy of Section~\ref{sec:theory}: Dimension~A (extensive-form implementations), Dimension~B (mechanism descriptions: B1 menu restatement, B2 safety-exposing, B3 clock-framing), Dimension~C (reasoning scaffolds: C1 contingent, C2 forward planning, C3 beliefs), and Family~D (preference framings, Appendix~\ref{app:prospect}). We present the full base-rule prompts for both the auction domain and the external-robustness matching domain; for each intervention we show only the text that is \emph{added to or modified from} the corresponding base prompt, since the surrounding context (bidder identity and response format in auctions; preference ordering, priorities, popularity signal, and output format in DA) remains identical. Template variables (e.g., \texttt{\{\{student\_id\}\}}, \texttt{\{\{preference\_order\}\}}, \texttt{\{\{increment\}\}}) are populated at runtime. The simulation pipeline that embeds these prompts is described in Appendix~\ref{app:procedures}; the DA protocol details are in Appendix~\ref{app:da}. Section~\ref{app:prompts-inventory} closes with the complete inventory (Table~\ref{tab:intervention-inventory}), which maps every repo-level template name to its final taxonomy family and records whether its results appear in this paper.
+
+\subsection{Base rules}\label{app:prompts-base}
+
+\paragraph{SPSB auction (IPV baseline).} The canonical baseline for the auction design-map cells (repo template \path{private_second_price}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+In this game, you will participate in an auction for a prize
+against {{num_bidders}} other bidders. You will play this game
+for {{n}} rounds.
+At the start of each round, bidders will see their value for
+the prize, randomly drawn between $0 and ${{private}}, with
+all values equally likely.
+After learning your value, you will submit a bid privately at
+the same time as the other bidders. Bids must be in
+${{increment}} increments.
+The highest bidder wins the prize and pays the second-highest
+bid. If you win, your earnings will increase by your value for
+the prize, and decrease by the second-highest bid. If you don't
+win, your earnings will remain unchanged.
+After each auction, we will display all bids. Ties for the
+highest bid will be resolved randomly.
+\end{lstlisting}
+\caption{SPSB auction, base rule (\texttt{private\_second\_price}). Standard second-price sealed-bid auction with independent private values. The FPSB and APV rule prompts used in the validation battery (Section~\ref{sec:validation}) differ only in the allocation/payment paragraph and the value-model paragraph; legacy formats outside this paper's scope (third-price, common-value, eBay) remain in the repository.}
+\label{fig:prompt-spsb-base}
+\end{figure}
+
+\paragraph{Direct DA (traditional description).} The canonical baseline of the external-robustness matching domain (\texttt{da\_direct\_traditional}) describes the full five-step student-proposing algorithm:
+
+\begin{figure}[H]
+\begin{lstlisting}
+You are Student {{student_id}}. There are 4 schools: w, x, y, z.
+You will be matched to at most one school.
+
+HOW THE MATCHING WORKS (Deferred Acceptance):
+1. All students simultaneously submit a ranking of schools
+2. Each student "proposes" to their top-ranked school
+3. Each school tentatively accepts the proposer it ranks highest
+   (by priority), rejecting others
+4. Rejected students propose to their next choice
+5. This repeats until all students are matched
+
+Your preference ordering (most preferred to least preferred):
+  {{preference_order}}
+
+Your priority rank at each school (1 = highest priority):
+  w: {{pw}}, x: {{px}}, y: {{py}}, z: {{pz}}
+
+Moreover, most applicants seem to favor {{global_ranking}}.
+
+Submit a complete ranking of schools from most preferred to
+least preferred.
+Format: Ranking: <1st> > <2nd> > <3rd> > <4th>
+\end{lstlisting}
+\caption{Direct DA, base rule (\texttt{da\_direct\_traditional}). A \emph{null} variant (\texttt{da\_direct\_null}) is identical except that the ``HOW THE MATCHING WORKS'' block is removed entirely, providing no mechanism explanation; its results appear in Appendix~\ref{app:da}.}
+\label{fig:prompt-da-traditional}
+\end{figure}
+
+\subsection{Dimension A: extensive-form implementations}\label{app:prompts-osp}
+
+\paragraph{Ascending clock (AC-B), per-tick query.} In the true iterative clock (final ID \path{osp_clock_iterative}), each auction consists of multiple clock cycles; at each posted price every remaining bidder is queried, and no dropout information is displayed:
+
+\begin{figure}[H]
+\begin{lstlisting}
+Your value towards to the prize is {value} in this round.
+The current price in this clock cycle is {current_price}.
+The price for next clock cycle is {current_price + increment}.
+
+Do you want to stay in the bidding?
+If you choose yes, you can keep bidding for next clock. If you
+choose No, you will exit and have no chance to re-enter the
+bidding. Your response must use these EXACT tags below. You
+must output the ACTION.
+    <PLAN> [...limit 50 words...] </PLAN>
+    <ACTION> Yes or No </ACTION>
+\end{lstlisting}
+\caption{Ascending clock (AC-B), per-tick stay/exit query (final ID \texttt{osp\_clock\_iterative}). The bidder is first shown the auction rules (value model plus clock payment rule); the query above is repeated at every clock tick. See Appendix~\ref{app:procedures} for the full clock simulation loop and the AC (open) variant. On the \texttt{intervention\_proxy\_breitmoser} name collision affecting this lever, see Section~\ref{app:prompts-inventory}.}
+\label{fig:prompt-clock-iterative}
+\end{figure}
+
+\subsection{Dimension B: mechanism descriptions}\label{app:prompts-desc}
+
+\paragraph{B1 --- Menu restatement (auction).} Based on \citet{gonczarowski2023strategyproofness}, this replaces the payment paragraph of the SPSB base rule with a menu description (\texttt{intervention\_menu}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+Your "price to win" the item will be set to the highest bid
+placed by any other player. If your bid is higher than this
+"price to win," then you will win the item and pay this price.
+If you don't win, your earnings will remain unchanged.
+\end{lstlisting}
+\caption{Menu restatement for SPSB (\texttt{intervention\_menu}, Family B1). Reported in Section~\ref{sec:map-descriptions} for all four models: small, sign-mixed effects across models and null on average (family-level detail in Appendix~\ref{app:heterogeneity}).}
+\label{fig:prompt-menu}
+\end{figure}
+
+\paragraph{B1 --- Menu restatement (DA, external robustness).} Two DA analogues exist as templates, \path{da_direct_menu_property} and \path{da_direct_menu_mechanics}; both restate DA through the obtainable-schools menu, following \citet{gonczarowski2023strategyproofness}. Both are reported in Appendix~\ref{app:da}, where they split sharply by content. The \emph{property} variant reads:
+
+\begin{figure}[H]
+\begin{lstlisting}
+KEY PROPERTY OF THIS MECHANISM:
+Given the other students' rankings and school priorities, there
+is a fixed set of schools you could possibly be matched with
+(your "Obtainable Schools").
+
+IMPORTANT: Your ranking CANNOT change what is in your Obtainable
+Schools. Your ranking ONLY determines which school you receive
+WITHIN that set - you get your highest-ranked school among the
+obtainable ones.
+\end{lstlisting}
+\caption{Menu restatement for DA, property variant (\texttt{da\_direct\_menu\_property}, Family B1). The \emph{mechanics} variant states the same construction procedurally (``Step 1: \ldots the mechanism computes your Obtainable Schools. Step 2: You receive the school you ranked highest among your Obtainable Schools.'') \emph{without} the invariance statement. Both are reported in Appendix~\ref{app:da}: the property variant significantly improves truthful reporting (pooled $4.2\% \to 1.8\%$), the mechanics variant significantly worsens it ($4.2\% \to 6.9\%$).}
+\label{fig:prompt-da-menu}
+\end{figure}
+
+\paragraph{B2 --- Payoff Safety (auction).} Surfaces the pivotality property behind \citet{vickrey1961counterspeculation}'s strategy-proofness argument (old labels \path{axis2_forward_onestep} / \path{axis1_contingent_onestep}; final ID \emph{Payoff Safety}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+**How the auction works:**
+Think of your bid as setting your "maximum price." The auction
+will find the highest price below your maximum that still wins.
+Specifically:
+- If your bid is the highest, you win and pay the second-highest
+  bid
+- If your bid is not the highest, you don't win and pay nothing
+
+This means: Your bid only matters for determining IF you win,
+not HOW MUCH you pay. You can think of it simply as: "At what
+price would I no longer want the item?"
+\end{lstlisting}
+\caption{Payoff Safety description for SPSB (Family B2). Despite the ``axis-2 / forward-planning'' repo filename, this is a mechanism description, not a reasoning scaffold: it states \emph{what is true} of the payment rule rather than instructing a mode of reasoning (see the mapping notes in Section~\ref{app:prompts-inventory}).}
+\label{fig:prompt-payoff-safety}
+\end{figure}
+
+\paragraph{B2 --- Rejection Safety (DA, external robustness).} Surfaces the property that distinguishes DA from the Boston mechanism \citep{abdulkadirouglu2003school}: rejections are safe (old label \path{axis2_da_monotonic_safety}; final ID \emph{Rejection Safety}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+KEY INSIGHT - REJECTIONS ONLY REDIRECT, NEVER ELIMINATE:
+In this matching process:
+- Being rejected from a school you ranked highly does NOT hurt
+  your chances at schools ranked lower
+- You cannot be "knocked out" of a school that would have
+  accepted you
+- The algorithm protects you: rejections only happen BEFORE you
+  would have been matched
+
+Your ranking determines the ORDER in which you're considered,
+not WHETHER you're considered.
+\end{lstlisting}
+\caption{Rejection Safety description for DA (Family B2). Two sibling ``monotonicity'' templates (\texttt{axis2\_da\_monotonic\_options}: ``your options never shrink''; \texttt{axis2\_da\_monotonic\_outcome}: ``the obtainable set determines the outcome'') were run but are not reported (Table~\ref{tab:intervention-inventory-da}).}
+\label{fig:prompt-rejection-safety}
+\end{figure}
+
+\paragraph{B3 --- Clock-framing (auction).} Based on \citet{breitmoser2022obviousness}, this \emph{describes} the sealed bid as an automatic exit threshold in a simulated clock---a description change only; the game remains a one-shot sealed-bid auction (repo template \path{intervention_proxy_breitmoser}; final ID \path{desc_clock_framing}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+**FIRST STAGE: Sealed Bid**
+You will submit a sealed bid privately at the same time as the
+other bidders. This bid will serve as your automatic exit price
+in the next stage.
+**SECOND STAGE: Ascending Clock (Simulation)**
+After the sealed bid stage, we will simulate an ascending clock
+auction. The clock will start at $0 and increase in increments
+of ${{increment}}. The clock will display the current price.
+You will also see that there are a total of {{num_bidders}}
+bidders participating, although you do not know other bidder's
+values. If the current price on the clock reaches or exceeds
+your sealed bid from the first stage, you will automatically
+exit the auction. The auction ends when only one bidder is left
+remaining in the second stage based on their bid from the first
+stage.
+**END OF AUCTION**
+If you win, your earnings will increase by your value for the
+prize and decrease by the clock price at the end of the auction.
+If you don't win, your earnings will remain unchanged.
+\end{lstlisting}
+\caption{Clock-framing description for SPSB (Family B3; final ID \texttt{desc\_clock\_framing}). The elicited action is still a single sealed bid; no per-tick queries occur. Never to be conflated with the true iterative clock of Figure~\ref{fig:prompt-clock-iterative}; see the name-collision note in Section~\ref{app:prompts-inventory}. Results: significant in all four families but sign-mixed (Appendix~\ref{app:heterogeneity}).}
+\label{fig:prompt-clock-framing}
+\end{figure}
+
+\subsection{Dimension C: reasoning scaffolds}\label{app:prompts-scaffold}
+
+\paragraph{C1 --- Payoff Tree (auction).} Presents the explicit decision tree of outcomes (old labels \path{axis2_forward_tree} and \path{axis1_contingent_tree}; final ID \emph{Payoff Tree}; classified C1 contingent reasoning---see Section~\ref{app:prompts-inventory}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+**Decision Tree:**
+Consider your decision as follows:
+
+You choose bid B. Then one of two things happens:
+
+  PATH A: Your bid B > all other bids
+    -> You WIN
+    -> You pay: second-highest bid (call it P)
+    -> Your profit: (Your Value) - P
+    -> Note: P < B, so if Value >= B, then profit >= 0
+
+  PATH B: Your bid B <= some other bid
+    -> You LOSE
+    -> You pay: $0
+    -> Your profit: $0
+
+Key insight: In PATH A, you pay P (not B). So bidding higher
+than your value only matters if it changes whether you're in
+PATH A vs PATH B.
+\end{lstlisting}
+\caption{Payoff Tree scaffold for SPSB (Family C1). Non-ASCII arrows in the repo template are transliterated as \texttt{->}.}
+\label{fig:prompt-tree-auction}
+\end{figure}
+
+\paragraph{C1 --- Payoff Tree (DA, external robustness).} The DA analogue (\texttt{axis1\_da\_tree}) replaces the algorithm description with a tree view:
+
+\begin{figure}[H]
+\begin{lstlisting}
+HOW THE MATCHING WORKS (Decision Tree View):
+Think of DA as a tree of possibilities:
+- ROOT: You propose to your 1st choice
+  - If ACCEPTED: You're matched to that school
+  - If REJECTED: You propose to your 2nd choice
+    - If ACCEPTED: You're matched to that school
+    - If REJECTED: You propose to your 3rd choice
+      - And so on...
+
+At each branch, acceptance/rejection depends on the school's
+priorities and who else proposed there.
+\end{lstlisting}
+\caption{Payoff Tree scaffold for DA (Family C1). Additional C1 variants in both domains (\emph{Enumerate}, \emph{Dominated}, \emph{Worst-Case}, \emph{Backward-Induction} framings) were run; the auction \emph{Worst-Case} cell enters the trace analysis as a manipulation check (Appendix~\ref{app:traces}) and the rest are not reported (Table~\ref{tab:intervention-inventory}). The \emph{Enumerate} variant, for example, asks: ``What are the possible bids the other players might submit? For each possible bid they might make, what would be your best response?''}
+\label{fig:prompt-tree-da}
+\end{figure}
+
+\paragraph{C3 --- Belief scaffolds.} First- and second-order belief prompts appended to the base rules. In auctions (\texttt{axis3\_beliefs\_firstorder}, \texttt{axis3\_beliefs\_secondorder}):
+
+\begin{figure}[H]
+\begin{lstlisting}
+[First-order]
+The other bidders are rational agents who are also trying to
+maximize their earnings.
+Before bidding, ask yourself: What do I expect the other bidders
+to bid? Given their values are also drawn randomly between $0
+and ${{private}}, and they want to maximize their earnings, how
+do I think they will behave? Does this affect what I should bid?
+
+[Second-order]
+Before bidding, consider the following: What do the other
+bidders think YOU will bid? They know you are rational and
+trying to maximize your earnings. They might try to anticipate
+your strategy. Does their belief about your behavior affect what
+they will do? And does that, in turn, affect what you should do?
+\end{lstlisting}
+\caption{Belief scaffolds for SPSB (Family C3). The DA analogues (\texttt{axis3\_da\_firstorder}, \texttt{axis3\_da\_secondorder}) ask ``What rankings do you think the other students will submit?'' and ``What do you think the other students believe YOU will rank?'' respectively. A \emph{Common Knowledge} variant in each domain (emphasizing common knowledge of rationality) was run but is not reported.}
+\label{fig:prompt-beliefs}
+\end{figure}
+
+\subsection{Family D: preference framings}\label{app:prompts-prospect}
+
+The Family-D battery (results in Appendix~\ref{app:prospect}) replaces or augments the objective framing rather than the mechanism explanation. As one representative, the risk-averse persona (\path{intervention_risk_averse}, identical wording in both domains modulo context):
+
+\begin{figure}[H]
+\begin{lstlisting}
+You are risk-averse. This means that you are the type of person
+that would only pay $4 for a coin toss where you got $0.00 on
+tails and $10.00 on heads (even though the expected value is
+$5.00). You prefer to avoid uncertainty and would rather have a
+guaranteed outcome than take a risky gamble, even if the gamble
+has the same or slightly higher expected value.
+\end{lstlisting}
+\caption{Risk-averse persona (Family D). Risk-neutral and risk-seeking personas change only the coin-toss price (\$5, \$6); the loss-aversion battery (gain/loss/mixed frames, endowment, WTA/WTP) is described in Appendix~\ref{app:prospect-loss}.}
+\label{fig:prompt-risk-persona}
+\end{figure}
+
+\subsection{Intervention inventory and old-to-new mapping}\label{app:prompts-inventory}
+
+The prompt templates accumulated across two experimental programs and several repo versions, and three of the resulting labels are actively misleading. We fix the mapping here once, and Table~\ref{tab:intervention-inventory} applies it to every template in the repo.
+
+\paragraph{Taxonomy corrections (plan reconciliation R7).} (i)~\emph{Payoff Tree} carries the repo filename \path{axis2_forward_tree.txt} (V12) / \path{axis1_contingent_tree.txt} (imported pipeline), but SPSB is a one-shot game with no own future decision points, so there is no forward-planning axis to scaffold; the intervention lays out payoff-relevant \emph{contingencies} and is classified C1. (ii)~\emph{Payoff Safety} (\path{axis2_forward_onestep} / \path{axis1_contingent_onestep}) and \emph{Rejection Safety} (\path{axis2_da_monotonic_safety}) state true properties of the payment/rejection rule without instructing any mode of reasoning; both are descriptions (B2), not scaffolds. (iii)~Clock-framing is a description (B3), not an extensive-form change.
+
+\paragraph{The \texttt{intervention\_proxy\_breitmoser} name collision (plan reconciliation R6).} The single template name \path{intervention_proxy_breitmoser} has been used for two different objects: (a)~in the ES appendix, it labels the \emph{true iterative clock} prompt (per-tick stay/exit queries, Figure~\ref{fig:prompt-clock-iterative}); (b)~in the repo template files (\path{rule_template/V10/}, \path{V12/}, and the imported pipeline's \path{rule_template/auctions/}), it is the \emph{two-stage sealed-bid clock-framing description} (Figure~\ref{fig:prompt-clock-framing}). We split the ID: \path{osp_clock_iterative} (Dimension~A) vs.\ \path{desc_clock_framing} (Family B3). Our audit of the imported pipeline supports the split as follows: the logs stored under each model's \path{intervention_proxy_breitmoser/} directory in \path{experiment_logs/} record exactly one sealed bid per bidder per auction (no tick-by-tick decisions), i.e., they are \path{desc_clock_framing} runs; whereas the clock column of the OSP comparison (Figure~\ref{fig:osp-comparison}) reproduces numerically from the pipeline's \path{ascending_clock_closed} cells, which are true per-tick clock runs (in the APV-described environment---see the provenance flag in Section~\ref{sec:map-extensive}). The audit is settled: the pipeline template behind \path{intervention_proxy_breitmoser} is the \emph{description} variant (\path{desc_clock_framing}), and the OSP clock column is computed from the \path{ascending_clock_closed} cells. With both IDs now reported for all four models (Section~\ref{sec:map-extensive} and Appendix~\ref{app:heterogeneity}), map cells A (true clock) and B3 (clock-framing) are empirically distinguished model by model.
+
+\paragraph{Run-status audit.} Table~\ref{tab:intervention-inventory} records, for every declared template, whether its results are reported in this paper (with the section), were \emph{run but not reported} (logs exist in \path{engineer_simplicity-main/experiment_logs/} or in the git-recovered writeup logs, but the cells do not appear in any exhibit), or were \emph{not run} on the canonical grid. This implements the no-phantom-results rule (plan \S7.8): no template is silently declared.
+
+\paragraph{Comparison-baseline declaration.} Two families of sealed-bid SPSB baselines coexist in the pipeline, and the paper uses them for different purposes (Section~\ref{sec:metrics}): extensive-form comparisons quote the \emph{dedicated} \texttt{spsb} cells (mean deviations $-0.49$/$-1.63$/$-3.28$/$-5.27$ for Claude/Gemini/GPT-4o/Gemma), while description and scaffold contrasts use the \emph{corrected pooled axis} baselines (the \texttt{axis1} and \texttt{axis3} baseline cells only; the legacy \texttt{axis2\_forward\_baseline} template is a two-stage clock-exit \emph{description} and is analyzed as a treatment, Appendix~\ref{app:heterogeneity}). Both baseline sets, and every treatment cell, are recorded with bootstrap confidence intervals in \path{results/merged_ranking/auction_cells.csv}.
+
+\begin{table}[p]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{4.9cm} p{3.3cm} p{1.0cm} p{4.4cm}}
+\toprule
+\textbf{Old label (repo template)} & \textbf{Final taxonomy family} & \textbf{Domain} & \textbf{Reported in paper?} \\
+\midrule
+\multicolumn{4}{l}{\emph{Panel A: Auctions}} \\
+\midrule
+\texttt{private\_second\_price} & Baseline (SPSB, IPV) & Auction & Yes (\S\ref{sec:validation}, \S\ref{sec:map}) \\
+\texttt{affiliated\_spsb}; \texttt{affiliated\_ac}; \texttt{affiliated\_ac\_closed} & Baseline (APV); A (AC); A (AC-B) & Auction & Yes (\S\ref{sec:validation}, \S\ref{sec:map-extensive}) \\
+\texttt{intervention\_proxy\_breitmoser} (ES-appendix usage) $\to$ \texttt{osp\_clock\_iterative} & A (extensive form) & Auction & Yes (\S\ref{sec:map-extensive}); clock column = \texttt{ascending\_clock\_closed} cells (provenance settled; see above) \\
+\texttt{intervention\_proxy\_breitmoser} (repo template) $\to$ \texttt{desc\_clock\_framing} & B3 (clock-framing) & Auction & Yes, all four models (App.~\ref{app:heterogeneity}); significant in all four but sign-mixed---helps three families, harms Gemini---so flagged under the robustness rule \\
+\texttt{intervention\_menu} & B1 (menu restatement) & Auction & Yes, all four models (\S\ref{sec:map-descriptions}); sign-mixed, null on average \\
+\texttt{axis2\_forward\_onestep} = \texttt{axis1\_contingent\_onestep} $\to$ Payoff Safety & B2 (safety-exposing) & Auction & Yes (\S\ref{sec:map-descriptions}) \\
+\texttt{axis2\_forward\_tree} = \texttt{axis1\_contingent\_tree} $\to$ Payoff Tree & C1 (contingent) & Auction & Yes (\S\ref{sec:map-scaffolds}) \\
+\texttt{axis1\_contingent\_\{enumerate, dominated, worstcase\}} & C1 (contingent) & Auction & Run; the \emph{Worst-Case} cell enters the trace analysis as a manipulation check (\S\ref{sec:traces}, App.~\ref{app:traces}); \emph{Enumerate}/\emph{Dominated} not reported \\
+\texttt{axis2\_forward\_backward\_induct} = \texttt{axis1\_contingent\_backward\_induct} & C1 (two-stage framing; no C2 axis exists in a one-shot bid) & Auction & Run; catalogued in App.~\ref{app:heterogeneity}, no map coordinate \\
+\texttt{axis3\_beliefs\_firstorder}; \texttt{axis3\_beliefs\_secondorder} & C3 (beliefs) & Auction & Yes (\S\ref{sec:map-scaffolds}) \\
+\texttt{axis3\_beliefs\_common\_knowledge} & C3 (beliefs) & Auction & Run, not reported \\
+\texttt{axis1\_contingent\_baseline}; \texttt{axis3\_beliefs\_baseline}; \texttt{loss\_aversion\_baseline} & Per-axis baselines (corrected pool) & Auction & Yes, as comparison baselines for description/scaffold contrasts (\S\ref{sec:metrics}) \\
+\texttt{axis2\_forward\_baseline} & Reclassified: two-stage clock-exit description (B3 variant) & Auction & Yes, as a \emph{treatment} (App.~\ref{app:heterogeneity}); excluded from every baseline pool \\
+\texttt{intervention\_risk\_\{averse, neutral, seeking\}} & D (risk personas) & Auction & Yes (App.~\ref{app:prospect}, App.~\ref{app:cardinal}) \\
+\texttt{loss\_aversion\_\{gain\_frame, loss\_frame, mixed\_frame, endowment, WTA\_WTP\}} & D (loss/endowment frames) & Auction & Yes (App.~\ref{app:prospect}, App.~\ref{app:cardinal}) \\
+\texttt{intervention\_NE\_strat\_reveal}; \texttt{intervention\_wrong\_strat\_reveal}; \texttt{intervention\_nash\_deviation} & Excluded: advice (reveals or misstates the strategy; not a simplicity-preserving lever) & Auction & Run, not reported \\
+\texttt{first\_price\_interventions/*}; \texttt{third\_price\_interventions/*} & Out of scope (BNE benchmark, not dominant-strategy; the third-price format is outside this draft) & Auction & Partially run, not reported; the FPSB \emph{baseline} cells enter the validation battery and App.~\ref{app:cardinal} only \\
+\texttt{robust\_*} (currency/language); \texttt{private\_all\_pay*} & Legacy V10 robustness & Auction & Run in earlier drafts, not reported (cut, plan \S7.9) \\
+\bottomrule
+\end{tabular}
+\caption{Intervention inventory (Panel A: auctions): every declared prompt template, its final taxonomy family (Section~\ref{sec:theory}), and its run/reporting status. ``Run, not reported'' means raw logs exist in the imported pipeline (\texttt{Engineering\_simplicity/engineer\_simplicity-main/experiment\_logs/}) or the git-recovered writeup logs, but the cell appears in no exhibit of this paper. Old labels are repo filenames; where the V12 writeup name and the imported-pipeline name differ, both are given with ``=''. Panel B (deferred acceptance, external robustness) continues in Table~\ref{tab:intervention-inventory-da}.}
+\label{tab:intervention-inventory}
+\end{table}
+
+\begin{table}[p]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{p{4.9cm} p{3.3cm} p{1.0cm} p{4.4cm}}
+\toprule
+\textbf{Old label (repo template)} & \textbf{Final taxonomy family} & \textbf{Domain} & \textbf{Reported in paper?} \\
+\midrule
+\multicolumn{4}{l}{\emph{Panel B: Deferred acceptance (external-robustness domain)}} \\
+\midrule
+\texttt{da\_direct\_traditional} & Baseline (direct DA) & DA & Yes (App.~\ref{app:da}) \\
+\texttt{da\_direct\_null} & Baseline variant (no explanation) & DA & Yes (App.~\ref{app:da}); heterogeneous across models \\
+\texttt{da\_direct\_textbook\_sp} & Direct SP statement (reveals the dominant strategy) & DA & Yes, as a diagnostic ceiling (App.~\ref{app:da}): $0.0\%$ error for all four models; excluded from the lever taxonomy \\
+\texttt{da\_direct\_menu\_property}; \texttt{da\_direct\_menu\_mechanics} & B1 (menu restatement) & DA & Yes (App.~\ref{app:da}); property variant improves play, mechanics variant backfires \\
+\texttt{axis2\_da\_monotonic\_safety} $\to$ Rejection Safety & B2 (safety-exposing) & DA & Yes (App.~\ref{app:da}) \\
+\texttt{axis2\_da\_monotonic\_options}; \texttt{axis2\_da\_monotonic\_outcome} & B2 variants & DA & Run, not reported \\
+\texttt{da\_osp\_yesno} (+ \texttt{da\_osp\_choice} node prompt; \texttt{da\_osp\_yesno\_guaranteed}) & A (iterative DA, OSP protocol) & DA & Run, not reported in this draft (the co-equal second-domain material, including the OSP-DA protocol, was moved out of the paper; logs and decision-level accounting in the replication package) \\
+\texttt{axis1\_da\_tree}; \texttt{axis1\_da\_\{enumerate, dominated, worstcase, onestep, backward\_induct\}} & C1 (contingent) & DA & Run, not reported (this draft reports the DA description cells only) \\
+\texttt{axis2\_da\_\{0step, 1step, 2step, fullsim\}} & C2 (forward planning) & DA & Run, not reported \\
+\texttt{axis3\_da\_\{firstorder, secondorder, common\_knowledge\}} & C3 (beliefs) & DA & Run, not reported \\
+\texttt{intervention\_risk\_\{averse, neutral, seeking\}} (DA) & D (risk personas) & DA & Yes (App.~\ref{app:prospect}) \\
+\texttt{loss\_aversion\_*} (DA) & D (loss/endowment frames) & DA & Yes (App.~\ref{app:prospect}) \\
+\texttt{da\_cardinal} variants (pipeline) & Environment variant (cardinal payoffs) & DA & Robustness note in App.~\ref{app:da} (incomplete grid; cell-level record in \texttt{da\_cells.csv}) \\
+\bottomrule
+\end{tabular}
+\caption{Intervention inventory, continued (Panel B: deferred acceptance, the external-robustness domain of Appendix~\ref{app:da}). Conventions as in Table~\ref{tab:intervention-inventory}.}
+\label{tab:intervention-inventory-da}
+\end{table}

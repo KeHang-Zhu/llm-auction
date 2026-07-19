@@ -1,0 +1,248 @@
+% ---------------------------------------------------------------------------
+% Appendix: Reasoning-trace analysis, details (v3 adaptation).
+% Changes from v2: (i) the full numerical dissociation table
+% (tab:trace-dissociation) MOVES HERE from the main text, replaced there by
+% the two-panel flow chart (fig:trace-flow) per the revision directive;
+% (ii) TPSB column/numbers removed from the mechanism-prevalence exhibit
+% (the format is out of scope; full cross-format tables remain in
+% results/traces/); (iii) refs retargeted to v3 labels.
+% Sources: analysis/build_trace_features.py outputs in results/traces/ —
+% trace_features.csv (21,990 traces), ols_results.txt,
+% feature_prevalence_model_family.csv, feature_prevalence_mechanism_gpt4o.csv,
+% traces_summary.md. Bootstrap/OLS seed: numpy 1299.
+% ---------------------------------------------------------------------------
+\section{Reasoning-Trace Analysis: Details}\label{app:traces}
+
+Every bid in our experiments is accompanied by a short free-text plan (median 68 words) in which the agent explains its choice. This appendix documents the measurement apparatus behind the trace results of Section~\ref{sec:traces}: the corpus, the keyword dictionary underlying the theory-aligned coding framework (Table~\ref{tab:trace-coding}), full prevalence tables, the pooled regression with its honestly modest explanatory power, the complete numerical dissociation table summarized by Figure~\ref{fig:trace-flow}, the mediation detail, and robustness to duplicate traces. Throughout, the plans are stated strategies, not full chains of thought; models may compute more (or less) than they verbalize, so every claim here concerns what models \emph{say}, validated against what they \emph{do}.
+
+\subsection{Corpus and Feature Dictionary}\label{app:traces-dictionary}
+
+The corpus contains 21{,}990 traces from three sources: (i)~13{,}416 traces from the harmonized four-model grid (92 run directories covering the sealed-bid SPSB baseline and intervention cells plus the closed clock); (ii)~1{,}167 traces from the menu-restatement (B1) and clock-framing (B3) cells, all four models; and (iii)~7{,}407 recovered GPT-4o traces from the first-price and third-price variants of the same grid, of which the first-price cells provide the cross-mechanism contrast used in this paper (the third-price cells remain in the corpus and the replication files but are outside the paper's scope). Duplicate second-price cells present in both (i) and (iii) were excluded from (iii) to prevent double counting. Each trace row carries its run directory as a cluster identifier; all standard errors below are cluster-robust at the run level. Ascending-clock traces (510 rows) are per-decision exit rationales, structurally different from sealed-bid plans; they are retained in the corpus but excluded from the pooled regressions. \TODO{Score the clock traces with the frozen dictionary for the quantitative left-panel entry of Figure~\ref{fig:trace-flow} (E-v3-6).}
+
+We score each trace with eighteen binary keyword features (Table~\ref{tab:trace-dictionary}), applied as transparent regular expressions (full patterns in \path{analysis/build_trace_features.py}); Section~\ref{sec:traces-coding} maps the features onto the theory's cognitive categories. The features were tuned on the language models actually produce: an initial dictionary keyed to the theory's vocabulary (``no risk,'' ``can't lose'') turned out to be essentially absent from real traces---the \texttt{safety\_recognition} feature, which detects an echo of the Payoff Safety invariant, fires on 3 of 21{,}990 traces---so the safety/risk group was re-anchored on the words models use (``overpay,'' ``profit margin,'' ``buffer,'' ``zero profit''). The dictionary does no negation handling by design: \texttt{overpay\_concern} counts ``avoid overpaying'' as overpayment rhetoric either way, which is the intended reading.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{p{0.30\linewidth}p{0.34\linewidth}p{0.28\linewidth}}
+\toprule
+Coding question (theory category) & Dictionary features & Baseline SPSB prevalence \\
+\midrule
+Does the plan correctly state the allocation and payment rules? & \texttt{payment\_rule\_correct}; \texttt{second\_price\_mention}; \texttt{first\_price\_mention} (confusion) & correct rehearsal 3.8\%; Claude mislabels the mechanism ``first-price'' in 10\% of its plans \\
+\addlinespace
+Does it recognize why truthful bidding is safe? & \texttt{dominance\_language}; \texttt{safety\_recognition}; \texttt{truthful\_intent} & dominance 2.1\%; the safety invariant is echoed in 3 of 21{,}990 plans corpus-wide \\
+\addlinespace
+Does it compare the payoff contingencies (win/lose cases)? & \texttt{worst\_case}; \texttt{expected\_value\_reasoning}; \texttt{zero\_profit\_fallacy} (a win-case error) & worst-case 4.2\%; zero-profit fallacy up to 2.6\% (GPT-4o) \\
+\addlinespace
+Does it plan forward over own future moves? & --- (no axis in a one-shot bid; clock plans are per-tick exit rationales) & N/A \\
+\addlinespace
+Does it reason about opponents, though the mechanism makes beliefs irrelevant? & \texttt{opponent\_modeling}; \texttt{probability\_reasoning} & opponent modeling 22\%; probability talk 38\% \\
+\addlinespace
+If safety is not recognized, what fallback heuristic appears? & \texttt{shading\_intent}; \texttt{overbid\_intent}; \texttt{margin\_language}; \texttt{overpay\_concern}; style features & shade-below intent 53\%; overpay worry 55\%; profit-margin talk 31\% \\
+\bottomrule
+\end{tabular}
+\caption{The theory-aligned coding framework: each question from the simplicity framework, the keyword features that operationalize it, and its prevalence in the pooled baseline second-price plans (14{,}073 sealed SPSB traces; per-model and per-mechanism prevalence in Tables~\ref{tab:trace-prevalence-models} and~\ref{tab:trace-prevalence-mechanisms} below). Features are transparent regular expressions; the dictionary was re-anchored on the vocabulary models actually produce (``overpay,'' ``margin,'' ``buffer'') after theory-native phrasings (``no risk'') proved essentially absent.}
+\label{tab:trace-coding}
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llp{8.2cm}}
+\toprule
+Group & Feature & Fires when the plan\ldots \\
+\midrule
+Normative & \texttt{dominance\_language} & invokes dominance (``dominant strategy,'' ``regardless of others'') \\
+recognition & \texttt{truthful\_intent} & states an intent to bid exactly one's value \\
+& \texttt{payment\_rule\_correct} & correctly rehearses that the winner pays the second-highest bid \\
+& \texttt{second\_price\_mention} & name-drops ``second-highest''/``second price'' (weak rule mention) \\
+& \texttt{first\_price\_mention} & calls the auction ``first-price'' (mechanism confusion) \\
+\addlinespace
+Opponents \& & \texttt{opponent\_modeling} & speculates about other bidders' values or bids \\
+beliefs & \texttt{probability\_reasoning} & uses chance/likelihood language \\
+& \texttt{expected\_value\_reasoning} & computes or invokes expected value \\
+\addlinespace
+Stated intent & \texttt{shading\_intent} & states an intent to bid \emph{below} value (value-anchored) \\
+& \texttt{overbid\_intent} & states an intent to bid \emph{above} value (value-anchored) \\
+\addlinespace
+Safety / risk & \texttt{worst\_case} & reasons about the worst case \\
+rhetoric & \texttt{safety\_recognition} & echoes the B2 invariant (``bid determines if you win, not what you pay'') \\
+& \texttt{overpay\_concern} & worries about overpaying \\
+& \texttt{zero\_profit\_fallacy} & argues that bidding one's value yields zero profit \\
+& \texttt{margin\_language} & invokes a profit margin or buffer \\
+\addlinespace
+Style & \texttt{conservative\_language} & self-describes as cautious/conservative \\
+& \texttt{aggressive\_language} & self-describes as aggressive/competitive \\
+& \texttt{risk\_language} & uses risk vocabulary \\
+\bottomrule
+\end{tabular}
+\caption{The trace feature dictionary: eighteen binary keyword features in five groups (mapped to the theory's coding questions in Table~\ref{tab:trace-coding}). Exact regular expressions and per-cell prevalence are in the replication package (\texttt{analysis/build\_trace\_features.py}; \texttt{results/traces/trace\_features.csv}).}
+\label{tab:trace-dictionary}
+\end{table}
+
+\subsection{Prevalence: Model Fingerprints and Mechanism Insensitivity}\label{app:traces-prevalence}
+
+Table~\ref{tab:trace-prevalence-models} reports feature prevalence in the baseline SPSB cells by model; Table~\ref{tab:trace-prevalence-mechanisms} reports prevalence by sealed-bid mechanism for GPT-4o. Pooling all 14{,}073 sealed second-price traces, the modal story a model tells itself is textbook \emph{first-price} logic applied to a second-price auction: 53\% state an intent to shade below value, 55\% worry about overpaying, and 31\% invoke a profit margin, while dominance language appears in 2.1\% of traces, correct payment-rule rehearsal in 3.8\%, and stated truthful intent in 6.8\%.
+
+Each model has a recognizable fingerprint (pooled sealed second-price cells). Gemini is a near-pure shader (\texttt{shading\_intent} 86\%, \texttt{overbid\_intent} 4.5\%). Claude is the only model that explicitly mislabels the mechanism ``first-price'' (10.0\% of its traces versus at most 0.1\% elsewhere) and has both the most stated overbidding (30\%) and the most stated truthful intent (12.6\%)---the noisiest stated strategy. Gemma produces the least value-anchored language (\texttt{shading\_intent} 10.6\%) but the most opponent modeling (49\%), conservative self-description (75\%), and overpayment concern (83\%); its vague, unanchored plans coincide with the largest bid errors. GPT-4o shades in 67.5\% of traces and has the highest rate of the zero-profit fallacy (2.6\%: ``bidding my value risks zero profit'').
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcccc}
+\toprule
+Feature (\% of traces) & Claude & Gemini & GPT-4o & Gemma \\
+\midrule
+\texttt{dominance\_language} & 0.0 & 0.7 & 0.0 & 0.0 \\
+\texttt{truthful\_intent} & 8.0 & 2.7 & 2.0 & 0.0 \\
+\texttt{payment\_rule\_correct} & 11.3 & 0.0 & 9.3 & 0.0 \\
+\texttt{second\_price\_mention} & 50.7 & 10.0 & 39.3 & 46.0 \\
+\texttt{first\_price\_mention} & 18.7 & 0.0 & 0.0 & 0.0 \\
+\texttt{opponent\_modeling} & 8.0 & 4.7 & 20.0 & 73.3 \\
+\texttt{probability\_reasoning} & 49.3 & 22.7 & 38.0 & 18.0 \\
+\texttt{expected\_value\_reasoning} & 3.3 & 2.7 & 2.0 & 0.0 \\
+\texttt{shading\_intent} & 54.0 & 88.0 & 61.3 & 4.0 \\
+\texttt{overbid\_intent} & 25.3 & 0.0 & 2.7 & 2.0 \\
+\texttt{worst\_case} & 6.0 & 8.0 & 2.7 & 1.3 \\
+\texttt{safety\_recognition} & 0.0 & 0.0 & 0.0 & 0.0 \\
+\texttt{overpay\_concern} & 59.3 & 22.7 & 45.3 & 89.3 \\
+\texttt{zero\_profit\_fallacy} & 0.0 & 0.0 & 1.3 & 0.0 \\
+\texttt{margin\_language} & 54.7 & 29.3 & 30.7 & 13.3 \\
+\texttt{conservative\_language} & 6.0 & 14.7 & 12.7 & 86.0 \\
+\texttt{aggressive\_language} & 2.7 & 5.3 & 2.0 & 17.3 \\
+\texttt{risk\_language} & 52.0 & 6.7 & 32.7 & 22.7 \\
+\midrule
+Traces & 150 & 150 & 150 & 150 \\
+\bottomrule
+\end{tabular}
+\caption{Feature prevalence in the baseline SPSB cells, by model (percent of traces; Claude 3.5 Haiku, Gemini 2.0 Flash, GPT-4o, Gemma 27B). Prevalence for every model $\times$ lever-family cell is in \texttt{results/traces/feature\_prevalence\_model\_family.csv}; the model fingerprints quoted in the text pool all sealed second-price cells, not only the baselines shown here.}
+\label{tab:trace-prevalence-models}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lcc}
+\toprule
+Feature (\% of traces) & SPSB & FPSB \\
+\midrule
+\texttt{dominance\_language} & 0.1 & 0.2 \\
+\texttt{truthful\_intent} & 2.4 & 2.9 \\
+\texttt{payment\_rule\_correct} & 6.1 & 0.0 \\
+\texttt{second\_price\_mention} & 23.8 & 0.0 \\
+\texttt{first\_price\_mention} & 0.1 & 0.2 \\
+\texttt{opponent\_modeling} & 22.0 & 24.5 \\
+\texttt{probability\_reasoning} & 37.7 & 43.4 \\
+\texttt{expected\_value\_reasoning} & 3.7 & 8.3 \\
+\texttt{shading\_intent} & 67.5 & 66.2 \\
+\texttt{overbid\_intent} & 3.5 & 1.4 \\
+\texttt{worst\_case} & 4.2 & 4.3 \\
+\texttt{safety\_recognition} & 0.0 & 0.0 \\
+\texttt{overpay\_concern} & 49.5 & 32.3 \\
+\texttt{zero\_profit\_fallacy} & 2.6 & 4.7 \\
+\texttt{margin\_language} & 31.1 & 30.2 \\
+\texttt{conservative\_language} & 12.6 & 13.0 \\
+\texttt{aggressive\_language} & 2.4 & 4.0 \\
+\texttt{risk\_language} & 49.2 & 44.7 \\
+\midrule
+Traces & 3{,}600 & 3{,}711 \\
+\bottomrule
+\end{tabular}
+\caption{Feature prevalence by sealed-bid mechanism, GPT-4o, all cells pooled within mechanism (percent of traces; \texttt{results/traces/feature\_prevalence\_mechanism\_gpt4o.csv}; the out-of-scope third-price column of the source file is omitted here). The reasoning script is nearly invariant to the payment rule, although the optimum differs sharply across formats (truthful in SPSB; $\approx\frac{2}{3}v$ in the three-bidder FPSB). The rule-rehearsal rows (\texttt{payment\_rule\_correct}, \texttt{second\_price\_mention}) are mechanically zero outside SPSB, since the phrase they detect describes the second-price rule.}
+\label{tab:trace-prevalence-mechanisms}
+\end{table}
+
+\paragraph{Mechanism-insensitive scripts.} Restricting to GPT-4o's \emph{baseline} cells in each format, shading language appears in 70\% of second-price and 79\% of first-price traces, with mean bid-to-value ratios of $0.88$ and $0.87$ and mean deviations of $-2.78$ and $-3.15$: one script for both payment rules, under-shading where shading is optimal (FPSB) and over-shading where truthfulness is optimal (SPSB). A useful side effect is a validity check on the dictionary itself: \texttt{shading\_intent} prevalence is nearly identical where shading is correct (FPSB, $66.2\%$) and where it is an error (SPSB, $67.5\%$), so the feature measures the stated strategy, not its appropriateness. The cross-mechanism contrast is currently GPT-4o only (the non-SPSB grids were recovered for that model alone); see Section~\ref{app:traces-directions}.
+
+\subsection{Stated Intent, Realized Bids, and the Pooled Regression}\label{app:traces-ols}
+
+The traces are not cheap talk. Among the 7{,}469 sealed second-price traces stating an intent to shade, 97.1\% of realized bids fall below value (mean deviation $-\$1.84$); among the 1{,}797 stating an intent to bid above value, 87.6\% fall above (mean $+\$1.88$); among the 950 stating truthful intent, 77.6\% land within $\pm\$0.50$ of value (mean $|b-v|$ of \$1.03). The largest errors come from the 4{,}541 traces that state no value-anchored intent at all: mean deviation $-\$4.84$, mean absolute deviation \$5.51, with plans anchored on uninformative quantities (``bid slightly above half my value''). In a signed-deviation regression with model and lever-family fixed effects, stated overbid intent shifts the realized deviation by $+\$4.72$ (SE $0.36$) relative to unanchored traces, with shading and truthful intents at $+\$0.99$ and $+\$0.91$; direction of stated intent, not eloquence, is what the bids track.
+
+Table~\ref{tab:trace-ols} reports the pooled feature regression of $|b-v|$ on the full dictionary with model and lever-family fixed effects, over the 14{,}073 sealed second-price traces. Two facts summarize it. First, articulating \emph{any} value-anchored plan---shading, overbidding, or truthful---is associated with \$1.5--\$2.2 smaller absolute deviations than an unanchored plan, and correct payment-rule rehearsal with a further $-\$0.77$; conservative self-description is the one style feature with a robust positive (worse) association ($+\$0.76$). Second, the overall explanatory power is honest but modest: $R^{2} = 0.251$ with features against $0.176$ with fixed effects only, an incremental $R^{2}$ of $\approx 0.075$. Stated reasoning is informative about \emph{how} an agent errs; it is far from a sufficient statistic for the error itself. We present this table as measurement discipline behind the prevalence and dissociation results, not as a headline finding.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{6pt}
+\begin{tabular}{lccc}
+\toprule
+Feature & Coefficient (\$) & Cluster SE & $p$ \\
+\midrule
+\texttt{shading\_intent} & $-2.06$ & $0.24$ & $<0.001$ \\
+\texttt{overbid\_intent} & $-2.18$ & $0.34$ & $<0.001$ \\
+\texttt{truthful\_intent} & $-1.50$ & $0.31$ & $<0.001$ \\
+\texttt{payment\_rule\_correct} & $-0.77$ & $0.23$ & $0.001$ \\
+\texttt{dominance\_language} & $-0.84$ & $0.53$ & $0.118$ \\
+\texttt{zero\_profit\_fallacy} & $-0.82$ & $0.37$ & $0.026$ \\
+\texttt{overpay\_concern} & $-0.29$ & $0.13$ & $0.026$ \\
+\texttt{worst\_case} & $-0.28$ & $0.21$ & $0.179$ \\
+\texttt{second\_price\_mention} & $-0.21$ & $0.21$ & $0.307$ \\
+\texttt{first\_price\_mention} & $-0.14$ & $0.34$ & $0.688$ \\
+\texttt{opponent\_modeling} & $+0.10$ & $0.20$ & $0.619$ \\
+\texttt{probability\_reasoning} & $+0.10$ & $0.10$ & $0.347$ \\
+\texttt{expected\_value\_reasoning} & $+0.11$ & $0.19$ & $0.569$ \\
+\texttt{margin\_language} & $+0.17$ & $0.16$ & $0.277$ \\
+\texttt{conservative\_language} & $+0.76$ & $0.14$ & $<0.001$ \\
+\texttt{aggressive\_language} & $+0.01$ & $0.59$ & $0.980$ \\
+\texttt{risk\_language} & $+0.06$ & $0.14$ & $0.640$ \\
+\texttt{safety\_recognition} & $+8.26$ & $8.24$ & $0.316$ \\
+\bottomrule
+\end{tabular}
+\caption{Pooled OLS of absolute bid deviation $|b-v|$ (in dollars) on the trace features, sealed second-price cells ($n = 14{,}073$), with model and lever-family fixed effects; standard errors cluster-robust by run directory. Intercept \$4.05 (SE $0.50$). $R^{2} = 0.251$; fixed effects only, $0.176$; incremental $R^{2}$ of the text features $\approx 0.075$. The \texttt{safety\_recognition} coefficient is meaningless noise (the feature fires on 3 of 21{,}990 traces) and is retained only for completeness. Full statsmodels output: \texttt{results/traces/ols\_results.txt}.}
+\label{tab:trace-ols}
+\end{table}
+
+\subsection{The Full Dissociation Table}\label{app:traces-dissociation}
+
+Table~\ref{tab:trace-dissociation} is the complete numerical version of the joint-response classification summarized by Figure~\ref{fig:trace-flow} in the main text.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{Stated reasoning} & \multicolumn{2}{c}{Behavior} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Lever (family) & target language & $\Delta$ vs.\ baseline &
+mean $|b-v|$ & baseline \\
+\midrule
+Payoff Safety (B2) & payment-rule rehearsal & $3.9\%\to 2.8\%$ ($p=0.60$) &
+$1.95$ ($p=0.015$) & $3.20$ \\
+Worst-case scaffold (C1) & worst-case rhetoric & $2\%\to 43\%$ ($p=0.007$) &
+$3.07$ ($p=0.81$) & $3.24$ \\
+Payoff Tree (C1) & rule rehearsal & $33.0\%\to 32.7\%$ ($p=0.90$) &
+$1.29$ ($p=0.017$) & $3.20$ \\
+Menu restatement (B1) & --- & --- &
+$3.55$ ($p=0.66$) & $3.20$ \\
+\bottomrule
+\end{tabular}
+\caption{Dissociation between stated reasoning and bidding behavior (pooled over four models, sealed-bid second-price cells; wild-cluster bootstrap $p$-values clustered at the run level, with model-cluster permutation cross-checks and duplicate-trace robustness in \texttt{results/traces/mediation/}). No lever moves both columns: Payoff Safety and the Payoff Tree improve bids without changing what agents say; the worst-case scaffold changes what agents say without improving bids; the menu restatement moves neither. The baseline is the corrected pooled axis baseline (axis-1 and axis-3 cells only; the legacy axis-2 ``baseline'' cell was itself a clock-framed description and is analyzed as a treatment in Appendix~\ref{app:heterogeneity}); under the dedicated-SPSB convention the Payoff Safety contrast is the $-2.67 \to -1.53$ of Section~\ref{sec:map-descriptions}. No language entry is reported for the menu row because the menu prompt replaces the ``second-highest'' vocabulary wholesale, so rule-rehearsal prevalence is zero by construction (prompt echo, not comprehension).}
+\label{tab:trace-dissociation}
+\end{table}
+
+\subsection{Mediation Detail for the Dissociation}\label{app:traces-mediation}
+
+The main text reports a complete dissociation: across every lever tested, stated reasoning and bids never move together---Payoff Safety (B2) and the Payoff Tree (C1) move bids without moving stated reasoning, the worst-case scaffold moves stated reasoning without moving bids, and the menu restatement moves neither. All quantities below are computed against the \emph{corrected} pooled axis baseline (axis-1 and axis-3 cells, $n = 1{,}188$ traces): the legacy axis-2 ``baseline'' cell was itself a two-stage clock-exit description (a treated cell; see Appendix~\ref{app:heterogeneity} and \path{results/merged_ranking/_axis2_baseline_provenance.md}) and is excluded from every baseline pool and analyzed as a treatment. Inference uses wild-cluster bootstrap $p$-values clustered at the run level with model-cluster permutation cross-checks and duplicate-trace robustness; the full pipeline is \path{analysis/build_trace_mediation.py} (seed 1299) with outputs in \path{results/traces/mediation/}.
+
+\paragraph{Payoff Safety: behavior without verbalization.} Treated traces ($n = 600$) improve from a mean deviation of $-2.67$ to $-1.53$ against the dedicated SPSB baseline cell (the published comparison), and from mean $|b-v|$ of $3.20$ to $1.95$ against the corrected pooled axis baseline (wild-cluster $p = 0.015$; model-cluster permutation $p = 0.36$, an honest four-cluster power limit). Yet the first stage of any classical mediation through verbalized understanding is zero: the invariant the description asserts is echoed in 0 of 600 treated traces (\texttt{safety\_recognition} prevalence $0.000$ treated vs.\ $0.000$ control), correct payment-rule rehearsal is flat ($2.8\%$ treated vs.\ $3.9\%$ control, $p = 0.60$), and rule name-dropping is flat ($28.2\%$ vs.\ $33.0\%$, $p = 0.61$). The product-of-coefficients decomposition accordingly bounds the comprehension-mediated share of the effect: point estimate $\approx 0$, $95\%$ upper bound $35.4\%$ on its absolute value (\path{results/traces/mediation/mediation_b2.csv}). The plans keep the same shading rhetoric and simply shrink the shade toward zero. Within the treated group, the minority of traces that do rehearse the payment rule err less (within-treatment gap in $|b-v|$ of $-\$1.40$; cluster-bootstrap 95\% CI $[-2.15, -0.56]$)---a cross-sectional association, not evidence of mediation. One sign flag for the record: in the trace-aligned logs, Claude's Payoff-Safety cell has a mean deviation of $+0.30$ (mild \emph{over}bidding), whereas the ES manuscript reports $-0.30$; the magnitude, and every absolute-deviation quantity used here, is unaffected (Appendix~\ref{app:heterogeneity}).
+
+\paragraph{Worst-case scaffold: verbalization without behavior.} The \texttt{axis1\_contingent\_worstcase} scaffold passes its manipulation check---worst-case language rises from $2.0\%$ in the axis baseline to $43.0\%$ under treatment (wild-cluster $p = 0.007$)---while behavior does not move: mean $|b-v|$ goes from $3.24$ to $3.07$ ($p = 0.81$; signed mean $-2.42$ to $-2.81$).
+
+\paragraph{Payoff Tree and menu.} The Payoff Tree is a second bids-only lever: mean $|b-v|$ falls from $3.20$ to $1.29$ (wild-cluster $p = 0.017$) while payment-rule name-dropping stays exactly at its baseline rate ($33.0\%$ vs.\ $32.7\%$, $p = 0.90$). An earlier draft reported the tree as moving language too ($7.5\% \to 26.7\%$); that contrast was an artifact of the contaminated axis-2 cell, whose clock-exit narrative crowded out rule vocabulary and depressed the apparent baseline rate. The reclassified two-stage clock-exit cell itself passes a manipulation check as a treatment (clock-and-exit language $0\% \to 14.3\%$, $p = 0.002$) with a pooled behavioral null that conceals offsetting model effects (Gemma strongly helped, Gemini strongly harmed; Appendix~\ref{app:heterogeneity}). The menu restatement moves neither bids ($p = 0.66$) nor language, serving as the placebo row---with one measurement caveat: the menu prompt \emph{removes} the ``second-highest'' vocabulary from the rules text, so its $0\%$ rule-rehearsal prevalence is prompt echo by construction, and cross-lever language comparisons involving B1 are not meaningful. Within-lever comparisons (Payoff Safety versus the axis baselines, which share the standard rule text) are unaffected by this confound.
+
+\subsection{Robustness: Duplicates, Clusters, and Measurement Caveats}\label{app:traces-robustness}
+
+\paragraph{Byte-identical duplicates.} Roughly 40\% of sealed-bid traces are byte-identical duplicates within model $\times$ cell $\times$ value draw: at temperature 0.5 the models are near-deterministic conditional on the value, and every duplicate group shares a single value and a single bid. Full-sample standard errors are therefore optimistic, and the effective sample per cell is closer to the number of distinct value draws than to the row count. Re-running the pooled regression on deduplicated data ($n = 8{,}839$) leaves every headline coefficient stable: \texttt{shading\_intent} $-2.06 \to -1.90$, \texttt{overbid\_intent} $-2.18 \to -2.17$, \texttt{truthful\_intent} $-1.50 \to -1.46$, \texttt{payment\_rule\_correct} $-0.77 \to -0.77$, \texttt{conservative\_language} $+0.76 \to +0.72$ (all $p \leq 0.001$); \texttt{overpay\_concern} attenuates to $-0.20$ ($p = 0.10$). Incremental $R^{2}$ is $0.069$ deduplicated versus $0.075$ in the full sample. The stated-intent consistency shares (97.1\%/87.6\%) are computed over traces and are unaffected in sign or approximate magnitude by deduplication.
+
+\paragraph{Cluster counts.} The combined grid provides 92 run-directory clusters, but the menu and clock-framing cells are stored as one flat directory per model $\times$ cell (8 clusters total), so standard errors for the B1/B3 family fixed effects lean on few clusters and should be read accordingly.
+
+\paragraph{Scope.} Keyword features are surface-level measurements of stated plans; the cross-mechanism invariance result is GPT-4o only; and clock traces are excluded from the regressions. None of the trace results are used as causal mediation estimates---the first-stage zero for Payoff Safety is precisely a \emph{failure} of the mediation pathway through verbalized understanding, which is the point.
+
+\subsection{Further Directions}\label{app:traces-directions}
+
+Three extensions would upgrade this apparatus from regexes to a measurement instrument, listed in descending referee-value per unit of effort. First, an \emph{LLM-judge strategy taxonomy}: classify every trace into a small closed set of strategies (truthful-dominance, shading-for-margin, opponent-anchored, mechanism-confused, \ldots), validated against a $\sim$100-trace human-labeled set; this fixes the dictionary's blind spots (negation, paraphrase, and especially the 4{,}541 unanchored traces where the largest errors live) and would sharpen the dissociation into a statement about strategy shares. \TODO{Validate the keyword dictionary against a judged taxonomy on a 100-trace human-labeled set before the ``2\% dominance recognition'' figure is made load-bearing.} Second, \emph{cross-mechanism script invariance for all families}: FPSB cells for Claude, Gemini, and Gemma with the frozen dictionary, turning the GPT-4o-only invariance result into a general claim about model ``house styles.'' Third, the C3 manipulation check and the clock-plan scoring of Figure~\ref{fig:trace-flow} (E-v3-6). \TODO{Co-author decision: which trace extensions to execute for the next draft; inputs and cost estimates in \texttt{results/traces/BRAINSTORM.md}.}

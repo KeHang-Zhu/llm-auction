@@ -1,0 +1,150 @@
+% ---------------------------------------------------------------------------
+% Appendix: Full Specification Tables (NEW in the 2026-07-19 digestibility
+% pass). Per Kehang: the main-text versions of Tables 1-3 and 5 were too
+% dense to digest; the main text now carries compact visuals (fig:design-space,
+% fig:ordinal, the simplified tab:design-map) and prose, while the complete
+% reference tables live here with their original labels, so every existing
+% \ref resolves. No numbers changed in the move.
+% ---------------------------------------------------------------------------
+\section{Full Specification Tables}\label{app:tables}
+
+This appendix collects the complete reference versions of the exhibits that appear in compact visual form in the main text: the ex-ante design map with its predictions and evidence labels (Table~\ref{tab:design-space}; visual version Figure~\ref{fig:design-space}), the master calibration of every environment (Table~\ref{tab:calibration-master}), the fully documented ordinal-validation table (Table~\ref{tab:ordinal}; visual version Figure~\ref{fig:ordinal}), the fully documented validity map (Table~\ref{tab:validity-map-full}; main-text scorecard Table~\ref{tab:validity-map}), and the populated design map with per-family directions, theory tags, and all caveats (Table~\ref{tab:design-map-full}; simplified main-text version Table~\ref{tab:design-map}).
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llp{0.30\linewidth}p{0.22\linewidth}l@{}}
+\toprule
+Cell & Dimension & Ex-ante prediction (theory) & Evidence label & Status \\
+\midrule
+\multicolumn{5}{@{}l}{\emph{Baseline}} \\
+SPSB sealed bid, standard description & --- & deviations from dominant strategy & Human anchor \citep{kagel1993independent} & run \\
+\addlinespace
+\multicolumn{5}{@{}l}{\emph{Dimension 1: implementation (outcome rule fixed)}} \\
+Ascending clock (AC / AC-B) & A & largest improvement (OSP; one-step) \citep{li2017obviously, pycia2023theory} & Human anchor \citep{li2017obviously, breitmoser2022obviousness} & run \\
+2P+X vs.\ AC+X (unfamiliar pair) & A & same OSP gap, familiarity removed & Human anchor \citep{li2017obviously} & pending \\
+\addlinespace
+\multicolumn{5}{@{}l}{\emph{Dimension 2: description (sealed bid fixed)}} \\
+Menu restatement & B1 & weak/none (human behavioral null) & Human anchor \citep{gonczarowski2023strategyproofness} & run \\
+Payoff Safety (invariant stated) & B2 & improvement, approaching OSP & Nearby evidence (matching: \citealp{gonczarowski2024describing, katuscak2024simpler}); auction cell = new prediction & run \\
+Clock-framing & B3 & improvement & Human anchor \citep{breitmoser2022obviousness} & run \\
+\addlinespace
+\multicolumn{5}{@{}l}{\emph{Dimension 3: reasoning support (mechanism and description fixed)}} \\
+Payoff Tree (contingent reasoning) & C1 & improvement (the binding axis) \citep{li2024designing} & New prediction & run \\
+Forward planning & C2 & N/A: no future own moves in a one-shot bid & N/A & --- \\
+First-order beliefs & C3 & inert if dominance internalized; backfire diagnostic of strategizing \citep{borgers2019strategically} & New prediction & run \\
+Second-order beliefs & C3 & as C3 above, more severe & New prediction & run \\
+\addlinespace
+\multicolumn{5}{@{}l}{\emph{Interactions (registered)}} \\
+Clock $\times$ Payoff Safety & A$\times$B2 & substitutes (ceiling: OSP already exposes safety) & New prediction & pending \\
+Payoff Safety $\times$ Payoff Tree & B2$\times$C1 & complements (invariant + case table) & New prediction & pending \\
+Menu $+$ invariance sentence & B1$+$B2 & behaves like B2; contrast with bare menu isolates content & Nearby evidence (matching unbundling, Appendix~\ref{app:da}) & pending \\
+Clock $\times$ belief prompt & A$\times$C3 & inert (OSP immunizes against opponent salience) & New prediction & pending \\
+\bottomrule
+\end{tabular}}
+\caption{The design map, fully specified ex ante (reference version of Figure~\ref{fig:design-space}). Every cell holds the outcome rule (highest bidder wins at the second-highest bid) fixed; dimensions differ in which interface layer they vary. Predictions are derived ex ante from the cited theory; roughly half the map is predicted inert or harmful, which the experiments test. Evidence labels: \emph{Human anchor} = directly comparable human experiment exists; \emph{Nearby evidence} = related but unmatched human evidence; \emph{New prediction} = only LLM evidence (a falsifiable prediction for human subjects); \emph{N/A} = no coherent interpretation. Preference framings (Family D) are payoff-irrelevant bounding cells, reported in Appendix~\ref{app:prospect} and excluded from the map. Verbatim prompt texts: Appendix~\ref{app:prompts}.}
+\label{tab:design-space}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\caption{Master calibration. Canonical parameterization of every environment in the main text; all cells use temperature $T=0.5$ and a one-shot protocol (no feedback across instances). $K$ = repetitions per cell (pinned targets; legacy deviations flagged in the notes). The external-robustness matching environment is specified in Appendix~\ref{app:da}.}
+\label{tab:calibration-master}
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lllllcl@{}}
+\toprule
+Environment & Mechanisms & Value model & Action grid & $N$ & $K$ per cell & Model coverage \\
+\midrule
+Sealed bid, IPV & SPSB (anchor); FPSB (validation) & $v_i \sim \mathrm{Unif}\{0,\dots,49\}$ & bid grid \$0.1 & 3 & 100 / $\ge$50$^{a}$ & panel + tiers$^{b}$ \\
+Sealed bid, APV & SP & $v_i = c+\epsilon_i$;\; $c\sim U[0,29]$, $\epsilon_i\sim U[0,20]$ & bid grid \$0.1 & 3 & $\ge$50 & panel + tiers$^{b}$ \\
+Clock, APV & AC, AC-B & as APV above & tick \$0.5 & 3 & 50$^{c}$ & panel + tiers$^{b}$ \\
+Clock, IPV & AC-B & as IPV above & tick \$0.5 & 3 & 50$^{d}$ & panel$^{d}$ \\
+\bottomrule
+\end{tabular}}
+\par\smallskip
+\begin{minipage}{\textwidth}\footnotesize
+\emph{Notes.} $^{a}$\,$K=100$ for the anchor cell (SPSB-IPV baseline, per model); $K\ge 50$ for lever-grid and robustness cells. \TODO{E8: harmonized baseline re-run pending; some legacy robustness cells ran $K=30$--$40$.}
+$^{b}$\,Panel = GPT-4o (2024-08-06, anchor), Claude 3.5 Haiku (2024-10-22), Gemini 2.0 Flash, Gemma 27B; robustness tiers = Llama-3-8B (capability floor) and the frontier tier gpt-5-mini, gpt-5, Claude Sonnet 5, Gemini 2.5 Flash (full lever grid), Appendix~\ref{app:ablations}.
+$^{c}$\,Some legacy APV clock cells stand at $K=40$ (configs \texttt{repetitions: 40}); top-ups pending in the harmonized re-runs (E2).
+$^{d}$\,Clean IPV clock cells exist for GPT-4o (SMAD $1.5\%$) and Gemma ($1.8\%$, $K=44$ after parse drops); Claude 3.5 Haiku and Gemini 2.0 Flash await native keys (E2).
+\end{minipage}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}p{0.185\linewidth}p{0.24\linewidth}p{0.36\linewidth}p{0.135\linewidth}@{}}
+\toprule
+Comparison (setting) & Human evidence & LLM panel, by family & Ordinal agreement \\
+\midrule
+1. Payment-rule difficulty: FPSB vs.\ SPSB (sealed, IPV) & FPSB much harder: SMAD 24.8\% vs.\ 5.7\% (ratio 4.4) \citep{kagel1993independent} & FPSB harder in all four: GPT-4o 27.6/8.7 (3.2); Claude 24.1/9.7 (2.5); Gemini 27.1/3.0 (9.0); Gemma 24.8/19.9 (1.25, attenuated)$^{a}$ & Yes (4/4) \\
+\addlinespace
+2. Implementation: sealed SPSB vs.\ ascending clock & Clock easier: SP-APV 9.3\% vs.\ AC 3.5\% / AC-B 5.8\% \citep{li2017obviously, breitmoser2022obviousness} & Clock easier in all four: SMAD 9.5--20.7\% $\to$ 1.4--5.2\% (Welch $p<0.001$ in each family; $d$ up to 1.00)$^{b}$ & Yes (4/4) \\
+\addlinespace
+3. Description: menu restatement of SPSB & No meaningful change: MAD \$0.51 $\to$ \$0.55; reconstructed $\rho=-0.07$ $[-0.12,-0.02]$ \citep{gonczarowski2023strategyproofness} & Null on average (no consistent direction): Gemma toward truthful ($+\$2.03$, $p<0.001$); GPT-4o away ($-\$1.16$, Welch $p=0.013$); Claude marginally away ($+\$0.82$); Gemini null ($p=0.56$)$^{c}$ & Yes on average (heterogeneous underneath) \\
+\addlinespace
+4. Description: clock-framing of SPSB & Increases truthful bidding \citep{breitmoser2022obviousness} & Helps three of four: GPT-4o 12.1$\to$6.3, Gemma 26.8$\to$13.8, Claude 8.3$\to$7.2 (SMAD\,\%, each $p<0.001$); Gemini reverses, 5.1$\to$9.5 ($p<0.001$) & Partial (3/4) \\
+\bottomrule
+\end{tabular}}
+\caption{Ordinal validation, fully documented (reference version of Figure~\ref{fig:ordinal}): does the panel recover the direction of every documented human comparison? Human quantities are computed from the moment-matched reconstructions of Section~\ref{sec:reconstruction} anchored to the cited experiments; agreement is assessed on direction and ranking only, never on levels. $^{a}$\,Claude and Gemini fidelity-battery values use the legacy figure normalization ($\mathbb{E}[b^\star]=25$; $\approx 2\%$ smaller than the cell-level $24.5$ normalization); ratios are unaffected (Appendix~\ref{app:ablations}). $^{b}$\,Four-family closed-clock cells against pooled-axis sealed baselines (order: Claude, Gemini, GPT-4o, Gemma = 9.5, 11.7, 11.4, 20.7 $\to$ 1.4, 5.2, 1.9, 1.9). $^{c}$\,Changes in mean deviation against the corrected pooled axis baselines (Section~\ref{sec:metrics}); a two-sided sign test cannot reject a zero median effect ($p=0.73$). Rows 3--4 are design levers, previewed in the validation as anchored rows; the clock-framing row fails the cross-family robustness rule and is analyzed in Appendix~\ref{app:heterogeneity}.}
+\label{tab:ordinal}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{2.55cm} >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}p{2.1cm}}
+\toprule
+\textbf{Phenomenon} & \textbf{Human finding} & \textbf{LLM finding} & \textbf{Verdict} \\
+\midrule
+Cross-mechanism difficulty ranking & FPSB $\gg$ SPSB in SMAD (24.76\% vs.\ 5.65\%) & Same ordering in all four families (Figure~\ref{fig:ordinal}); five-format rank concordance $\tau_b = 0.60$, joint 95\% CI $[0.40, 1.00]$, $\tau_b > 0$ in 100\% of draws; ratio attenuated for Gemma & Transfers ($\checkmark$), 4/4 families \\
+\addlinespace
+Clock/OSP implementation effect & Clock reduces deviations vs.\ sealed SP: 3.54\% (AC), 5.83\% (AC-B) vs.\ 9.31\% & Same direction, larger effect, in all four families ($p<0.001$ each) & Transfers ($\checkmark$), 4/4 families \\
+\addlinespace
+Menu-description null & Menu restatement leaves human bidding essentially unchanged & Null on average (sign test $p=0.73$); sign-mixed at the family level & Transfers on average ($\checkmark$), heterogeneous \\
+\addlinespace
+Deviation \emph{direction} (strategy-proof sealed bid) & Overbidding: 67.2\% of bids above value (92.2\% of deviators) & Underbidding: 74.1\% of bids below value (81.6\% of deviators) & Diverges ($\times$) \\
+\addlinespace
+Deviation \emph{levels} and shape & Continuous, right-skewed bid distributions; little mass exactly at value & Point mass at truthful play (29.2\% within $\pm2\%$; 71.7\% in AC vs.\ 26.8\% for humans); levels uncalibrated & Diverges ($\times$) \\
+\bottomrule
+\end{tabularx}
+\caption{\textbf{Validity map, fully documented} (reference version of the main-text scorecard Table~\ref{tab:validity-map}): which behavioral phenomena transfer from human experimental populations to the LLM panel. Human findings from the cited literature via the reconstructions of Section~\ref{sec:reconstruction}; verdicts are qualitative (transfers = same sign and comparative statics; diverges = opposite sign or uncalibrated levels). The two red cells discipline the whole paper: because directions and levels do not transfer, all screening claims are ordinal and all design-map scores are within-family preservation indices. The difficulty-row concordance statistic is Kendall's $\tau_b$ over the five in-scope formats, with a joint bootstrap propagating both bid-level LLM resampling and the human reconstruction re-draws ($B=2000$, seed 1299; \texttt{results/analysis/difficulty\_concordance.json}).}
+\label{tab:validity-map-full}
+\end{table}
+
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{3.5pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}lll cccc c c l l@{}}
+\toprule
+& & & \multicolumn{4}{c}{Per-family direction$^{a}$} & & & & \\
+\cmidrule(lr){4-7}
+Cell & Dim. & Burden targeted & Cl & Ge & G4 & Gm & $D$ (\$)$^{b}$ & Pooled $\rho$ [95\% CI]$^{c}$ & Evidence & Robust? \\
+\midrule
+Ascending clock (AC-B) & A & contingent reasoning (removed) & $\uparrow$ & $\uparrow$ & $\uparrow$ & $\uparrow$ & $-0.5$ & $+0.97$ [$+0.83, +1.00$] & Human anchor ($\checkmark$ agrees) & \checkmark\ 4/4 \\
+Payoff Safety & B2 & safety recognition & $\uparrow$ & $\uparrow$ & $\uparrow$ & $\uparrow$ & $-1.53$ & $+0.78$ [$+0.39, +1.00$] & Nearby (matching); auction = prediction & \checkmark\ 4/4 \\
+Payoff Tree & C1 & contingent reasoning (supported) & 0 & $\uparrow$ & $\uparrow$ & $\uparrow$ & $-1.13$ & $+0.59$ [$+0.46, +0.68$] & New prediction & \checkmark\ 3/4, 1 null \\
+Clock-framing & B3 & safety recognition (by analogy) & $\uparrow$ & $\downarrow$ & $\uparrow$ & $\uparrow$ & $-1.93^{\dagger}$ & $+0.30$ [$-0.77, +0.52$] & Human anchor (partial, 3/4) & \texttt{flagged} \\
+\midrule
+Baseline (SPSB, standard text) & --- & --- & \multicolumn{4}{c}{---} & $-2.67$ & $0$ & Human anchor (both populations fail) & --- \\
+Menu restatement & B1 & none (restatement placebo) & $\downarrow$ & 0 & $\downarrow$ & $\uparrow$ & $-2.09^{\dagger}$ & $-0.14$ [$-1.00, +0.27$] & Human anchor ($\checkmark$ null on avg.) & inactive$^{d}$ \\
+First-order beliefs & C3 & belief formation (irrelevant axis) & $\downarrow$ & $\downarrow$ & 0 & $\downarrow$ & $-3.04$ & $-0.41$ [$-0.88, -0.04$] & New prediction & \checkmark\ backfire \\
+Second-order beliefs & C3 & belief formation (irrelevant axis) & $\downarrow$ & 0$^{e}$ & $\downarrow$ & $\downarrow$ & $-3.47$ & $-0.35$ [$-1.36, +0.03$] & New prediction & \checkmark\ backfire$^{e}$ \\
+\midrule
+Risk-averse persona (bounding, App.~\ref{app:prospect}) & D & none (preference framing) & $\downarrow$ & $\downarrow$ & $\downarrow$ & $\downarrow$ & $-4.71$ & $-1.82$ [$-5.73, -0.72$] & New prediction & \checkmark\ 4/4 backfire \\
+\midrule
+\multicolumn{11}{@{}l}{\emph{Registered, runs pending (Table~\ref{tab:design-space}): clock$\times$safety (substitutes), safety$\times$tree (complements), menu$+$invariance ($\approx$ B2), clock$\times$beliefs (inert), 2P+X / AC+X.}} \\
+\bottomrule
+\end{tabular}}
+\caption{The design map, populated---full reference version of the simplified main-text Table~\ref{tab:design-map}. Families: Cl = Claude 3.5 Haiku, Ge = Gemini 2.0 Flash, G4 = GPT-4o, Gm = Gemma 27B. $^{a}$\,Direction of the family's change in absolute deviation from dominant-strategy play: $\uparrow$ = toward truthful, $\downarrow$ = away, 0 = null; per-family magnitudes appear in the text of Sections~\ref{sec:map-extensive}--\ref{sec:map-scaffolds}. $^{b}$\,Cross-family mean deviation (bid $-$ value, dollars) under the cell; $^{\dagger}$ = evaluated against the corrected pooled-axis baselines ($-2.55$) rather than the dedicated SPSB cells ($-2.67$). $^{c}$\,Median preservation index over model cells with double-bootstrap 95\% CIs (2{,}000 draws, seed 1299), as computed in the predecessor grid; for levers replicated in the external matching domain the median pools those cells. \TODO{Recompute auction-only pooled $\rho$ medians (E-v3-4).} $^{d}$\,Inactive: null on average (sign test $p = 0.73$) with family-level signs mixed; no consistent direction exists to recommend. $^{e}$\,Gemini's second-order cell is the grid's one small opposite-signed belief cell (see footnote in Section~\ref{sec:map-scaffolds}); classified $\approx 0$ and flagged. Evidence labels follow Table~\ref{tab:design-space}. The risk-averse persona is not a designer lever; it bounds the map from below (Appendix~\ref{app:prospect}).}
+\label{tab:design-map-full}
+\end{table}

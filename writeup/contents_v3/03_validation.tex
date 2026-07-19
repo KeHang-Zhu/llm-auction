@@ -1,0 +1,186 @@
+% ============================================================================
+% 03_validation.tex — auction-v3, Section 3:
+% "Can LLMs Recover Human Ordinal Auction Patterns?"
+% Merges v2's 04_design (testbed, metrics, reconstruction) with v2's
+% 05_validation (results), restructured per the revision directive:
+% Setting / Human benchmark / LLM procedure / Metric / Results, with the
+% compact ordinal-agreement table (tab:ordinal) as the section's exhibit
+% and per-model-family directions everywhere. REMOVED per directive:
+% third-price auction, common-value winner's-curse battery, eBay.
+% The cross-model robustness inclusion rule is stated here (sec:metrics)
+% and binds the whole paper. Labels kept from v2 where content matches:
+% sec:design, sec:metrics, sec:reconstruction, sec:validation,
+% tab:calibration-master, tab:validity-map, fig:smad-comparison, fig:direction.
+% Menu per-model numbers use the CONVENTIONS §3 canon (corrected pooled
+% axis-1/axis-3 baselines) — resolving the v2 cross-file discrepancy in
+% which 06_ranking/05_validation quoted same-batch baselines instead.
+% ============================================================================
+
+\section{Ordinal Validation Against the Human Experimental Record}\label{sec:validation}
+
+This section describes the instrument and validates it. The logic of the validation is fixed by the paper's positioning: we do not ask whether LLM agents bid like people in levels (they do not, and Section~\ref{sec:validation-map} documents exactly how), but whether a panel of LLM bidders recovers the \emph{ordinal} regularities of the human experimental record---which mechanism is behaviorally harder, which design change helps, which leaves behavior unchanged. Each validation exercise therefore has five declared parts: the \emph{setting} (the auction rules and decisions faced by human subjects and LLM bidders), the \emph{human benchmark} (the published comparison), the \emph{LLM procedure} (how model bids were obtained), the \emph{metric} (directional and rank agreement on a common deviation scale), and the \emph{result}, reported family by family. Figure~\ref{fig:ordinal} collects the results in the format the rest of the paper relies on.
+
+\subsection{The Testbed: Environments, Agents, and Protocol}\label{sec:design}
+
+\paragraph{Market instances.}
+The unit of observation is a fully specified, seed-reproducible \emph{market instance}: a draw of bidder values, a mechanism, a description, and a set of LLM agents whose parsed actions mechanically determine the allocation and payments. For each experimental cell we repeat the simulation $K$ times with independent seeds, producing realized values, bids, allocations, prices, profits, and---for every bid---a free-text stated plan (Section~\ref{sec:traces}).
+
+\paragraph{Value environments.}
+Two information structures are used, both with $n=3$ bidders and all parameters fixed in configuration files. \emph{Independent private values} (IPV): $v_i \sim \mathrm{Unif}\{0,1,\dots,49\}$, so the expected truthful bid is $\mathbb{E}[v]=24.5$; this is the baseline environment for the design map. \emph{Affiliated private values} (APV): $v_i = c + \epsilon_i$ with $c \sim \mathrm{Unif}[0,29]$ and $\epsilon_i \sim \mathrm{Unif}[0,20]$; each bidder observes her own realized $v_i$, so dominant strategies are unchanged, and this environment exists for comparability with the human clock experiments run under affiliation \citep{li2017obviously, breitmoser2022obviousness}.
+
+\paragraph{Mechanisms.}
+Sealed-bid auctions restrict bids to a \$0.1 grid; the winner pays the second-highest bid (SPSB, the strategy-proof anchor) or, in the validation battery only, the first-price rule in which the winner pays her own bid (FPSB). FPSB is not strategy-proof---its risk-neutral equilibrium calls for shading, $b^\star(v) = \frac{n-1}{n}v$---and it enters the paper solely as the difficulty contrast of Figure~\ref{fig:ordinal}, not as a cell of the design map.\footnote{The repository additionally contains third-price, common-value, and eBay-style proxy-bidding environments; they are outside this paper's scope, which confines validation to the comparisons the design map needs. The registered +X battery (Figure~\ref{fig:design-space}) will supply the unfamiliar-format robustness check those environments previously motivated. \TODO{Run the 2P+X / AC+X pair (E-v3-1).}} Ascending clock auctions start at price $0$ and rise by $\$0.5$ per tick; at each price every active bidder chooses \emph{stay} or \emph{exit} (irreversible), the last bidder standing wins at the runner-up's exit price, and we distinguish the open clock (AC: dropouts announced) from the closed clock (AC-B: exits private). The clock lever runs in two purpose-labeled cells: an APV cell for human-benchmark comparability, and an IPV cell for identification---under IPV a bidder learns nothing payoff-relevant from others' exits, so any clock improvement must be cognitive rather than informational.\footnote{A provenance audit found that the legacy clock cells pair an affiliated-values \emph{description} with independent draws (the configured common component is zero), so the informational channel was already absent; a dedicated clean IPV cell (IPV description and draws, \$0.5 tick, $K=50$) reproduces the result exactly for the two families re-runnable at the time of writing---SMAD $1.5\%$ (GPT-4o) and $1.8\%$ (Gemma). \TODO{IPV-clock cells for Claude 3.5 Haiku and Gemini 2.0 Flash pending native API keys (E2).}}
+
+\paragraph{The panel.}
+The prespecified panel comprises four widely deployed, non-reasoning model families from three commercial providers and one open-weight family: GPT-4o (2024-08-06), the anchor present in every cell \citep{openai2024gpt4o}; Claude 3.5 Haiku (2024-10-22) \citep{anthropic2024claude}; Gemini 2.0 Flash \citep{google2024gemini}; and Gemma 27B \citep{google2024gemma}. The panel deliberately excludes frontier reasoning models from the main grid: the screening question requires agents capable enough to parse a mechanism yet still subject to the reasoning failures that simple design aims to remedy, and deployed high-volume agent fleets occupy exactly that regime for cost and latency reasons. Both boundaries of the regime are measured rather than assumed: a frontier tier (gpt-5-mini, gpt-5, Claude Sonnet 5, Gemini 2.5 Flash) and a capability floor (Llama-3-8B) are reported as robustness in Appendix~\ref{app:ablations}. All non-reasoning models run at temperature $T=0.5$, the most common convention in LLM-based simulation \citep{horton2023large, Horton2024EDSL}; an ablation over $T \in \{0.1, 1.0\}$ shows modest, non-monotonic effects, so $T=0.5$ is a comparability convention, not a tuning choice (Appendix~\ref{app:ablations}).
+
+\paragraph{Protocol.}
+Each repetition is an independent one-shot market: values are freshly drawn, agents receive no feedback across instances, and each agent is queried in a separate API call. The prompt contains (i) the mechanism's rule explanation (plus the treatment text, when a design lever is active), (ii) the agent's private value, and (iii) a required structured response format---\texttt{<PLAN>} for the stated plan, \texttt{<ACTION>} for the bid or the per-tick stay/exit decision---parsed by a deterministic regex extractor; outcomes are then computed mechanically from the parsed actions. The one-shot design is licensed by a repeated-play ablation with full history feedback, which finds no learning over 15 rounds (FPSB SMAD $0.2523$ in the first five rounds versus $0.2524$ in the last five, $p = 0.997$; SPSB likewise null; Appendix~\ref{app:learning}), so the treatment effects below cannot reflect within-session adaptation. Step-by-step procedures and verbatim prompts appear in Appendices~\ref{app:procedures} and~\ref{app:prompts}; Table~\ref{tab:calibration-master} in Appendix~\ref{app:tables} pins the full per-cell calibration.
+
+
+\subsection{Metrics and the Robustness Rule}\label{sec:metrics}
+
+\paragraph{A unified deviation metric.}
+For an auction format $m$ with benchmark bid function $b^\star_m(\cdot)$---truthful bidding $b^\star(v)=v$ in the strategy-proof formats, the risk-neutral equilibrium $b^\star_{\text{FPSB}}(v)=\frac{n-1}{n}v$ in the first-price validation format---define the absolute bid error $d_m(v) \equiv |b - b^\star_m(v)|$ over \emph{all} submitted bids and normalize by the expected benchmark bid $\mu^\star_m \equiv \mathbb{E}_m[b^\star_m(v)]$. The \emph{scaled mean absolute deviation} is
+\[
+\Delta_m \;\equiv\; 100 \cdot \frac{\mathbb{E}_m\!\left[\,|b - b^\star_m(v)|\,\right]}{\mathbb{E}_m\!\left[b^\star_m(v)\right]},
+\]
+read as a percentage of the expected benchmark bid ($\Delta_m = 10$: bids err by $10\%$ of the expected benchmark on average). SMAD is computable identically for reconstructed humans and for LLM agents, which is what places the two populations on one scale. Alongside SMAD we report the \emph{signed} mean deviation ($\text{bid} - \text{benchmark}$, in dollars) wherever the direction of error matters; the two statistics can disagree about orderings, and we treat such disagreements as findings. We restrict attention to formats whose theoretical prediction is deterministic given the bidder's information, so the benchmark is single-valued.
+
+\paragraph{The preservation index.}
+For a design lever $L$ and model family $f$, let $D(L,f)$ be the mean deviation from dominant-strategy play under $L$ and $D(\text{base},f)$ the same object under the baseline sealed bid. The \emph{preservation index}
+\[
+\rho(L,f) \;\equiv\; 1 - \frac{D(L,f)}{D(\text{base},f)}
+\]
+equals $1$ if the lever restores perfect dominant-strategy play, $0$ if it does nothing, and is negative if it \emph{backfires}. Because $\rho$ is computed within family, every cell of the design map is scored against the behavior it inherits, making the map invariant to cross-family differences in baseline levels---and, crucially for Section~\ref{sec:validation-map}, invariant to the sign of a population's characteristic error, so the same index is meaningful for overbidding humans and underbidding models.
+
+\paragraph{Baseline declaration.}
+Two baseline conventions appear in the auction analysis, and we fix their use once. Cross-format comparisons (sealed bid versus clock) use the dedicated SPSB cells, with per-family mean deviations of $-0.49$ (Claude 3.5 Haiku), $-1.63$ (Gemini 2.0 Flash), $-3.28$ (GPT-4o), and $-5.27$ (Gemma 27B)---cross-family mean $-\$2.67$. Description and scaffold contrasts use the pooled axis baseline cells run in the same grid, with per-family means of $+0.54$, $-1.25$, $-2.94$, and $-6.53$ respectively---cross-family mean $-\$2.55$. The pooled convention reflects a provenance correction made in this draft's predecessor: the legacy ``axis-2 baseline'' cell was itself a treated clock-framing description and is excluded from every baseline pool and analyzed as a treatment (Appendix~\ref{app:heterogeneity}); correcting it \emph{raised} the cross-family concordance of the lever ordering (Kendall's $W$ from $0.43$ to $0.70$), evidence that the contamination had been injecting noise. Both conventions are recorded cell by cell in the replication file (\path{results/merged_ranking/auction_cells.csv}), and no comparison in this paper mixes them.
+
+\paragraph{The cross-model robustness rule.}
+The paper's inclusion criterion is pre-committed and binds every headline claim:
+\begin{quote}
+\emph{A result enters the main text only if its direction is consistent across the four prespecified model families. Results that appear in one family, flip direction across families, or depend on a single idiosyncratic wording are reported in the appendices as model heterogeneity or failure cases, not as design conclusions.}
+\end{quote}
+Accordingly, every main-text result below shows its per-family direction, never only a pooled average, and two cells of the design map (the menu restatement's family-level signs and the clock-framing description) are flagged in the main text and analyzed in Appendix~\ref{app:heterogeneity}.
+
+\paragraph{Statistical standard.}
+Every reported cell carries a bootstrap standard error and 95\% confidence interval (resampling market instances, 2{,}000 replications, seed 1299); every treatment effect is evaluated against its declared baseline with both a Mann--Whitney test and a Welch $t$-test plus Cohen's $d$ (the two tests can disagree when a lever moves dispersion without the mean, and we report both); pooled preservation indices carry double-bootstrap intervals; and observed-zero error rates are reported with rule-of-three upper bounds rather than as perfection.
+
+\subsection{The Human Benchmark Layer}\label{sec:reconstruction}
+
+\paragraph{Moment-matched reconstruction.}
+Because micro-level bid data are rarely available from the classic experiments, we reconstruct human bid distributions by calibrating a mixture model to the aggregate statistics each source reports. Bids are modeled as $b = b^\star_m(v)\cdot r$, where the bid-to-benchmark ratio $r$ follows a three-component mixture that maps directly onto how experimental papers categorize behavior: with probability $p_{\text{eq}}$, $r \sim \mathcal{N}(1,\sigma^2)$ (equilibrium bidders); with probability $p_{\text{over}}$, $r \sim 1 + \mathrm{Exp}(\lambda)$ (overbidders); with probability $p_{\text{under}}$, $r \sim \mathrm{Unif}(1-\delta, 1)$ (underbidders). Mixture weights are set directly from reported behavioral rates (e.g., \citealp{li2017obviously}: ${\sim}50\%$ dominant-strategy play, ${\sim}40\%$ overbidding); the overbid scale $\lambda$ is calibrated to a secondary moment (a mean bid-to-value ratio, a bid-regression coefficient, or a reported mean absolute deviation); and $\sigma$ is derived from regression fits where reported. Sources: \citet{li2017obviously} and \citet{breitmoser2022obviousness} for SPSB and the clocks under affiliation; \citet{kagel1993independent} for first- and second-price sealed bidding under IPV; \citet{gonczarowski2023strategyproofness} for the menu-description contrast. A quantal-response alternative is rejected on first principles: QRE predicts symmetric deviations around equilibrium, contradicting the well-documented asymmetric overbidding in second-price auctions. Full per-source calibrations are in Appendix~\ref{app:human}.
+
+\paragraph{Epistemic status, enforced.}
+The reconstructions are model-based simulations of published moments, not samples of human behavior, and every use of them is held to a matching standard: \emph{comparisons to reconstructed humans are made at the level of rankings, directions, and comparative statics only; levels and significance tests are reserved for theory benchmarks.} We run no hypothesis tests against reconstructed distributions---such tests would recycle our own calibration choices---and where reconstructed anchors appear in figures, their uncertainty is shown as Monte-Carlo bands obtained by re-drawing the mixture parameters within the ranges the source statistics admit (Appendix~\ref{app:human}). The design map of Section~\ref{sec:map} never conditions on the reconstructions; they enter only here (validation) and in the human-anchor labels of the map.
+
+\subsection{Results: Ordinal Agreement, Family by Family}\label{sec:validation-ordinal}
+
+Figure~\ref{fig:ordinal} is the validation exhibit: one row per comparison with published human evidence, one cell per model family, color coding the direction of each family's response against the human direction (the fully documented table, with sources and per-cell statistics, is Table~\ref{tab:ordinal} in Appendix~\ref{app:tables}). Two rows are design levers (rows 3--4); they are previewed here as validation rows and analyzed as map cells in Section~\ref{sec:map}.
+
+\begin{figure}[t]
+\centering
+% ---------------------------------------------------------------------------
+% fig:ordinal — the ordinal-validation exhibit as a colored agreement matrix
+% (2026-07-19 digestibility pass). Fully documented reference version:
+% tab:ordinal in app:tables. Green = toward truthful play / human ordering
+% preserved; red = away from truthful play; gray = null.
+% ---------------------------------------------------------------------------
+\begin{tikzpicture}
+\matrix (m) [
+  matrix of nodes,
+  row sep=-\pgflinewidth, column sep=-\pgflinewidth,
+  nodes={draw=black!35, anchor=center, font=\scriptsize, align=center,
+         text width=1.85cm, minimum height=0.95cm, inner sep=2pt},
+  column 1/.style={nodes={text width=3.35cm, align=left, fill=white}},
+  column 7/.style={nodes={text width=2.05cm, font=\scriptsize\bfseries}},
+  row 1/.style={nodes={fill=black!10, font=\scriptsize\bfseries, minimum height=0.55cm}},
+]{
+Comparison & Human & Claude & Gemini & GPT-4o & Gemma & Agreement \\
+Payment-rule difficulty: FPSB vs.\ SPSB (SMAD ratio) &
+|[fill=green!14]| 4.4$\times$ harder &
+|[fill=green!14]| 2.5$\times$ &
+|[fill=green!14]| 9.0$\times$ &
+|[fill=green!14]| 3.2$\times$ &
+|[fill=green!7]| 1.25$\times$ {\tiny(atten.)} &
+Yes (4/4) \\
+Implementation: sealed $\to$ clock (SMAD, \%) &
+|[fill=green!14]| 9.3 $\to$ 3.5 &
+|[fill=green!14]| 9.5 $\to$ 1.4 &
+|[fill=green!14]| 11.7 $\to$ 5.2 &
+|[fill=green!14]| 11.4 $\to$ 1.9 &
+|[fill=green!14]| 20.7 $\to$ 1.9 &
+Yes (4/4) \\
+Description: menu restatement ($\Delta$ mean dev., \$) &
+|[fill=black!6]| $\approx$ no change &
+|[fill=red!12]| away (0.8) &
+|[fill=black!6]| null &
+|[fill=red!12]| away (1.2) &
+|[fill=green!14]| toward (2.0) &
+Yes on avg.\ {\tiny(sign-mixed)} \\
+Description: clock-framing (SMAD, \%) &
+|[fill=green!14]| toward truthful &
+|[fill=green!14]| 8.3 $\to$ 7.2 &
+|[fill=red!25]| 5.1 $\to$ 9.5 &
+|[fill=green!14]| 12.1 $\to$ 6.3 &
+|[fill=green!14]| 26.8 $\to$ 13.8 &
+Partial (3/4) \\
+};
+\end{tikzpicture}
+\caption{Ordinal validation at a glance: does the panel recover the direction of every documented human comparison? Rows are the four comparisons with published human evidence; the Human column is computed from the moment-matched reconstructions of Section~\ref{sec:reconstruction} anchored to \citet{kagel1993independent} (row 1), \citet{li2017obviously, breitmoser2022obviousness} (rows 2 and 4), and \citet{gonczarowski2023strategyproofness} (row 3). Cell color codes the direction of the family's change: green $=$ toward truthful play (or human ordering preserved), red $=$ away, gray $=$ null; every family-level shift shown is significant at $p<0.05$ except the cells marked null. Row 2 uses the pooled-axis sealed baselines; row 3 reports changes in mean deviation against the corrected pooled axis baselines (Section~\ref{sec:metrics}), whose average is null (sign test $p=0.73$), matching the human null. Rows 3--4 are design levers previewed as anchored validation rows; the clock-framing row fails the cross-family robustness rule and is analyzed in Appendix~\ref{app:heterogeneity}. The fully documented version, with sources, conventions, and per-cell statistics, is Table~\ref{tab:ordinal} in Appendix~\ref{app:tables}.}
+\label{fig:ordinal}
+\end{figure}
+
+\paragraph{Row 1: the difficulty ordering.}
+\emph{Setting}: sealed-bid IPV auctions differing only in the payment rule---first-price, where equilibrium requires strategic shading, versus second-price, where truth-telling is dominant. \emph{Human benchmark}: reconstructed SMAD of $24.76\%$ (FPSB) versus $5.65\%$ (SPSB), a $4.4\times$ difficulty gap \citep{kagel1993independent}. \emph{LLM procedure}: the same two formats, identical prompts up to the payment-rule paragraph, $K \ge 50$ per cell. \emph{Result}: every family finds first-price harder. GPT-4o mirrors the human gap most closely ($27.55\%$ versus $8.69\%$); Gemma preserves the direction but nearly flattens the ratio ($24.80\%$ versus $19.88\%$), deviating almost as much where truth-telling is dominant as where shading is required. The ordering transfers in all four families; its \emph{magnitude} is family-specific, a fact recorded in the validity map below and detailed in Appendix~\ref{app:ablations}. A rank-concordance statistic extends the row beyond the FPSB/SPSB pair: over the five in-scope formats (FPSB-IPV, SPSB-IPV, SP-APV, AC, AC-B), Kendall's $\tau_b$ between the human and GPT-4o SMAD rankings is $0.60$. The estimate is stable under bid-level resampling of the LLM cells ($B=2000$; $98.7\%$ of draws leave $\tau_b$ at $0.60$) and stays positive in $100\%$ of joint draws that additionally propagate the human reconstruction re-draws of Section~\ref{sec:reconstruction} (joint $95\%$ CI $[0.40, 1.00]$), with FPSB ranked hardest on both sides in every draw. Both discordant pairs in the point estimate involve the closed clock, where GPT-4o's two clock cells sit so close to perfect play (SMAD $0.5$--$0.8\%$) that their ordering is uninformative (\path{analysis/difficulty_concordance.py}).
+
+\paragraph{Row 2: the implementation effect.}
+\emph{Setting}: the same second-price outcome rule as a one-shot sealed bid versus an ascending clock. \emph{Human benchmark}: clock formats roughly halve human deviations (SP-APV $9.31\%$ versus AC $3.54\%$ and AC-B $5.83\%$) \citep{li2017obviously, breitmoser2022obviousness}. \emph{LLM procedure}: per-tick stay/exit elicitation (Appendix~\ref{app:procedures}), with the APV cell carrying human comparability and the IPV cell carrying identification (Section~\ref{sec:design}). \emph{Result}: the clock helps every family, with SMAD falling to $1.4$--$5.2\%$ from sealed baselines of $9.5$--$20.7\%$ ($p<0.001$ in each family), and GPT-4o's APV clock cells ($0.81\%$ AC, $0.47\%$ AC-B) sitting below even the human clock benchmarks. This is the map's calibration row (hypothesis H1), and it passes in the strongest available form. One finer human regularity sits beyond the instrument's resolution, and we record it rather than claim it: humans do slightly better under the open clock than the closed one ($3.54\%$ versus $5.83\%$), while GPT-4o's two clock cells are both so close to perfect ($0.81\%$, $0.47\%$) that their ordering is uninformative---and only one family has both cells.
+
+\paragraph{Rows 3 and 4: description treatments.}
+\emph{Setting}: the sealed-bid SPSB auction with only the rule-explanation text varied. \emph{Human benchmarks}: the menu restatement leaves human bidding essentially unchanged \citep{gonczarowski2023strategyproofness}; the clock-framing description increases human truthful bidding \citep{breitmoser2022obviousness}. \emph{Result}: the menu restatement is null on average in the panel as it is in humans---but the null is an average over genuinely sign-mixed family-level effects (one family improves, two degrade, one is flat), a heterogeneity the single-population human experiments could not have revealed. The clock-framing description agrees with the human direction in three families and reverses in Gemini---the same family that a second clock-framing paraphrase also harms (Appendix~\ref{app:heterogeneity})---so its anchor holds at the majority-of-families level, and under our robustness rule the lever itself is not a main-text design recommendation. Both rows illustrate what the rule is for: the panel's value is not that every cell is clean, but that heterogeneity is detected and flagged rather than averaged away.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figure1_bands.png}
+    \caption{\textbf{Human vs.\ LLM deviation by auction format, with reconstruction-uncertainty bands on the human anchors.} Blue bars: SMAD of reconstructed human bidding from the theoretical benchmark (Section~\ref{sec:reconstruction}). Yellow bars: GPT-4o agents against the same benchmarks ($N=3$ bidders). Black whiskers: 95\% Monte-Carlo reconstruction-uncertainty bands obtained by re-drawing the mixture parameters within the ranges the source statistics admit ($B=2000$; Appendix~\ref{app:human}): $[22.30, 27.25]$ around the FPSB-IPV point $24.76$; $[4.46, 6.79]$ around SPSB-IPV $5.65$; $[6.78, 11.74]$ around SP-APV $9.31$; $[2.00, 5.36]$ around AC $3.54$; $[2.30, 10.11]$ around AC-B $5.83$. The FPSB $\gg$ SPSB ordering and the clock improvement over sealed SP-APV hold in $100\%$ of re-draws (AC-B: $92.6\%$). These are calibration bands, not sampling bands on human behavior; comparisons remain ordinal (Section~\ref{sec:reconstruction}). \TODO{Regenerate this asset restricted to the five formats above: the current PNG carries two common-value panels (starred) from a battery outside this paper's scope (\texttt{scripts/plots/figure1\_bands.py}).}}
+    \label{fig:smad-comparison}
+\end{figure}
+
+\subsection{What Transfers, What Does Not, and Why the Divergence Helps}\label{sec:validation-map}
+
+Ordinal validation would be suspect if it were secretly level-matching in disguise; it is not, and the sharpest evidence is a divergence we declare rather than hide. Table~\ref{tab:validity-map} is the section's accounting: three phenomena transfer from human populations to the panel, and two do not.
+
+\paragraph{The direction of errors reverses.}
+Human bidders in strategy-proof sealed-bid auctions err overwhelmingly \emph{upward}: $67.2\%$ of reconstructed SPSB-IPV bids lie strictly above value---$92.2\%$ among bids that deviate at all---consistent with the classic right-skewed distributions of \citet{kagel1993independent}.\footnote{Direction shares use the repository-canonical convention: the share of all bids strictly above value, with the share among deviating bids in parentheses. Figure~\ref{fig:direction} instead removes a $\pm2\%$ band around the benchmark before classifying; the qualitative reversal is invariant to the convention, but individual shares should not be compared across conventions.} GPT-4o errs \emph{downward}: $74.1\%$ of its baseline SPSB bids fall strictly below value ($81.6\%$ among deviators), with a large point mass at exactly truthful play ($29.2\%$ within $\pm2\%$ of value) that human data lack; the same reversal appears in the APV cell ($64.7\%$ human overbidding versus $92.4\%$ GPT-4o underbidding under the band convention), and in first price both populations overbid relative to equilibrium but the model does so far more often ($85.9\%$ versus $56.5\%$). Levels, dispersion, and distributional shape likewise fail to transfer. These are the validity map's red cells, and they are why every cross-population claim in this paper is ordinal and every design-map score is a within-family ratio.
+
+\paragraph{Opposite failures, common levers.}
+Read against the design results of Section~\ref{sec:map}, the reversal becomes the validation's sharpest identification argument rather than its embarrassment. Two populations fail in \emph{opposite} directions, yet---as Figure~\ref{fig:ordinal} already shows for the anchored rows---they are helped by the \emph{same} levers, in the same order: the clock repairs human overbidding and model underbidding alike, and the menu restatement repairs neither. If deviations were driven by population-specific psychology (a joy of winning pushing humans up; a trained conservatism pulling models down), there would be no reason for the correction structure to be shared. The parsimonious reading is that the binding constraint lives in the strategic problem itself---the difficulty of verifying, from a direct mechanism's description, that truthful play is safe \citep{li2017obviously, oprea2024decisions}---while what fills the gap is population-specific. This is precisely the property a screening instrument needs: the instrument must share the \emph{problem} with human participants, not their idiosyncratic response to it. The reversal also rules out the deflationary explanation of the agreement: a panel that merely reproduced the human experimental literature memorized in training would \emph{overbid} in second-price auctions, and ours does not. The agreement on which levers work is re-derived by a different reasoner failing in a different way---which is why it is informative.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=0.82\linewidth]{figure2_by_auction_type_10pct.png}
+    \caption{\textbf{Directional decomposition of deviations, humans vs.\ GPT-4o.} Share of underbids vs.\ overbids after removing bids within a $\pm2\%$ band of the theoretical benchmark. Humans overbid where GPT-4o underbids in the strategy-proof sealed-bid formats---the declared divergence of Table~\ref{tab:validity-map}. Only the first-price, second-price, and affiliated sealed-bid panels are within this paper's scope. \TODO{Regenerate the asset without the out-of-scope format panels.}}
+    \label{fig:direction}
+\end{figure}
+
+\begin{table}[!htbp]
+\centering
+\small
+\begin{tabular}{@{}l l l@{}}
+\toprule
+Phenomenon & Key statistic & Verdict \\
+\midrule
+Cross-mechanism difficulty ranking & 4/4 families; $\tau_b = 0.60$, joint 95\% CI $[0.40, 1.00]$ & Transfers ($\checkmark$) \\
+Clock/OSP implementation effect & 4/4 families, $p<0.001$ each & Transfers ($\checkmark$) \\
+Menu-description null & null on average (sign test $p=0.73$); family signs mixed & Transfers on avg.\ ($\checkmark$) \\
+Deviation \emph{direction} (SP sealed bid) & humans 67.2\% overbid; GPT-4o 74.1\% underbid & Diverges ($\times$) \\
+Deviation \emph{levels} and shape & LLM point mass at truthful play; levels uncalibrated & Diverges ($\times$) \\
+\bottomrule
+\end{tabular}
+\caption{Validity-map scorecard: which behavioral phenomena transfer from human populations to the LLM panel. The two red rows discipline the whole paper: because directions and levels do not transfer, all screening claims are ordinal and all design-map scores are within-family preservation indices. Full documentation of every row---human sources, per-family findings, and the concordance-bootstrap method---is Table~\ref{tab:validity-map-full} in Appendix~\ref{app:tables}.}
+\label{tab:validity-map}
+\end{table}
+\paragraph{Verdict, and the boundary.}
+The panel recovers the direction of every documented human comparison in our scope, in all four families for the mechanism-level rows and at the pooled level for the description rows, with family-level heterogeneity flagged where it exists. What the panel does not do---match levels, directions of error, or distributional shape---is documented in the scorecard's red rows, and Appendix~\ref{app:cardinal} shows the gap is not closable by tuning: across a 95-cell grid of temperature, persona, framing, and explanation knobs, no single setting achieves cardinal agreement across mechanisms, and the only knob that restores the human direction of error in second-price auctions induces dominated overbidding in first price, where humans almost never overbid. The instrument is ordinal; used as such, it is validated. Section~\ref{sec:map} now puts it to work.

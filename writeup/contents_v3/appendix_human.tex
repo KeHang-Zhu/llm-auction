@@ -1,0 +1,79 @@
+% ---------------------------------------------------------------------------
+% Appendix: Human Data Reconstruction (v3 adaptation of v2 appendix_human).
+% Trimmed per the revision directive: third-price and common-value (winner's
+% curse) reconstruction material removed with the corresponding formats; the
+% TPSB mixture row is dropped from tab:mixture-calibration. The removed
+% calibrations remain in the replication package.
+% ---------------------------------------------------------------------------
+\section{Human Data Reconstruction}\label{app:human}
+
+This appendix records, source by source, how we map the aggregate statistics reported in each human experiment into the unified SMAD metric of Section~\ref{sec:metrics}. The mixture model used to reconstruct bid-level distributions is specified in Section~\ref{sec:reconstruction}; the calibrated parameters for every source--treatment pair appear in Appendix~\ref{app:mixture} below, and the closing paragraph of this appendix states exactly which forms of uncertainty our reconstruction bands do and do not capture.
+
+\paragraph{Li (2017) and Breitmoser--Schweighofer-Kodritsch (2022): SPSB, AC, and AC-B under APV.}
+These papers \citep{li2017obviously,breitmoser2022obviousness} report mean absolute deviation (MAD)\footnote{For clock auctions, since the winner did not submit a final sealed bid, the reported MAD is computed only from bidders who revealed a bid by dropping out (i.e., those who exited the clock), excluding the winner's unobserved terminal willingness-to-pay.}
+from truthful bidding. In \citet{li2017obviously}, the reported deviation is based on a group-level statistic involving the second-highest bid and second-highest value; in \citet{breitmoser2022obviousness}, deviations are computed from submitted bids (often focusing on non-winning bids). In each case we adhere to the source paper's unit of observation, but the SMAD definition conceptually applies to the underlying submitted bids.
+Because the equilibrium optimum under AC and SPSB is truthful bidding $b^\star(v)=v$, we have $d_m=|b-v|$ and thus
+\[
+\Delta_m = 100\cdot \frac{\mathrm{MAD}_m}{\mu_m^\star},
+\qquad
+\mu_m^\star=\mathbb E[v].
+\]
+Here $\mathbb E[v]$ is implied by the experimental value distribution reported by the source paper: $\mathbb E[v]=70$ in \citet{li2017obviously}, and $\mathbb E[v]=65$ in \citet{breitmoser2022obviousness} given their stated common-value and idiosyncratic components.\footnote{When auctions are repeated, we follow the source paper's convention and report post-learning blocks (e.g., dropping the first three rounds and using the next reported block).}
+If the paper reports $\mathrm{SE}(\mathrm{MAD}_m)$ (often using group means as the unit of observation), we propagate it via
+\[
+\mathrm{SE}(\widehat{\Delta}_m)=100\cdot \frac{\mathrm{SE}(\widehat{\mathrm{MAD}}_m)}{\widehat{\mu}_m^\star},
+\quad
+\mathrm{CI}_{95\%}(\Delta_m)=\widehat{\Delta}_m \pm 1.96\,\mathrm{SE}(\widehat{\Delta}_m).
+\]
+
+\paragraph{Kagel and Levin (1993): FPSB and SPSB under IPV.}
+\citet{kagel1993independent} report bid regressions and over-/under-bidding frequencies for fixed bidder counts (e.g., $N\in\{5, 10\}$). We treat each $N$ separately: the regression form $\hat b(x)=\hat\alpha+\hat\beta x$ is fit for a \emph{fixed} number of bidders, and is not pooled across varying $N$.
+Theory gives linear equilibrium bid functions under IPV with $x\sim U[x_{\min},x_{\max}]$:
+$$\begin{aligned}
+b^\star_{\mathrm{FPSB\text{-}IPV}}(x) &= x - \frac{x-x_{\min}}{N} = \frac{N-1}{N}x + \frac{1}{N}x_{\min} \\
+b^\star_{\mathrm{SPSB\text{-}IPV}}(x) &= x
+\end{aligned}$$
+(When $x_{\min}=0$, the FPSB expression reduces to the familiar slope-only formula. The source also reports a third-price treatment; its reconstruction is retained in the replication package but the format is outside this paper's scope.)
+Because only summary moments are reported, we reconstruct the bid distribution via a parametric data-generating process (DGP) consistent with the bid regressions and over-/under-bidding frequencies reported in Table~2 of \citet{kagel1993independent}.
+For each auction series and fixed $N$, we assume $x\sim U[x_{\min},x_{\max}]$ (bounds from the source paper), and generate bids as
+\[
+b = \hat\alpha+\hat\beta x + \varepsilon,\qquad \varepsilon\sim \mathcal N(\mu,\sigma^2),
+\]
+where $(\mu,\sigma)$ are calibrated by moment matching to the reported frequencies (e.g., $\Pr(b>x)$ and $\Pr(b>b^\star(x))$).
+Given the calibrated DGP, we estimate
+\[
+\widehat{\mathrm{MAD}}_m = \mathbb E\!\left[\,|b-b^\star(x)|\,\right],
+\qquad
+\widehat{\mu}_m^\star=\mathbb E[b^\star(x)],
+\qquad
+\widehat{\Delta}_m = 100\cdot \frac{\widehat{\mathrm{MAD}}_m}{\widehat{\mu}_m^\star}.
+\]
+In practice, we run the Monte Carlo procedure 100 times and report the across-run mean $\widehat{\Delta}_m$ as the point estimate; uncertainty is obtained from across-run variability (percentile or normal approximation).
+
+\subsection{Mixture-Model Calibration Details}\label{app:mixture}
+
+Table~\ref{tab:mixture-calibration} reports the calibrated parameters of the three-component mixture model of Section~\ref{sec:reconstruction} for every source--treatment pair used in this paper. The mixture weights $(p_{\text{eq}}, p_{\text{over}}, p_{\text{under}})$ are set directly from the behavioral rates reported in each source; the overbid scale $\lambda$ is calibrated to match the secondary statistic listed in the final column (a mean bid-to-value ratio, a regression fit, or a reported MAD, depending on what the source publishes).
+
+\begin{table}[h]
+\centering
+\small
+\begin{tabular}{llcccc}
+\toprule
+Source & Treatment & $p_{\text{eq}}$ & $p_{\text{over}}$ & $\lambda$ & Calibration Target \\
+\midrule
+Li (2017) & SPSB & 0.50 & 0.40 & 0.219 & Mean ratio = 1.08 \\
+Li (2017) & AC & 0.67 & 0.18 & 0.198 & Mean ratio = 1.02 \\
+Breitmoser (2022) & SPSB & 0.44 & 0.40 & 0.283 & Mean ratio = 1.10 \\
+Breitmoser (2022) & AC & 0.83 & 0.12 & 0.154 & Mean ratio = 1.01 \\
+Kagel-Levin (1993) & FPSB, $n$=5 & 0.75 & 0.12 & 0.100 & $R^2$=0.88 \\
+Kagel-Levin (1993) & SPSB, $n$=5 & 0.27 & 0.67 & 0.153 & $R^2$=0.97 \\
+Gonczarowski et al.\ (2023) & Traditional & 0.37 & 0.41 & 0.450 & MAD = \$0.51 \\
+Gonczarowski et al.\ (2023) & Menu & 0.34 & 0.43 & 0.450 & MAD = \$0.55 \\
+\bottomrule
+\end{tabular}
+\caption{Calibrated mixture model parameters by source and treatment, for the formats within this paper's scope. Mixture weights from reported rates; $\lambda$ calibrated to match the secondary statistic listed; $p_{\text{under}} = 1 - p_{\text{eq}} - p_{\text{over}}$. Calibrations for legacy out-of-scope formats (third-price, common-value) remain in the replication package.}
+\label{tab:mixture-calibration}
+\end{table}
+
+\paragraph{Reconstruction uncertainty.}
+All reconstructed human benchmarks are Monte Carlo objects: for each calibrated DGP we simulate 100 independent replications and report the across-run mean of $\widehat{\Delta}_m$ as the point estimate, with uncertainty summarized by percentile bands (or a normal approximation) across replications. These bands capture simulation noise \emph{conditional on} the calibrated parameters. The reconstruction-uncertainty bands shown on the human anchors of Figure~\ref{fig:smad-comparison} go one step further: they re-draw the mixture parameters $(p_{\text{eq}}, p_{\text{over}}, p_{\text{under}}, \lambda, \sigma, \delta)$ within the ranges the reported source statistics admit ($B = 2000$) and propagate each draw through the full reconstruction, so they reflect calibration uncertainty as well. They still do not capture sampling variation in the underlying human populations, because the source aggregates typically come without standard errors. For this reason, we never run hypothesis tests against reconstructed human distributions anywhere in the paper: comparisons to reconstructed humans are made at the level of rankings, directions, and comparative statics, with levels and formal tests reserved for theory benchmarks. \TODO{Extend the parametric-bootstrap bands to every human anchor that appears in Figure~\ref{fig:ranking} (currently the anchors carry the Monte-Carlo percentile bands only).}

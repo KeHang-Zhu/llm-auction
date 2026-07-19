@@ -1,0 +1,63 @@
+% ---------------------------------------------------------------------------
+% Appendix: External-domain robustness — the menu-content split in deferred
+% acceptance (v3 adaptation). Per the revision directive: labeled explicitly
+% as EXTERNAL ROBUSTNESS, never pooled with the auction cells, never part of
+% the central design map. Refs retargeted to v3 labels. Content otherwise
+% unchanged from v2 appendix_da (which had already been scoped down to the
+% description finding). Sources: results/merged_ranking/da_cells.csv +
+% da_cells_summary.md (market-cluster bootstrap B=2000, numpy seed 1299).
+% ---------------------------------------------------------------------------
+\section{External-Domain Robustness: The Menu-Content Split in Deferred Acceptance}\label{app:da}
+
+Auctions are this paper's domain, and no exhibit in the main text pools any other environment with them. This appendix asks whether the description finding of Section~\ref{sec:map-descriptions}---that what moves behavior is not additional text about the mechanism but text that states the \emph{invariance} making truthful play safe---is specific to auctions, by replicating it in a second, non-auction strategy-proof environment: school choice under student-proposing deferred acceptance (DA). The setup is deliberately minimal. In each instance, four LLM students submit rank-order lists over four schools with unit capacity, under Ergin-acyclic priorities \citep{ergin2002efficient,ashlagi2018stable}; student-proposing DA is strategy-proof for the proposing side \citep{roth1982economics}, so a truthful list is dominant. Preferences are induced by school valuations $v_{i,s} = c_s + \varepsilon_{i,s}$ with $c_s \sim U[40,70]$ and $\varepsilon_{i,s} \sim U[0,20]$; each cell runs 50 market instances; elicitation uses the same prompt-and-parse protocol as the auctions, with \texttt{<REASON>}/\texttt{<DECISION>} tags and a rank-order list as the action. We measure misreporting as the normalized Kendall-$\tau$ distance between the submitted and the true preference ranking---the fraction of the six school pairs ranked in opposite order, the matching analogue of the auction deviation metric (both are unit-free percentages that equal zero exactly at truthful play)---using a tie-robust variant that does not count inversions among schools with exactly tied values ($17\%$ of simulated students draw at least one tie, and permutations of tied schools are artifacts of the deterministic tie-break). Even small $\kappa$ can be consequential: under deferred acceptance, a single misreport can cascade through rejection chains and alter the final matching for $\Theta(n)$ participants \citep{dubins1981machiavelli}. We run the same four model families as the main text. The pooled direct-DA baseline error is $4.2\%$. All numbers below are recomputed from the raw per-instance logs by \path{analysis/build_da_cells.py} (market-cluster percentile bootstrap, $B = 2000$, seed 1299); cross-model figures are unweighted means of per-model means.
+
+\subsection{The Invariance Content Is the Active Ingredient}\label{app:da-descriptions}
+
+The description cells (prompts in Appendix~\ref{app:prompts}) replicate, and sharpen, the auction-domain finding: what moves behavior is not additional text about the mechanism but text that states the invariance making truthful play safe.
+
+\paragraph{Safety-exposing description (B2).} The \emph{Rejection Safety} description states the property that distinguishes DA from the Boston mechanism \citep{abdulkadirouglu2003school}: rejections only redirect, never eliminate---a rejection from a school does not hurt the student's chances at her next-ranked school. It nearly eliminates misreporting, from $4.2\%$ to $0.2\%$ pooled (Claude $5.8\% \to 0.8\%$ $[0.3, 1.7]$; Gemini, GPT-4o, and Gemma all to exactly $0.0\%$).
+
+\paragraph{Menu descriptions (B1) split by content.} \citet{gonczarowski2023strategyproofness} propose describing a strategy-proof mechanism through the \emph{menu} it induces: given others' reports, a student faces a fixed set of obtainable schools, and her report selects from that set. We implement two variants that bracket the informational content of this idea. The \emph{invariance-property} variant states the menu's incentive content explicitly (``your ranking \emph{cannot change} your obtainable set; it only determines which school you receive within it''). The \emph{mechanics} variant restates the same construction procedurally (``Step 1: the mechanism computes your obtainable schools. Step 2: you receive the school you ranked highest among them'') without asserting the invariance. The two variants move behavior in opposite directions:
+\begin{itemize}
+    \item \emph{Menu with the invariance property improves play}, behaving like a safety-exposing description: pooled error falls from $4.2\%$ to $1.8\%$ (Mann--Whitney $p < 10^{-4}$), with large significant gains for the two weak-baseline models (Claude $5.8\% \to 2.1\%$, MW $p = 10^{-4}$; Gemini $7.6\% \to 0.3\%$, $p < 10^{-4}$) and null effects for the models already near truthful (GPT-4o $p = 0.23$; Gemma $p = 0.43$).
+    \item \emph{Menu mechanics alone worsens play}: pooled error rises from $4.2\%$ to $6.9\%$ ($p < 10^{-4}$), driven by GPT-4o ($1.0\% \to 4.2\%$) and especially Gemma ($2.6\% \to 13.7\%$). Restating the outcome computation gives the models material to strategize over without the property that would make strategizing pointless.
+\end{itemize}
+In auctions the menu restatement is null on average and sign-mixed across models (Section~\ref{sec:map-descriptions}; Appendix~\ref{app:heterogeneity}); the DA data explain why: the standard menu text bundles a computation with an invariance, and only the invariance helps. Where the auction cell delivers the bundle and finds nothing, the DA cells unbundle it and find two opposing effects. This is also the evidence base for the registered auction interaction cell \emph{menu $+$ invariance sentence} (Section~\ref{sec:map-interactions}), which carries the map's ``Nearby evidence'' label from exactly this table. The human record, read through the same split, is consistent: property-exposing descriptions improve human understanding and (modestly) behavior in matching mechanisms \citep{gonczarowski2024describing, katuscak2024simpler}, while mechanics-only descriptions of a strategy-proof mechanism have been found to \emph{reduce} truth-telling in the field \citep{guillen2018effectiveness}---the same backfire our mechanics-only cell produces.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llccccc}
+\toprule
+& & \multicolumn{4}{c}{Mean Kendall-$\tau$ error, \% [95\% CI]} & \\
+\cmidrule(lr){3-6}
+Description & Family & Claude & Gemini & GPT-4o & Gemma & Mean \\
+\midrule
+Direct DA (baseline) & --- & 5.8 [4.3, 7.5] & 7.6 [6.1, 9.2] & 1.0 [0.4, 1.7] & 2.6 [1.4, 4.0] & 4.2 \\
+\addlinespace
+Menu, mechanics only & B1 & 6.7 [5.3, 8.2] & 3.1 [2.0, 4.2] & 4.2 [2.9, 5.7] & 13.7 [11.0, 16.7] & 6.9 \\
+Menu, invariance property & B1 & 2.1 [1.3, 3.0] & 0.3 [0.1, 0.7] & 0.3 [0.1, 0.7] & 4.2 [2.6, 6.1] & 1.8 \\
+Rejection Safety & B2 & 0.8 [0.3, 1.7] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.2 \\
+Textbook strategy-proofness & (advice) & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 [0.0, 0.0] & 0.0 \\
+\bottomrule
+\end{tabular}
+\caption{The menu-content split in DA (external-domain robustness): mean normalized Kendall-$\tau$ error in percent, with market-cluster bootstrap $95\%$ confidence intervals ($B = 2000$, seed 1299); ``Mean'' is the unweighted cross-model mean. Models: Claude 3.5 Haiku, Gemini 2.0 Flash, GPT-4o, Gemma 27B. Cells are $50$ markets $\times$ $4$ students (a few cells have $42$--$49$ markets after parse-failure drops), recorded in \texttt{results/merged\_ranking/da\_cells.csv}. A menu description that carries the invariance property improves play like a safety-exposing description; a menu description that restates only the mechanics worsens it. The textbook strategy-proofness cell states the dominant strategy outright and is included only as a diagnostic ceiling (see text). These cells never enter the auction design map.}
+\label{tab:da-descriptions}
+\end{table}
+
+\paragraph{Matching-domain counterparts of the main-text exhibits.}
+For completeness, Figure~\ref{fig:da-counterparts} collects the matching-domain distributions that earlier drafts bundled into the main-text auction figures. The Rejection Safety row is the description cell analyzed above; the remaining rows---the iterative (OSP) elicitation protocol, the DA payoff tree, and the DA belief scaffolds---are external-domain robustness distributions whose directions mirror the auction design map (the OSP protocol and the tree improve truthful reporting; belief prompts degrade it), with cell-level statistics in the replication package (\path{results/merged_ranking/da_cells.csv}). They are shown as distributions only and enter no main-text claim.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.92\textwidth,height=0.88\textheight,keepaspectratio]{v3_da_counterparts.pdf}
+    \caption{External-domain robustness: matching-domain (deferred acceptance) counterparts of the main-text auction exhibits, per model family. Rows: iterative (OSP) elicitation, Rejection Safety (B2), Payoff Tree (C1), first- and second-order beliefs (C3), each against the direct-DA baseline (gray); $x$-axis is the normalized Kendall-$\tau$ distance from the truthful ranking. Directions mirror the auction map: OSP elicitation and invariance-exposing content help; belief prompts hurt. Panel means use the same parse as the per-cell dataset; the headline numbers of Table~\ref{tab:da-descriptions} use its tie-robust variant and differ slightly.}
+    \label{fig:da-counterparts}
+\end{figure}
+
+\paragraph{Diagnostic ceiling: the textbook statement.} A \emph{textbook strategy-proofness} description---a plain statement that submitting one's true ranking is optimal regardless of what others do---produces $0.0\%$ error for \emph{all four} models, marginally below even Rejection Safety ($0.2\%$). This cell reveals the dominant strategy outright and is not a simplicity-preserving lever (it is the matching analogue of the direct advice excluded from our lever space; \citealp{masuda2022net}), but it serves as a useful ceiling: when told the answer, every model complies perfectly, confirming that baseline misreporting reflects a failure to \emph{derive} strategy-proofness rather than an inability to execute a truthful report.
+
+\paragraph{Removing the explanation.} Conversely, a \emph{null} description that states the rules with no explanation of the algorithm shifts play heterogeneously (pooled $4.2\% \to 5.2\%$, MW $p = 0.03$): it worsens Claude ($8.7\%$), GPT-4o ($3.3\%$), and Gemma ($7.0\%$) but \emph{improves} Gemini ($2.1\%$)---description content interacts with model-specific priors rather than acting uniformly, the same lesson as Appendix~\ref{app:heterogeneity}.
+
+\paragraph{Robustness: cardinal presentation.} An earlier variant of the grid presented raw dollar values (``$w = \$72$, $x = \$61$, \ldots'') instead of a sorted preference ordering, forcing the model to derive its own ranking. Baseline errors rise by an order of magnitude ($12$--$24\%$ across models), and the description split replicates: the invariance-property menu again produces the large improvement (Gemini $18.8\% \to 1.2\%$; GPT-4o $11.9\% \to 1.9\%$) while the mechanics variant barely moves the needle. The cardinal variant is incomplete (several cells were not run) and is documented, cell by cell, in \path{results/merged_ranking/da_cells.csv} (\texttt{variant=da\_cardinal}).

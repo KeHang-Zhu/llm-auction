@@ -1,0 +1,268 @@
+% ============================================================================
+% AUCTION-V3: LLM-Based Mechanism-Design Screening (reframe of auction-v2)
+% Master file. Build: pdflatex auction-v3 && bibtex auction-v3
+%                     && pdflatex auction-v3 && pdflatex auction-v3
+% ============================================================================
+% BUILD LOG (v3 restructure pass, 2026-07-19)
+% - REFRAME per the revision directive (PI memo "Reframe the Paper Around
+%   LLM-Based Mechanism-Design Screening"): the paper's single question is
+%   whether an LLM panel recovers robust ORDINAL patterns in human bidding
+%   and whether those signals can SCREEN theory-guided designs. LLM behavior
+%   is the instrument, not the object; cardinal fit is explicitly out of
+%   scope (one scope statement in 06_discussion; full analysis moved to
+%   appendix_cardinal).
+% - STRUCTURE (6 sections, related work DIFFUSED into the intro; no
+%   standalone related-work section):
+%     1 Introduction (human deviations as the design problem; SPSB-vs-clock
+%       example first; research question + two contributions in one
+%       paragraph; NO experiment results in P1; NO DA/third-price mentions)
+%     2 Simplicity Theory and the Design Map (accessible definitions; the
+%       COMPLETE combinatorial map tab:design-space with ex-ante predictions
+%       and evidence labels BEFORE any results; hypotheses explicitly linked
+%       to the simulation method)
+%     3 Can LLMs Recover Human Ordinal Auction Patterns? (testbed + metrics
+%       + reconstruction + the compact ordinal-agreement exhibit tab:ordinal
+%       with per-family directions; validity map; the cross-model robustness
+%       inclusion rule declared in sec:metrics and binding paper-wide)
+%     4 Using LLMs to Populate the Mechanism-Design Map (per-family
+%       directions everywhere; tab:design-map with evidence labels;
+%       interactions registered with ex-ante signs, runs pending E-v3-2;
+%       frontier/DA/family-D as robustness pointers only)
+%     5 What the Traces Say (Li-aligned coding framework tab:trace-coding;
+%       two-panel TikZ flow chart fig:trace-flow REPLACES v2 Table 6 in the
+%       main text; full numerical table moved to app:traces; levers
+%       classified into the four joint-response patterns)
+%     6 Discussion and Conclusion (practitioner box; screening workflow +
+%       cost; robustness/scope incl. the single cardinal scope statement;
+%       limitations; numbered falsifiable predictions P1-P5; ends with the
+%       directive's general conclusion)
+% - CROSS-MODEL ROBUSTNESS RULE: main text admits only direction-consistent
+%   results across the four prespecified families. Flagged to
+%   appendix_heterogeneity (NEW): clock-framing B3 (helps 3/4, Gemini
+%   reverses; two paraphrases), menu family-level signs (sign-mixed AND
+%   baseline-convention-sensitive), axis-2 contamination record, minor flags.
+% - REMOVED FROM THE PAPER per directive: third-price auction (all tables/
+%   prose; note the frontier "constraints migrate" TPSB evidence is cut and
+%   its role reassigned to the pending +X battery), eBay environment
+%   (appendix_ebay deleted; procedures trimmed), winner's-curse/common-value
+%   battery (05 subsection + reconstruction section + table rows). Removed
+%   cells remain in the replication package; appendix tables note this.
+% - ADDED: +X pair (2P+X / AC+X, Li 2017) registered as the unfamiliar-
+%   format probe (pending, E-v3-1); interaction cells A×B2, B2×C1,
+%   B1+invariance, A×C3 registered with predicted signs (pending, E-v3-2);
+%   per-family belief-cell pinning (E-v3-3); auction-only pooled-rho and
+%   sign-test recomputation (E-v3-4); auction-only figure regenerations
+%   (E-v3-5: figure1_bands, figure2, fig1_osp_comparison, ranking_forest);
+%   C3 manipulation check + clock-plan scoring (E-v3-6).
+% - NUMBER RECONCILIATIONS made in this pass (supersede v2 where they
+%   conflict): menu per-family effects quoted from the CONVENTIONS §3 canon
+%   (corrected axis1+axis3 pool: Gemma +2.03 toward, GPT-4o -1.16 away,
+%   Claude +0.82 away, Gemini null) — v2's 05/06 had quoted same-batch
+%   baselines (Gemini improving, Gemma null); both conventions now shown
+%   side by side in app:heterogeneity tab:menu-conventions. Clock-framing
+%   pooled rho fixed to +0.30 [-0.77,+0.52] everywhere (v2 06_ranking line
+%   ~591 carried a stale +0.29 [+0.17,+0.45]). The desc_clock_framing row of
+%   the intervention inventory corrected from "large improvement in every
+%   model" to the canonical sign-mixed result.
+% - DA: external robustness ONLY (appendix_da, retitled); never pooled with
+%   auction cells; design-map rho medians still pool DA cells for dual-domain
+%   levers per the predecessor pipeline — disclosed in tab:design-map notes,
+%   auction-only recomputation is E-v3-4. Adjacent-tier sign tests likewise
+%   footnoted as domain-pooled pending E-v3-4.
+% - TITLE set to "Engineering Simplicity" per Kehang (2026-07-19). Author
+%   list set to Zhu/Shah/Parkes per the same directive; the Horton
+%   conflict-disclosure and NBER sentences are removed from \thanks
+%   accordingly, and the equal-contribution note is retained for Zhu/Shah.
+%   Table of contents added (tocdepth 2). Introduction generalized per
+%   Kehang: broad market-mechanisms opening; auctions positioned as the
+%   demonstration scenario; DA named as the portability domain (supersedes
+%   the earlier memo's "no DA in the intro" instruction).
+% - INTRO RESTRUCTURE (second pass per Kehang, 2026-07-19, following
+%   skills/writeup/skill.md): P1 = broad background (significance +
+%   challenge: simplicity stuck as theory because empirical search is
+%   costly); P2 = the new opportunity (LLM agents) + the ordinal-screening
+%   methodology + research question + headline preview (skill rule 2, give
+%   away the game); "This paper needs one such mechanism..." now OPENS P3;
+%   the standalone "two literatures" paragraphs are deleted and every
+%   citation rehomed where its content appears (horton/aher/park/manning/
+%   fish/chen/tsuchihashi/lu/corrigan in P2; gonczarowski/breitmoser/
+%   katuscak/guillen/masuda at the levers in P5; oprea in P1; duetting/
+%   dutting/wang2024gemnet as a scoping clause in P6). Framing: the paper
+%   establishes ordinal screening as a methodology that turns simplicity
+%   into an engineering problem.
+% - INTRO/THEORY THIRD PASS (Kehang, 2026-07-19, example.pdf style):
+%   (a) intro re-cut into 18 SHORT one-job paragraphs; the main-result
+%   preview is now its OWN paragraph (P5), phrased mechanism-generically,
+%   placed before the scenario paragraph (P6, which opens with "This paper
+%   needs one such mechanism..."); (b) 02_theory §2.1 rewritten GENERAL-
+%   FIRST (types/actions/outcome function g, dominant strategy, SP, and the
+%   estimand D = E[d] with general OSP/simplicity definitions), new §2.2
+%   sec:theory-auction instantiates the SPSB/clock scenario and the
+%   SP-but-not-OSP wedge; subsequent subsections renumbered automatically.
+% - DIGESTIBILITY PASS (Kehang, 2026-07-19, ultracode): (i) Section 3 title
+%   fixed to "Ordinal Validation Against the Human Experimental Record"
+%   ("Ordinal Auction Patterns" was imprecise). (ii) Figures 3/4/6/7 (osp,
+%   safety, tree, beliefs) regenerated AUCTION-ONLY in the ES visual style
+%   (scripts/plots/v3_split_domain_figs.py -> writeup/figures/v3_*_auction
+%   .pdf); their DA halves moved to app:da as one combined 5x4 exhibit
+%   (fig:da-counterparts, v3_da_counterparts.pdf). (iii) Figure 5
+%   (menu+clock-framing) rebuilt in the same ES style AND on the corrected
+%   axis1+axis3 baseline pool (scripts/plots/v3_menu_framing.py ->
+%   v3_menu_framing.pdf; the old figure3_intervention_comparison.png pooled
+%   the contaminated axis-2 cell). (iv) Tables 1/2/3 de-densified: Table 1
+%   (design space) -> TikZ map figure fig:design-space; Table 3 (ordinal
+%   validation) -> TikZ colored agreement matrix fig:ordinal; Table 2
+%   (calibration) folded into 3.1 prose; all three full tables moved
+%   verbatim to the NEW appendix_tables.tex (app:tables, Appendix A) with
+%   their original labels so every \ref resolves. Table 5 (design map)
+%   simplified in place (directions + rho + evidence + robust only); full
+%   version = tab:design-map-full in app:tables. (v) E6-residual TODO
+%   completed: difficulty-ordering rank concordance = Kendall tau-b 0.60,
+%   joint 95% CI [0.40, 1.00] (bid-level LLM bootstrap x human
+%   reconstruction re-draws, B=2000, seed 1299, tau>0 in 100% of draws;
+%   analysis/difficulty_concordance.py, results/analysis/). Remaining
+%   E-v3-5 regenerations: figure1_bands, figure2, ranking_forest.
+% - Compile status at handoff: clean (0 errors); \MISSINGFIG count 0.
+%   \TODO count deliberate — this is a working draft.
+% - Local TeX note: enumitem/bbm/algorithms/algorithmicx/courier installed to
+%   the user tree (~/Library/texmf) via tlmgr usermode (TL2024 historic
+%   repo); tikz/pgf ships with BasicTeX 2024. Bibliography: auction_v2.bib
+%   (unchanged; no new citation keys introduced in v3).
+% ============================================================================
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{times}
+
+\input{math_commands.tex}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{subcaption}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage{natbib}
+\usepackage{geometry}
+\usepackage{url}
+\usepackage{bbm}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{listings}
+\usepackage{tikz}
+\usetikzlibrary{positioning, matrix}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  breaklines=true,
+  columns=fullflexible
+}
+\usepackage{hyperref}
+\setcitestyle{authoryear}
+
+% Float discipline: v3's main text is denser in floats than v2's; without
+% these, a single tall float (e.g., the banded validation figure) jams the
+% queue and every subsequent float drifts past the bibliography.
+\renewcommand{\topfraction}{0.92}
+\renewcommand{\bottomfraction}{0.6}
+\renewcommand{\textfraction}{0.05}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{5}
+
+% Figures live in several places during the draft stage.
+\graphicspath{{figures/}{../Engineering_simplicity/plots/}{../Engineering_simplicity/engineer_simplicity-main/plots/auctions/}{../Engineering_simplicity/engineer_simplicity-main/plots/da/}}
+
+% ---------------------------------------------------------------------------
+% Draft machinery
+% ---------------------------------------------------------------------------
+\newcount\Comments  % 0 suppresses notes-to-selves
+\Comments = 1
+\newcommand{\kibitz}[2]{\ifnum\Comments=1{\color{#1}{#2}}\fi}
+\definecolor{english}{rgb}{0.0, 0.5, 0.0}
+\newcommand{\dcpadd}[1]{\kibitz{english}{#1}}
+\newcommand{\dcp}[1]{\kibitz{teal}{[DCP: #1]}}
+\newcommand{\khz}[1]{\kibitz{red}{[Kehang: #1]}}
+\newcommand{\kerem}[1]{\kibitz{cyan}{[kerem: #1]}}
+\newcommand{\jeff}[1]{\kibitz{brown}{[jeff: #1]}}
+\newcommand{\avs}[1]{\kibitz{purple}{[avs: #1]}}
+% Pending-work flag: anything that awaits registered re-runs (E-v3-*) or
+% the harmonized re-runs inherited from the v2 plan (E2/E6/E8)
+\newcommand{\TODO}[1]{\kibitz{red}{[TODO: #1]}}
+% Placeholder for a referenced figure whose asset is not yet regenerated
+\newcommand{\MISSINGFIG}[1]{\fbox{\parbox{0.9\linewidth}{\centering\vspace{2em}\textcolor{red}{\textbf{FIGURE PENDING:} #1}\vspace{2em}}}}
+
+% Anonymization toggle: \anontrue for conference builds
+\newif\ifanon
+\anonfalse
+
+\title{Engineering Simplicity\ifanon\else\thanks{
+  \footnotesize
+  This research was made possible by a generous grant from Dropbox Inc.\ Thanks to Parker Whitfill and Kobi Gal for their helpful feedback. Author's contact information, code, and data will be available at \url{https://github.com/KeHang-Zhu/llm-auction}. Kehang Zhu and Anand V.\ Shah contributed equally to this work.
+}\fi}
+
+\ifanon
+\author{Anonymous}
+\else
+\author{
+  Kehang Zhu$^{*}$\\
+  Harvard \\
+  \and
+  Anand Shah$^{*}$\\
+  MIT \\
+  \and
+  David C. Parkes \\
+  Harvard \\
+}
+\fi
+\date{
+Initial draft: May 30, 2024 \\
+Current version: \today
+}
+
+\begin{document}
+
+\maketitle
+
+\input{contents_v3/00_abstract}
+
+\newpage
+{\setcounter{tocdepth}{2}\small\tableofcontents}
+\newpage
+
+\input{contents_v3/01_intro}
+\input{contents_v3/02_theory}
+\input{contents_v3/03_validation}
+\input{contents_v3/04_designmap}
+\input{contents_v3/05_traces}
+\input{contents_v3/06_discussion}
+
+\ifanon
+\paragraph{Disclosure.} An AI assistant was used to assist with plotting code, manuscript restructuring, and consistency review; details withheld for anonymous review.
+\else
+\paragraph{Disclosure.} Claude (Anthropic) was used to assist with plotting code, manuscript restructuring, and consistency review.
+\fi
+
+\clearpage
+\bibliographystyle{plainnat}
+\bibliography{auction_v2}
+
+\clearpage
+\appendix
+\input{contents_v3/appendix_tables}
+\input{contents_v3/appendix_human}
+\input{contents_v3/appendix_procedures}
+\input{contents_v3/appendix_learning}
+\input{contents_v3/appendix_ablations}
+\input{contents_v3/appendix_cardinal}
+\input{contents_v3/appendix_heterogeneity}
+\input{contents_v3/appendix_prospect}
+\input{contents_v3/appendix_prompts}
+\input{contents_v3/appendix_traces}
+\input{contents_v3/appendix_da}
+
+\end{document}

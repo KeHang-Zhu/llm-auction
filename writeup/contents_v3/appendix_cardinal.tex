@@ -1,0 +1,54 @@
+% ---------------------------------------------------------------------------
+% Appendix: Cardinal Calibration (moved from v2's Section 7.3 per the
+% revision directive: cardinal agreement is out of scope for the main text;
+% temperature/persona/frame tuning and level-matching failures live here).
+% Third-price columns/rows REMOVED per directive; the grid's out-of-scope
+% cells remain in results/cardinal/. Sources:
+% results/cardinal/{cardinal_grid.csv, cardinal_summary.md}.
+% ---------------------------------------------------------------------------
+\section{Cardinal Calibration: Why No Tuning Makes the Panel Human}\label{app:cardinal}
+
+The main text's claims are ordinal by design, and this appendix documents why that design choice is forced rather than convenient: no tuning of the agents that we searched produces \emph{cardinal} agreement with human bidding across mechanisms. The exercise matters because ``tune the simulator until it matches, then read levels off it'' is an increasingly common proposal for LLM-based behavioral simulation \citep{corrigan2025usefulness}; our grid shows what such a calibration can and cannot buy in the auction domain.
+
+\paragraph{The grid.}
+We search every knob for which we have data: sampling temperature ($T\in\{0.1, 0.5, 1.0\}$; GPT-4o, all formats), risk personas (averse/neutral/seeking; second price for all four families, first price for GPT-4o), prospect-theoretic framings (loss/gain/mixed/endowment/WTA--WTP), and rule explanation on/off---95 mechanism$\times$knob cells in the full grid (some involving formats outside this paper's scope; the replication file \path{results/cardinal/cardinal_grid.csv} records all of them, and this appendix reports the in-scope sealed-bid and clock cells). Distance to the human benchmarks is measured on three axes: \emph{level} (the gap in SMAD), \emph{direction} (the gap in the share of bids above value), and \emph{shape} (Wasserstein-1 distance between scaled deviation distributions and the moment-matched reconstructions). Table~\ref{tab:cardinal} reports the core sealed-bid grid for the anchor model.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Cardinal calibration under tuning knobs (GPT-4o, sealed-bid IPV). Each cell reports SMAD\,\% and the share of bids above value; human targets in the top row. SMAD $=100\cdot\mathbb{E}|b-b^{*}(v)|/24.5$ with each format's own benchmark (FPSB $N{=}3$: $2v/3$; SPSB: $v$). $\dagger$: differs from its own baseline at $p<0.05$ (Welch tests for SMAD, two-proportion tests for shares); baselines are the pooled axis baselines (personas), the loss-aversion baseline (frames), and the $T{=}0.5$ anchor (temperature, explanation).}
+\label{tab:cardinal}
+\begin{tabular}{lcccc}
+\toprule
+& \multicolumn{2}{c}{First price} & \multicolumn{2}{c}{Second price} \\
+Setting & SMAD & over\,\% & SMAD & over\,\% \\
+\midrule
+\emph{Human target} & \emph{24.8} & \emph{0.4} & \emph{5.6} & \emph{67.2} \\
+\midrule
+Untuned anchor ($T{=}0.5$)   & 28.1 & 0.0  & 8.9  & 16.7 \\
+Axis-pooled baseline     & 23.4 & 0.0  & 11.4 & 0.4  \\
+Temperature 0.1          & 28.6 & 0.0  & 15.1$^\dagger$ & 10.2$^\dagger$ \\
+Temperature 1.0          & 25.5 & 0.7  & 13.2$^\dagger$ & 9.8$^\dagger$  \\
+Risk-averse persona      & 15.0$^\dagger$ & 0.0 & 18.3$^\dagger$ & 0.0 \\
+Risk-neutral persona     & 20.9 & 0.0 & 11.0 & 2.7$^\dagger$ \\
+Risk-seeking persona     & 28.0$^\dagger$ & 18.0$^\dagger$ & 10.5 & 45.3$^\dagger$ \\
+WTA--WTP frame           & 23.0 & 0.0  & 7.2$^\dagger$  & 0.0  \\
+Rule explanation off     & 28.1 & 0.0  & 8.7  & 16.0 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Level: the best knob is mechanism-specific.}
+On the level axis alone, cardinal agreement is often achievable---but with a different knob in every format. In FPSB, temperature $1.0$ closes the gap almost exactly (SMAD $25.50$ $[23.49, 27.69]$ against the human $24.76$; untuned anchor $28.11$). In SPSB, the WTA--WTP frame is best ($7.24$ $[6.02, 8.56]$ against $5.65$; $-3.57$ SMAD relative to its own baseline, Welch $p = 0.005$), while both temperature deviations from the anchor make play \emph{worse}. In the affiliated-values sealed-bid format the untuned anchor is already the best available cell ($10.95$ against $9.31$). The clock formats invert the problem: the panel is \emph{too good}---SMAD $0.83$ (AC) and $0.48$ (AC-B) against human targets of $3.54$ and $5.83$---so the only knob that moves the panel toward humans is raising temperature to $1.0$, which works purely by injecting decoding noise into near-perfect play.\footnote{The high-temperature closed-clock cell is small ($8$ non-winner exits); we read the clock rows as suggestive. Both clock formats are unavailable at $T=0.1$ in the grid.}
+
+\paragraph{Direction: one knob moves it, at a price.}
+The direction axis is where the human--LLM reversal of Section~\ref{sec:validation-map} lives, and exactly one knob addresses it. Under the risk-seeking persona, GPT-4o's share of above-value bids in SPSB rises from $0.4\%$ to $45.3\%$ ($p<10^{-4}$) against a human target of $67.2\%$---the direction gap falls from $66.8$ to $21.9$ percentage points---and the second-price \emph{shape} improves as well (Wasserstein-1 from $23.8$ to $14.8$ points). No other knob moves direction: under every temperature, frame, and explanation setting the SPSB overbid share never exceeds $17\%$, and the risk-averse persona drives all overbid shares to zero. But the price is paid in first price, the one format where humans almost never bid above value: the same persona induces dominated bids in $18.0\%$ of FPSB decisions (human: $0.4\%$; $p<10^{-4}$) and raises FPSB SMAD by $4.6$ points ($p = 0.002$). In the direction rankings the risk-seeking persona is first of fifteen settings in SPSB and \emph{last} of fifteen in FPSB---the sharpest possible statement of the trade-off. Matching human overbidding where humans overbid requires a disposition that violates the sharpest regularity humans display where they do not.
+
+\paragraph{Tuning is model-specific.}
+The trade-off does not transfer across model families. The same risk-seeking persona applied to SPSB moves Gemma from $20.7$ to $5.87$ SMAD---against the human $5.65$, the single best cardinal match in the grid---and Gemini from $11.7$ to $4.9$, but leaves GPT-4o essentially unchanged ($11.4$ to $10.5$) and \emph{explodes} Claude from $9.5$ to $35.0$, with $93\%$ of bids above value. A persona calibrated on one family, then deployed on another, can convert mild underbidding into catastrophic overbidding.
+
+\paragraph{The remaining knobs are not dials.}
+Temperature is non-monotone where it matters---SPSB SMAD is $15.1$, $8.9$, and $13.2$ at $T = 0.1$, $0.5$, $1.0$ (both deviations from the anchor significant at $p \le 10^{-4}$)---so it cannot trade off fidelity smoothly; its one clean cardinal use is adding human-like noise to the too-perfect clock formats. Turning the rule explanation on or off has no detectable effect on any axis (level differences of at most $0.16$ SMAD across the sealed formats, all $p \ge 0.53$).\footnote{We phrase this as ``no detectable effect'' rather than as an estimated effect of removing explanation: the manipulation cannot be verified from the archived prompts, and the contrast rests on the run directories' provenance.} The remaining prospect-theoretic frames mostly \emph{hurt} the second-price level relative to their own baseline (Appendix~\ref{app:prospect}).
+
+\paragraph{Verdict.}
+There is no single consistent tuning. The level winner by worst-case rank (the WTA--WTP frame) and the direction winner (the risk-seeking persona) are disjoint, and the direction winner breaks the level and direction axes in first price; no setting in the grid sits in the top half of both the level and the direction rankings across the core mechanisms. Cardinal agreement is therefore achievable only mechanism-by-mechanism, and sometimes only model-by-model---a boundary that is structural rather than an accident of our grid, since the direction axis demands a disposition the first-price format punishes. Two implications carry back to the main text. First, the boundary bounds the proxy use-case: a designer who needs calibrated \emph{levels}---revenue predictions, welfare magnitudes---cannot obtain them from a single tuned synthetic population spanning mechanisms, which is why every cross-population claim in this paper is ordinal. Second, it clarifies what \emph{would} be needed: per-mechanism (and, our grid adds, per-family) calibration against a small human sample from the target environment, in the spirit of \citet{corrigan2025usefulness}---a local correction that cannot be amortized across formats, because the knob that fixes one format's distribution is the knob that breaks another's.

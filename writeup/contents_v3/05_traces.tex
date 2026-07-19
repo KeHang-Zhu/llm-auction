@@ -1,0 +1,115 @@
+% ============================================================================
+% 05_traces.tex — auction-v3, Section 5:
+% "What the Traces Say: Stated Reasoning and Realized Bids"
+% Rewrite of v2's sec:ranking-traces per the revision directive:
+% (i) a unified Li-aligned coding framework (tab:trace-coding) replaces the
+% stand-alone dictionary exercise; (ii) mechanisms analyzed as
+% burden -> stated-error composition -> bids; (iii) levers analyzed as
+% targeted error -> change in error share -> change in bids; (iv) the
+% dissociation table (v2 Table 6) is REPLACED in the main text by a
+% two-panel flow chart (fig:trace-flow, TikZ) and the full numerical
+% table moves to Appendix app:traces (tab:trace-dissociation);
+% (v) levers classified into the four joint-response patterns.
+% TPSB material removed; FPSB script-invariance is GPT-4o-only and lives
+% in the appendix. Numbers: results/traces/* via analysis/build_trace_*.py.
+% ============================================================================
+
+\section{What the Traces Say: Stated Reasoning and Realized Bids}\label{sec:traces}
+
+Every bid in our experiments arrives with a \emph{stated plan}: a short free-text explanation (median 68 words) the agent writes before acting---``I will bid \$28.5, slightly below my value of \$30, to keep a profit margin.'' The plans are stated strategies, not full chains of thought; models may compute more or less than they verbalize. But they are exactly the kind of evidence a practitioner would collect to audit an interface change---ask participants what they are doing and why---so the question of this section is pointed: do the design levers that move \emph{bids} also move what agents \emph{say}, and vice versa? We code all 21{,}990 plans from the sealed-bid and clock cells with a transparent dictionary of eighteen keyword features (exact regular expressions in \path{analysis/build_trace_features.py}; full prevalence tables and regressions in Appendix~\ref{app:traces}), organized here into the cognitive categories of the theory, so that mechanisms and levers can be read against the same rubric.
+
+\subsection{A Theory-Aligned Coding Framework}\label{sec:traces-coding}
+
+The coding framework (Table~\ref{tab:trace-coding}, Appendix~\ref{app:traces}) maps the dictionary onto six questions drawn from the simplicity framework of Section~\ref{sec:theory}: whether the plan understands the rules, whether it recognizes why truthful bidding is safe, whether it compares the payoff contingencies, whether it plans forward (an axis with nothing to bind on in a one-shot bid), whether it engages in belief reasoning the mechanism makes unnecessary, and---when safety goes unrecognized---which fallback heuristic fills the gap.
+
+The baseline prevalences under this rubric already contain the section's first finding. The modal plan in the second-price auction is textbook \emph{first-price} logic applied to a second-price rule: a majority of plans state an intent to shade below value and worry about overpaying, under a third invoke a profit margin, while dominance language appears in $2\%$ of plans and a correct rehearsal of the payment rule in $4\%$. The plans are not cheap talk---among plans stating an intent to shade, $97.1\%$ of realized bids fall below value (mean deviation $-\$1.84$); among plans stating an intent to bid above, $87.6\%$ fall above ($+\$1.88$); and the largest errors come from the $4{,}541$ plans with no value-anchored intent at all (mean deviation $-\$4.84$), whose language anchors on uninformative quantities (``slightly above half my value''). Stated direction almost always matches the realized bid; the failure is in \emph{which plan gets chosen}. A pooled regression of $|b-v|$ on the full dictionary nonetheless explains only a modest share of error variance (incremental $R^2 \approx 0.075$ over model and lever fixed effects; Appendix~\ref{app:traces}): the plans are informative about how an agent errs, far from sufficient for the error itself.
+
+\subsection{Mechanisms: Burden, Stated Errors, and Bids}\label{sec:traces-mechanisms}
+
+Reading mechanisms through the rubric (Figure~\ref{fig:trace-flow}, left panel) connects the theory's burden assignment to both outcomes at once. The \emph{sealed second-price bid} taxes contingent reasoning; its plans show the corresponding failure---the first-price fallback script above, with safety essentially never articulated---and its bids show the corresponding deviation (cross-family mean $-\$2.67$; SMAD $9.5$--$20.7\%$). The \emph{ascending clock} removes that burden, and both records change together: plans reduce to per-tick exit rationales anchored on the running price--value comparison, and bids compress to near-truthful ($\approx -\$0.5$; SMAD $1.4$--$5.2\%$).\footnote{Clock plans (510 per-decision rationales) are structurally different from sealed-bid plans and are excluded from the pooled regressions; their characterization here is qualitative. \TODO{Score the clock plans with the frozen dictionary for a quantitative left-panel entry (E-v3-6).} The companion cross-mechanism fact---GPT-4o deploys a nearly identical shading script in first-price and second-price variants of the same grid (shading language in $79\%$ vs.\ $70\%$ of plans; mean bids $0.87v$ vs.\ $0.88v$), i.e., one script whether shading is optimal or an error---is measured for the anchor model only and is reported in Appendix~\ref{app:traces}.}
+
+\subsection{Levers: Targeted Error, Stated-Error Share, and Bids}\label{sec:traces-levers}
+
+The design levers make the rubric causal (Figure~\ref{fig:trace-flow}, right panel). For each lever we report the cognitive error it targets, whether the share of that stated error moves after treatment, and whether bids move---all against the corrected pooled axis baseline, with wild-cluster bootstrap $p$-values at the run level (full numerical table: Table~\ref{tab:trace-dissociation}, Appendix~\ref{app:traces}).
+
+\emph{Payoff Safety} (B2) targets safety recognition---it hands the agent the invariant. Bids improve substantially (mean $|b-v|$ $3.20 \to 1.95$, $p = 0.015$), yet the stated plans do not budge: the invariant is echoed in \emph{zero} of its 600 treated plans, and correct payment-rule rehearsal is flat ($3.9\% \to 2.8\%$, $p = 0.60$). The plans keep the same shading rhetoric and simply shrink the shade to pennies (``I will bid \$31.9 to avoid overbidding,'' value \$32). \emph{Payoff Tree} (C1) targets contingency construction; it is the second bids-only lever (mean $|b-v|$ $3.20 \to 1.29$, $p = 0.017$; rule-rehearsal exactly flat, $33.0\% \to 32.7\%$, $p = 0.90$).\footnote{An earlier draft reported the tree as also moving rule-rehearsal language; that contrast was an artifact of the contaminated axis-2 baseline cell (Appendix~\ref{app:heterogeneity}), whose clock-exit narrative had crowded out rule vocabulary in the apparent baseline.} A \emph{worst-case} contingency scaffold---a C1 variant that instructs the agent to reason about the worst case rather than laying the cases out---does the opposite: it passes its manipulation check emphatically (worst-case language $2\% \to 43\%$, $p = 0.007$) while bids do not move ($3.24 \to 3.07$, $p = 0.81$). The \emph{menu restatement} (B1) moves neither bids ($3.55$ vs.\ $3.20$, $p = 0.66$) nor language---though its language column carries a measurement caveat: the menu prompt replaces the ``second-highest'' vocabulary wholesale, so its zero rule-rehearsal rate is prompt echo, not comprehension. \emph{Belief prompts} (C3) are the fourth pattern: bids get worse (Section~\ref{sec:map-scaffolds}) while the targeted language presumably rises---their manipulation check is the one cell of the rubric not yet scored. \TODO{Run the opponent-language manipulation check for the C3 cells with the frozen dictionary (E-v3-6).}
+
+\begin{figure}[htbp]
+\centering
+% ---------------------------------------------------------------------------
+% Two-panel flow chart replacing v2's Table 6 (per revision directive).
+% Left: mechanism -> theory burden -> stated-error composition -> bids.
+% Right: lever -> targeted error -> (words moved? / bids moved?) -> pattern.
+% Full numerical version: tab:trace-dissociation in app:traces.
+% ---------------------------------------------------------------------------
+\begin{minipage}[t]{0.40\textwidth}
+\centering
+{\footnotesize\textbf{Panel A: mechanisms}}\\[2pt]
+\begin{tikzpicture}[
+  box/.style={draw, rounded corners=2pt, align=left, font=\scriptsize, inner sep=3pt, text width=0.86\linewidth},
+  hd/.style={font=\scriptsize\itshape, anchor=west},
+  arr/.style={-stealth, thick, gray},
+  node distance=7pt
+]
+\node[box, fill=black!8] (m1) {\textbf{Sealed second-price bid (SPSB)}\\ \emph{burden:} contingent reasoning over unobserved rival bids};
+\node[box, below=of m1] (p1) {\emph{stated plans:} first-price fallback script --- 53\% shade-below intent, 55\% overpay worry, 31\% profit margin; 2\% dominance, 4\% correct rule};
+\node[box, below=of p1] (b1) {\emph{bids:} mean deviation $-\$2.67$ (SMAD 9.5--20.7\% across families)};
+\draw[arr] (m1) -- (p1);
+\draw[arr] (p1) -- (b1);
+\node[box, fill=black!8, below=14pt of b1] (m2) {\textbf{Ascending clock (AC-B)}\\ \emph{burden:} none binding (one-step: stay iff price $<$ value)};
+\node[box, below=of m2] (p2) {\emph{stated plans:} per-tick exit rationales anchored on the running price--value comparison};
+\node[box, below=of p2] (b2) {\emph{bids:} mean deviation $\approx -\$0.5$ (SMAD 1.4--5.2\%; tails eliminated)};
+\draw[arr] (m2) -- (p2);
+\draw[arr] (p2) -- (b2);
+\end{tikzpicture}
+\end{minipage}\hfill
+\begin{minipage}[t]{0.58\textwidth}
+\centering
+{\footnotesize\textbf{Panel B: design levers}}\\[2pt]
+\begin{tikzpicture}[
+  lever/.style={draw, rounded corners=2pt, align=left, font=\scriptsize, inner sep=3pt, text width=0.30\linewidth, fill=black!8},
+  res/.style={draw, align=left, font=\tiny, inner sep=2.5pt, text width=0.40\linewidth},
+  tag/.style={align=left, font=\tiny\bfseries, text width=0.17\linewidth, inner sep=1pt},
+  arr/.style={-stealth, thick, gray}
+]
+% row 1: Payoff Safety
+\node[lever] (l1) at (0,0) {\textbf{Payoff Safety} (B2)\\ targets: safety recognition};
+\node[res, right=8pt of l1, yshift=9pt] (w1) {words: flat (rule talk 3.9$\to$2.8\%, $p{=}.60$; invariant echoed 0/600)};
+\node[res, right=8pt of l1, yshift=-11pt] (d1) {bids: improve ($|b{-}v|$ 3.20$\to$1.95, $p{=}.015$)};
+\node[tag, right=4pt of w1.east, yshift=-10pt] (t1) {bids move, words don't};
+\draw[arr] (l1.east) -- (w1.west); \draw[arr] (l1.east) -- (d1.west);
+% row 2: Payoff Tree
+\node[lever, below=34pt of l1] (l2) {\textbf{Payoff Tree} (C1)\\ targets: contingency construction};
+\node[res, right=8pt of l2, yshift=9pt] (w2) {words: flat (rule talk 33.0$\to$32.7\%, $p{=}.90$)};
+\node[res, right=8pt of l2, yshift=-11pt] (d2) {bids: improve (3.20$\to$1.29, $p{=}.017$)};
+\node[tag, right=4pt of w2.east, yshift=-10pt] (t2) {bids move, words don't};
+\draw[arr] (l2.east) -- (w2.west); \draw[arr] (l2.east) -- (d2.west);
+% row 3: Worst-case scaffold
+\node[lever, below=34pt of l2] (l3) {\textbf{Worst-case scaffold} (C1 variant)\\ targets: contingency construction};
+\node[res, right=8pt of l3, yshift=9pt] (w3) {words: jump (worst-case talk 2$\to$43\%, $p{=}.007$)};
+\node[res, right=8pt of l3, yshift=-11pt] (d3) {bids: flat (3.24$\to$3.07, $p{=}.81$)};
+\node[tag, right=4pt of w3.east, yshift=-10pt] (t3) {words move, bids don't};
+\draw[arr] (l3.east) -- (w3.west); \draw[arr] (l3.east) -- (d3.west);
+% row 4: Menu
+\node[lever, below=34pt of l3] (l4) {\textbf{Menu restatement} (B1)\\ targets: none (restatement)};
+\node[res, right=8pt of l4, yshift=9pt] (w4) {words: no change attributable (rule vocabulary replaced by the prompt itself)};
+\node[res, right=8pt of l4, yshift=-13pt] (d4) {bids: flat (3.55 vs.\ 3.20, $p{=}.66$)};
+\node[tag, right=4pt of w4.east, yshift=-12pt] (t4) {neither moves};
+\draw[arr] (l4.east) -- (w4.west); \draw[arr] (l4.east) -- (d4.west);
+% row 5: Beliefs
+\node[lever, below=36pt of l4] (l5) {\textbf{Belief prompts} (C3)\\ activates: opponent modeling (irrelevant axis)};
+\node[res, right=8pt of l5, yshift=9pt] (w5) {words: opponent talk (manipulation check pending, \TODO{E-v3-6})};
+\node[res, right=8pt of l5, yshift=-13pt] (d5) {bids: worsen ($-2.67 \to -3.04$ / $-3.47$)};
+\node[tag, right=4pt of w5.east, yshift=-12pt] (t5) {bids worsen};
+\draw[arr] (l5.east) -- (w5.west); \draw[arr] (l5.east) -- (d5.west);
+\end{tikzpicture}
+\end{minipage}
+\caption{Stated reasoning and realized bids, in one rubric. \emph{Panel A (mechanisms):} each mechanism's theory-assigned cognitive burden, the composition of stated errors in its plans, and its realized bid deviation, side by side. \emph{Panel B (levers):} each lever's targeted error category, whether the corresponding stated-error share moved, and whether bids moved; the right-hand tag classifies the joint response. No lever lands in the ``reasoning and bids both improve'' cell: the effective levers (Payoff Safety, Payoff Tree) change bids without changing plans; the worst-case scaffold changes plans without changing bids; the menu changes neither; belief prompts damage bids. Pooled over the four families, sealed second-price cells, corrected pooled-axis baselines; wild-cluster bootstrap $p$-values at the run level. Full numerical version and robustness: Table~\ref{tab:trace-dissociation}, Appendix~\ref{app:traces}.}
+\label{fig:trace-flow}
+\end{figure}
+
+\subsection{The Joint-Response Classification, and What It Means for Auditing}\label{sec:traces-patterns}
+
+Classifying every lever by its joint response yields the section's headline (Figure~\ref{fig:trace-flow}, right tags). Of the four possible patterns---both improve; bids only; words only; neither---the panel's levers populate three, and the empty cell is the one an interface auditor would expect to be full: \emph{no lever moves stated reasoning and bids together}. The effective levers are behavioral, not deliberative: Payoff Safety improves bids while its own invariant goes unechoed, so the description operates without passing through anything the agent can articulate. The worst-case scaffold is verbal, not behavioral: it rewrites the plans and leaves the bids alone. Because the first stage of any comprehension-mediated pathway is null for every verbalized-understanding measure, a classical mediation decomposition bounds the share of Payoff Safety's bid effect that could run through stated comprehension at roughly one third ($95\%$ upper bound $35\%$; point estimate $\approx 0$; Appendix~\ref{app:traces})---and the within-treatment association that plans rehearsing the rule err \$1.4--1.5 less (CI $[-2.15, -0.56]$) is cross-sectional, not causal.
+
+Three implications follow, one for each audience. For the \emph{screening instrument}: lever effects should be scored on realized play, which is what every cell of Section~\ref{sec:map} does. For a \emph{practitioner} fielding an interface change on LLM (or human) participants: a passed comprehension check is no evidence that behavior moved, and a failed one is no evidence that it did not---the best lever in our map produces zero change in articulated understanding. For the \emph{theory}: the dissociation localizes the levers' operation at the point of action rather than at the level of articulated strategy, consistent with the map's reading that what binds is recognizing safety in use, not producing its verbal certificate. The full numerical dissociation table, the pooled regression, duplicate-trace and cluster robustness, and the measurement caveats behind every number in this section are collected in Appendix~\ref{app:traces}.

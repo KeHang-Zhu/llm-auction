@@ -1,0 +1,161 @@
+% ============================================================================
+% 04_designmap.tex — auction-v3, Section 4:
+% "Using LLMs to Populate the Mechanism-Design Map"
+% Rewrite of contents_v2/06_ranking.tex per the revision directive:
+% (i) organized as a theory-guided design MAP (tab:design-map), not a ranking
+% of isolated prompts; (ii) per-family directions shown for every cell (never
+% only pooled averages); (iii) the cross-family robustness rule applied —
+% clock-framing (B3) fails it and is flagged to app:heterogeneity; the menu's
+% family-level signs are flagged likewise; (iv) auction-only: DA appears ONLY
+% as an external-robustness pointer, never pooled; (v) interactions subsection
+% registers the pending combination cells with ex-ante signs; (vi) frontier
+% demoted to a robustness pointer (app:ablations); (vii) traces get their own
+% Section 5. Menu per-family numbers use the CONVENTIONS §3 canon (corrected
+% pooled axis-1/axis-3 baselines) — this resolves the v2 discrepancy in which
+% 05/06 quoted same-batch baselines while 01/07 quoted the corrected pool.
+% Canonical stats: results/merged_ranking/{auction_cells.csv, concordance.md}.
+% ============================================================================
+
+\section{Using LLMs to Populate the Mechanism-Design Map}\label{sec:map}
+
+This section delivers the paper's second contribution: the design map of Figure~\ref{fig:design-space}, populated cell by cell with the validated panel. We proceed dimension by dimension---implementation (Section~\ref{sec:map-extensive}), description (Section~\ref{sec:map-descriptions}), reasoning support (Section~\ref{sec:map-scaffolds})---then assemble the map (Section~\ref{sec:map-assembled}, Table~\ref{tab:design-map}), classify the registered interaction cells (Section~\ref{sec:map-interactions}), and close with the robustness exercises that bound the map's scope (Section~\ref{sec:map-robustness}).
+
+Throughout, $D(L,f)$ denotes model family $f$'s mean bid deviation from value (dollars) under design cell $L$, with SMAD reported in parallel; the comparative statistic is the preservation index $\rho$ of Section~\ref{sec:metrics}, computed within family on the absolute-deviation scale. The baseline conventions of Section~\ref{sec:metrics} apply unchanged: format-level comparisons use the dedicated SPSB cells (per-family means $-0.49$, $-1.63$, $-3.28$, $-5.27$ for Claude 3.5 Haiku, Gemini 2.0 Flash, GPT-4o, and Gemma 27B; cross-family $-\$2.67$), and description/scaffold contrasts use the corrected pooled axis baselines ($+0.54$, $-1.25$, $-2.94$, $-6.53$; cross-family $-\$2.55$). Every cell-level statistic is computed from the merged run-level dataset in the replication package (\path{results/merged_ranking/auction_cells.csv}; bootstrap seed 1299).
+
+\subsection{Implementation: The Ascending Clock}\label{sec:map-extensive}
+
+The implementation cell asks how much of the baseline deviation the extensive form itself removes. Theory predicts this is the strongest lever in the map (H1): the OSP clock eliminates the contingent-reasoning burden entirely, replacing case-by-case verification over unobserved opponent bids with a sequence of on-path comparisons \citep{li2017obviously}, each of which is one-step simple \citep{pycia2023theory}.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{v3_osp_auction.pdf}
+    \caption{Implementation cell of the design map, per model family. Distribution of bid deviations from value ($\text{bid} - \text{value}$) in the second-price sealed bid (gray, dedicated SPSB cells) and the ascending clock (colored); dashed lines mark means. Every family deviates in the sealed-bid format; the clock corrects every family toward truthful play and removes the left tail of severe underbids. The matching-domain counterpart of this exhibit is in Appendix~\ref{app:da} (Figure~\ref{fig:da-counterparts}).}
+    \label{fig:osp-comparison}
+\end{figure}
+
+\paragraph{Result: the strongest cell, in every family.}
+In the SPSB baseline all four families underbid, with mean deviations of $-0.49$ (Claude), $-1.63$ (Gemini), $-3.28$ (GPT-4o), and $-5.27$ (Gemma), and with long left tails---individual bids \$10--20 below value. The closed ascending clock corrects all four: mean deviations compress to $-0.05$, $-1.24$, $-0.45$, and $-0.33$ respectively (cross-family $\approx -\$0.5$), SMAD falls to $1.4\%$, $5.2\%$, $1.9\%$, and $1.9\%$ from pooled-axis baselines of $9.5\%$, $11.7\%$, $11.4\%$, and $20.7\%$, and the shift is significant in every family (Welch $p<0.001$ each; Cohen's $d$ up to $1.00$). The improvement is largest exactly where the baseline is worst---Gemma's mean deviation falls from $-5.27$ to $-0.33$, a near-complete correction---and the clock \emph{eliminates the catastrophic tail}: the worst-case failures disappear, a variance effect that may matter as much as the mean effect for a deployed market. Direction is consistent in $4/4$ families; the cell passes the robustness rule in the strongest available form and agrees with its human anchor (Figure~\ref{fig:ordinal}).
+
+\paragraph{Identification.}
+Because the four-family cell runs under independent private values, the improvement cannot be informational: under IPV, nothing payoff-relevant is revealed by others' exits, so the channel is purely cognitive. Two provenance notes complete the accounting. The legacy clock cells pair an affiliated-values description with IPV draws (the configured common component is zero), so the informational channel was absent in the data even before the audit; and a dedicated clean IPV cell (IPV description \emph{and} draws, \$0.5 tick, $K=50$) reproduces the result exactly for the two families re-runnable at the time of writing---SMAD $1.5\%$ (GPT-4o) and $1.8\%$ (Gemma) against sealed baselines of $12$--$27\%$. \TODO{Clean IPV clock for Claude 3.5 Haiku and Gemini 2.0 Flash pending native keys (E2); given the exact replication in two families and the direction of every legacy cell, we do not expect the remaining cells to change the cell's classification.}
+
+\paragraph{The bridge: unbundling the clock.}
+As a design lesson the implementation result is coarse, because OSP changes several things at once: the game tree, the action space (a sequence of binary stay/exit choices), and the salience of the safety property at every decision point. A designer needs to know which margin does the work, because the margins have very different costs---re-engineering a deployed mechanism's extensive form is expensive, while changing its description or its decision support is nearly free. The next two subsections unbundle the clock with presentation-only cells that hold the sealed-bid form fixed.
+
+\subsection{Description: Restating the Rules versus Exposing the Safety Invariant}\label{sec:map-descriptions}
+
+Dimension~2 holds the mechanism fixed and varies only the words. The three sub-levers behave very differently, and the differences are the map's most practically valuable content.
+
+\paragraph{Payoff Safety (B2): the invariant, stated honestly, moves every family.}
+The safety-exposing description adds one honest statement of the invariant behind \citet{vickrey1961counterspeculation}'s argument: \emph{``Think of your bid as setting your maximum price. Your bid determines IF you win, not WHAT you pay. If you win, you pay what others bid, not what you bid.''} It scaffolds no reasoning and reveals no strategy; it states a true property of the payment rule. The effect is a same-signed improvement in all four families: mean deviations move from $-0.49$ to $+0.30$ (Claude), $-1.63$ to $-0.38$ (Gemini), $-3.28$ to $-1.88$ (GPT-4o), and $-5.27$ to $-4.17$ (Gemma), cutting the cross-family mean from $-\$2.67$ to $-\$1.53$ (Figure~\ref{fig:descriptions}).\footnote{Claude's residual error flips sign under this description (from $-0.49$ to $+0.30$, mild overbidding); the absolute deviation still shrinks, and Claude ends closest to truthful of the four. The raw-log sign is $+0.30$; an earlier manuscript reported $-0.30$ (magnitude identical).} Against the axis baselines the improvement is significant for Gemini ($p<10^{-30}$, $d=1.85$) and GPT-4o (Mann--Whitney $p<10^{-5}$); for Claude the mean effect is null while dispersion halves (SMAD $12.0\%$ to $4.8\%$)---a case where the Welch/Mann--Whitney pair earns its keep---and Gemma improves against both declared baselines. Direction is consistent in $4/4$ families: the cell passes the robustness rule. For comparison, the clock achieves $\approx -\$0.5$: one sentence recovers roughly half of what the full OSP redesign delivers. No human auction experiment has tested a bare invariant statement---the nearest human evidence is from matching-mechanism descriptions, where property-exposing text helps and mechanics-only text backfires \citep{gonczarowski2024describing, katuscak2024simpler, guillen2018effectiveness}---so this cell carries the map's \emph{Nearby evidence} label and doubles as its sharpest new prediction for human subjects (Section~\ref{sec:discussion}).
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{v3_safety_auction.pdf}
+    \caption{Safety-exposing description (B2): \emph{Payoff Safety} in second-price auctions, per model family. Dedicated SPSB baseline in gray, treated cell in color; dashed lines mark means. The absolute deviation shrinks in every family---roughly half the gap to the full clock implementation of Figure~\ref{fig:osp-comparison}---from a one-sentence change in the rule explanation.}
+    \label{fig:descriptions}
+\end{figure}
+
+\paragraph{Menu restatement (B1): the built-in placebo is null on average---and honestly sign-mixed.}
+The menu restatement re-describes the outcome function in the style of \citet{gonczarowski2023strategyproofness}: the bid is a ``maximum acceptable price,'' the highest rival bid is the market price, winning means the market price was below your maximum. It adds words and salience but no incentive content beyond the standard rules, making it the map's placebo for the claim that \emph{content}, not \emph{restatement}, is what helps. On average it does nothing---a two-sided sign test cannot reject a zero median effect ($p=0.73$), matching the human behavioral null \citep{gonczarowski2023strategyproofness}---but the average conceals real family-level heterogeneity (Figure~\ref{fig:ranking-framing}, top row): against the corrected pooled baselines, Gemma moves \emph{toward} truthful play ($+\$2.03$, $p<0.001$), GPT-4o moves \emph{away} ($-\$1.16$, Welch $p=0.013$; Mann--Whitney $p=0.54$), Claude moves marginally away ($+\$0.82$ further above value; Welch $p=0.064$, Mann--Whitney $p<0.001$), and Gemini is null ($+\$0.12$, $p=0.56$).\footnote{These are the canonical corrected-baseline contrasts. Against the same-batch baseline cells run alongside the menu grid, the family-level attributions shift (Gemma null, Gemini improving), while the pooled null is unchanged---family-level menu effects are baseline-convention-sensitive as well as sign-mixed, which reinforces reading this cell only as ``no consistent effect.'' Appendix~\ref{app:heterogeneity} reports both conventions cell by cell.} By the robustness rule the menu is classified \emph{inactive}: no consistent direction exists to report. Its placebo value survives in the aggregate---extra prose about the mechanism does not systematically move behavior, so the large B2 effects cannot be generic prompt sensitivity---but it is a noisier placebo than the single-population human experiments suggest, and the family-level signs are a finding in themselves: description responses are model-specific where description \emph{content} is not.
+
+\paragraph{Clock-framing (B3): flagged---helps three families, harms the fourth.}
+The clock-framing description keeps the one-shot sealed bid but describes the number as the threshold at which an automatic proxy would exit a rising clock \citep{breitmoser2022obviousness}. It is a description, not a mechanism change (the elicited action is still a single sealed bid), and its cells are empirically distinct from the true clock's per-tick records. It helps GPT-4o (SMAD $12.1\% \to 6.3\%$), Gemma ($26.8\% \to 13.8\%$), and Claude ($8.3\% \to 7.2\%$), each at $p<0.001$---agreeing with the human evidence---but pushes Gemini the wrong way ($5.1\% \to 9.5\%$, $p<0.001$). Under the robustness rule, a lever whose direction flips across families does not enter the main-text design conclusions: we record it in the map as \emph{flagged}, with pooled $\rho = +0.30$ $[-0.77, +0.52]$, the interval's width driven by the Gemini reversal. The full analysis---including a second, independently discovered clock-framing paraphrase that helps only Gemma and also harms Gemini, direct evidence that description effects are wording-sensitive in a way implementation effects are not---is in Appendix~\ref{app:heterogeneity}. The flagged cell still teaches the map's method: a single-model study (or a single-wording study) would have reported clock-framing as a clean win; the panel reveals it as a gamble whose sign depends on the reader.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{v3_menu_framing.pdf}
+    \caption{Presentation-only cells of the map, per model family ($2 \times 4$ panels; deviations in dollars). \emph{Top row:} menu restatement (B1) against the corrected pooled axis baseline (gray)---small, sign-mixed shifts with no consistent direction (classified inactive). \emph{Bottom row:} clock-framing (B3)---helps three families, reverses in Gemini (flagged; Appendix~\ref{app:heterogeneity}). Panel annotations give baseline and treatment means with Welch $p$-values against the corrected pool. Per-family panels are the paper's required display; pooled averages alone would misreport both cells.}
+    \label{fig:ranking-framing}
+\end{figure}
+
+\paragraph{What the description dimension establishes.}
+Within Dimension~2, the split predicted by H2 is exactly what the panel finds: text that \emph{asserts the invariant} improves play in every family; text that merely restates the outcome function has no consistent effect; and OSP-style framing borrowed from the clock is real but unreliable across families. The operative distinction is not more words versus fewer---the menu is longer than the safety sentence---but what the words assert. An external-domain replication sharpens the same point by unbundling the menu itself: in a school-choice matching environment, a menu description \emph{carrying} the invariance statement behaves like a safety description while a menu restating only the computation makes play strictly worse; we use it purely as external robustness, never pooled with the auction cells (Appendix~\ref{app:da}).
+
+\subsection{Reasoning Support: Contingencies Help, Opponent Salience Hurts}\label{sec:map-scaffolds}
+
+Dimension~3 holds both the mechanism and its description fixed and scaffolds the agent's reasoning, one cognitive axis at a time \citep{li2024designing}. The predictions (H3) are axis-specific, and half of them predict harm.
+
+\paragraph{Payoff Tree (C1): constructing the contingencies works.}
+Contingent reasoning is the sealed bid's binding axis: to verify dominance, a bidder must compare payoffs case by case over opponent bids she cannot see. The \emph{Payoff Tree} performs that construction for her---``PATH A: your bid is highest $\to$ you WIN and pay the \emph{second-highest} bid. PATH B: it is not $\to$ you LOSE and pay nothing''---stating what happens, never what to do. It improves three families and leaves the fourth unchanged: GPT-4o moves from $-3.28$ to $-0.86$, Gemma from $-5.27$ to $-2.34$, Gemini from $-1.63$ to $-0.53$, and Claude---whose baseline is already nearest truthful---is null, for a cross-family improvement from $-\$2.67$ to $-\$1.13$ (Figure~\ref{fig:contingent}). Direction is consistent (three improvements, one null, no reversal): the cell passes the robustness rule. Like the clock, the tree closes roughly half the gap to the OSP benchmark without touching the extensive form; unlike the clock, it costs a paragraph. No human experiment has tested this scaffold; it is a \emph{New prediction} cell.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{v3_tree_auction.pdf}
+    \caption{Contingent-reasoning support (C1): the \emph{Payoff Tree}, per model family. Dedicated SPSB baseline in gray, treated cell in color. Three families improve; Claude, already near-truthful at baseline, is null; no family reverses.}
+    \label{fig:contingent}
+\end{figure}
+
+\paragraph{Belief scaffolds (C3): the diagnostic backfires, as predicted.}
+Belief formation is the axis strategy-proofness makes irrelevant: optimal play does not depend on opponents, so prompting an agent to think about them should do nothing---\emph{if} the agent has internalized dominance. It has not, and the prompts do damage. \emph{First-order beliefs} (``What do you expect the other players to do? Does this affect what you should do?'') moves the cross-family mean from $-2.67$ to $-3.04$, worsening Claude, Gemini, and Gemma on the absolute-deviation scale while GPT-4o is approximately flat; \emph{second-order beliefs} (``What do the others think YOU will do?'') is worse still at $-3.47$, degrading Claude, GPT-4o, and Gemma.\footnote{The exception family differs by variant and is small in magnitude: GPT-4o's first-order cell is approximately null, and Gemini's second-order cell moves slightly \emph{toward} truthful on the absolute scale (MAD $1.63 \to 1.31$)---the only opposite-signed belief cell in the grid; we classify it as $\approx 0$ and flag it. \TODO{Pin the per-family belief-cell classifications on the merged dataset (E-v3-3); per-family entries here follow the imported-pipeline record (\texttt{writeup/auction-v2-numbers.txt}).}} No family improves meaningfully under either variant; the damage concentrates in the weakest baseline (Gemma), and the prompted agents' plans show what the prompt does: models directed at opponents shade further below value, undercutting imagined competition (Section~\ref{sec:traces}). This is the taxonomy's predicted signature, not an anomaly: the design space contains anti-levers, and a screening instrument earns its keep by finding them before deployment. Pooled $\rho$: $-0.41$ $[-0.88, -0.04]$ (first-order), $-0.35$ $[-1.36, +0.03]$ (second-order). Both cells are \emph{New prediction} rows: the corresponding human experiment---belief elicitation attached to a strategy-proof auction---has, to our knowledge, never been run.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{v3_beliefs_auction.pdf}
+    \caption{Belief-formation prompts (C3): first-order (top row) and second-order (bottom row) variants, per model family. Dedicated SPSB baseline in gray, treated cells in color. Belief scaffolding worsens play in three of four families under each variant and helps none; Gemma is the most susceptible.}
+    \label{fig:beliefs}
+\end{figure}
+
+\paragraph{Forward planning (C2): N/A by design.}
+A one-shot sealed bid has no future own-moves, so the forward-planning axis has nothing to bind on; the map records the cell as N/A rather than as an empty result. (A legacy ``backward-induction framing'' of the static sealed bid exists in the repository and is catalogued with the other run-but-not-load-bearing cells in Appendix~\ref{app:heterogeneity}.)
+
+\subsection{The Map, Assembled}\label{sec:map-assembled}
+
+Table~\ref{tab:design-map} assembles the cells; Figure~\ref{fig:ranking} displays every model$\times$cell estimate. Reading the map column by column enforces the paper's discipline: every row shows its per-family direction pattern, its pooled preservation index with a double-bootstrap interval, its evidence label from Figure~\ref{fig:design-space}, and whether it passes the cross-family robustness rule.
+
+\begin{table}[htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}l cccc l l l@{}}
+\toprule
+& \multicolumn{4}{c}{Direction} & & & \\
+\cmidrule(lr){2-5}
+Cell & Cl & Ge & G4 & Gm & Pooled $\rho$ [95\% CI] & Evidence & Robust? \\
+\midrule
+Ascending clock (A) & $\uparrow$ & $\uparrow$ & $\uparrow$ & $\uparrow$ & $+0.97$ [$+0.83, +1.00$] & \textcolor{teal!60!black}{\textbf{[H]}} agrees & \checkmark\ 4/4 \\
+Payoff Safety (B2) & $\uparrow$ & $\uparrow$ & $\uparrow$ & $\uparrow$ & $+0.78$ [$+0.39, +1.00$] & \textcolor{orange!75!black}{\textbf{[N]}} $\to$ prediction & \checkmark\ 4/4 \\
+Payoff Tree (C1) & 0 & $\uparrow$ & $\uparrow$ & $\uparrow$ & $+0.59$ [$+0.46, +0.68$] & \textcolor{violet!80!black}{\textbf{[P]}} & \checkmark\ 3/4, 1 null \\
+Clock-framing (B3) & $\uparrow$ & $\downarrow$ & $\uparrow$ & $\uparrow$ & $+0.30$ [$-0.77, +0.52$] & \textcolor{teal!60!black}{\textbf{[H]}} partial (3/4) & \texttt{flagged} \\
+\midrule
+Baseline (SPSB) & \multicolumn{4}{c}{---} & $0$ & \textcolor{teal!60!black}{\textbf{[H]}} both deviate & --- \\
+Menu restatement (B1) & $\downarrow$ & 0 & $\downarrow$ & $\uparrow$ & $-0.14$ [$-1.00, +0.27$] & \textcolor{teal!60!black}{\textbf{[H]}} null on avg. & inactive \\
+First-order beliefs (C3) & $\downarrow$ & $\downarrow$ & 0 & $\downarrow$ & $-0.41$ [$-0.88, -0.04$] & \textcolor{violet!80!black}{\textbf{[P]}} & \checkmark\ backfire \\
+Second-order beliefs (C3) & $\downarrow$ & 0 & $\downarrow$ & $\downarrow$ & $-0.35$ [$-1.36, +0.03$] & \textcolor{violet!80!black}{\textbf{[P]}} & \checkmark\ backfire \\
+\midrule
+Risk-averse persona (D) & $\downarrow$ & $\downarrow$ & $\downarrow$ & $\downarrow$ & $-1.82$ [$-5.73, -0.72$] & \textcolor{violet!80!black}{\textbf{[P]}} bounding & \checkmark\ 4/4 backfire \\
+\bottomrule
+\end{tabular}
+\caption{The design map, populated (compact version; the full reference table, with cross-family mean deviations, burden tags, baseline conventions, and all caveats, is Table~\ref{tab:design-map-full} in Appendix~\ref{app:tables}). Families: Cl = Claude 3.5 Haiku, Ge = Gemini 2.0 Flash, G4 = GPT-4o, Gm = Gemma 27B; $\uparrow$ = toward truthful play on the absolute-deviation scale, $\downarrow$ = away, 0 = null; per-family magnitudes are in the text of Sections~\ref{sec:map-extensive}--\ref{sec:map-scaffolds}. $\rho$ = median preservation index over model cells with double-bootstrap 95\% CIs (for levers replicated in the external matching domain the median pools those cells; auction-only recomputation is registered, E-v3-4). Evidence labels as in Figure~\ref{fig:design-space}. Gemini's second-order 0 is the grid's one small opposite-signed belief cell, classified $\approx 0$ and flagged (Section~\ref{sec:map-scaffolds}). Registered interaction cells (clock$\times$safety, safety$\times$tree, menu$+$invariance, clock$\times$beliefs, 2P+X/AC+X) are pending runs.}
+\label{tab:design-map}
+\end{table}
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth]{ranking_forest.pdf}
+    \caption{The design map as a forest plot. Rows are cells sorted by pooled median $\rho = 1 - D(\text{cell})/D(\text{baseline})$; marks show each model-family cell; the pooled median and double-bootstrap 95\% CI accompany each row; the shaded region $\rho < 0$ marks backfiring cells. Gold diamonds are human anchors computed from the moment-matched reconstructions (AC $+0.62$, AC-B $+0.37$, menu $-0.07$); rows without a diamond are LLM-only and enter Section~\ref{sec:discussion} as predictions. \TODO{Regenerate auction-only for v3: the current asset includes the external-domain (matching) cells and rows outside the v3 map (E-v3-5).}}
+    \label{fig:ranking}
+\end{figure}
+
+\paragraph{Structure: a tier pattern, concordant across families.}
+The map's rows fall into tiers---implementation at top; safety-exposing text and contingency support in a strong second tier; restatement inactive around baseline; belief prompts below it; the bounding persona at bottom---and we pre-committed to claiming no more than a partial order. Treating each family as a judge ranking the cells, Kendall's $W = 0.70$ in the auction grid ($p = 0.004$): the ordering is far from independent across families. (This concordance is computed on the corrected baselines; repairing the contaminated axis-2 ``baseline'' cell \emph{raised} $W$ from $0.43$ to $0.70$---the mislabeled treatment had been injecting noise into every axis-2 contrast; Appendix~\ref{app:heterogeneity}.) Adjacent-tier separations are supported at three of four boundaries, with one honest failure: the restatement tier does not reliably beat the belief tier, because the menu cell is sign-mixed rather than a clean placebo.\footnote{Formal adjacent-tier sign tests currently pool the auction cells with the external-domain matching cells (eight model$\times$domain cells per comparison): implementation beats the strong presentation tier in $7/8$ ($p = 0.070$), the strong tier beats restatement in $8/8$ ($p = 0.008$), restatement-vs-beliefs fails ($4/8$, $p = 1.0$), and the strategizing tier beats the bounding persona in $8/8$ ($p = 0.008$). \TODO{Recompute the sign tests on auction-only cells (E-v3-4); the auction-only direction patterns in Table~\ref{tab:design-map} are consistent with all four claims.}}
+
+\paragraph{What the map localizes.}
+Read from the bottom up, the populated map localizes the constraint that simple design relieves---and it is the same localization in every family that has room to improve. Prompting \emph{more strategizing} (beliefs) makes play worse, so the binding problem is not too little strategic reasoning. Restating the rules is inactive on average, so the problem is not comprehension bandwidth. What works, in every syntactic form it appears---the safety sentence, and the payoff tree whose ``key insight'' line carries the same invariant---is text or structure that exposes \emph{why truthful play is safe}; and the full OSP implementation, which makes that safety visible at every decision point, delivers the remainder. The binding constraint is not \emph{computing} the dominant strategy---the payoff tree shows every family can execute the case analysis when it is laid out---but \emph{seeing that truth-telling is safe} without being shown. Section~\ref{sec:traces} adds the mechanism-level evidence: the cells that move bids do so without changing what the agents say they are doing.
+
+\subsection{Interactions: Substitutes, Complements, and Inactive Levers}\label{sec:map-interactions}
+
+A design map earns the name only if it also speaks to combinations, and the combinatorial structure of the map (Figure~\ref{fig:design-space}) defines four interaction cells with ex-ante signs. The populated single-lever cells already classify the levers a designer would combine: one dominant implementation lever (the clock), two robust presentation/support levers operating on different margins (the safety sentence supplies the invariant; the payoff tree supplies the case analysis), one inactive lever (the menu restatement), and one family of anti-levers (belief prompts). The registered combinations test the classification's joint logic: \emph{clock $\times$ safety} should be redundant (substitutes---the clock already exposes safety at every price; predicted $\rho \approx$ the clock's own); \emph{safety $\times$ tree} should stack (complements---invariant plus contingency table relieve different halves of the verification; predicted $\rho$ above either alone); \emph{menu $+$ invariance sentence} should behave like safety (the content, not the format, is active---the external-domain unbundling already points this way; Appendix~\ref{app:da}); and \emph{clock $\times$ beliefs} should be inert (OSP should immunize against opponent salience---if it does not, the anti-lever is more dangerous than the map currently records). \TODO{Interaction cells registered, not yet run (E-v3-2). Each is a single $K=50$ cell per family at $\approx\$10$ per cell; report per-family directions against the same baselines and add the four rows to Table~\ref{tab:design-map}.}
+
+\subsection{Robustness Beyond the Panel}\label{sec:map-robustness}
+
+Three exercises bound the map's scope; each is reported in full in an appendix and summarized here in a sentence or three.
+
+\paragraph{Frontier models (Appendix~\ref{app:ablations}).}
+Running the full lever grid on four frontier reasoning models (gpt-5-mini, gpt-5, Claude Sonnet 5, Gemini 2.5 Flash) shows the map's positive cells compressing to nothing---all four are essentially exactly truthful at every sealed baseline (SMAD $0$--$2.3\%$), so safety text, trees, and belief prompts have no error left to move---while the \emph{backfire} cells keep their teeth: the same menu restatement that is inactive in the panel collapses Claude Sonnet 5 from exact truthfulness to a mean deviation of $-\$8.71$ (SMAD $35.5\%$, $d = -3.8$), and one sentence of affiliation language in a clock description triggers a misapplied winner's-curse script in the same model, removed entirely by a clean IPV-worded rerun. The frontier failure mode is retrieval selection---surface wording chooses which memorized playbook runs---so presentation choices remain live design risks even where the bounded-rationality regime has closed. The panel's regime is the relevant one for high-volume deployed fleets, and the capability floor (Llama-3-8B, mean SMAD $57.6\%$) bounds it from below.
+
+\paragraph{An external domain (Appendix~\ref{app:da}).}
+The description dimension replicates in a non-auction strategy-proof environment (school choice under deferred acceptance), where the menu description can be unbundled: the invariance-carrying variant improves truthful reporting like a safety description; the mechanics-only variant makes it strictly worse. We use this strictly as external robustness for the H2 reading---auction results above stand on their own, and no exhibit pools the two domains.
+
+\paragraph{Preference framings (Appendix~\ref{app:prospect}).}
+The bounding family confirms that the map's failures are not disguised risk preferences: framings that would move a risk-sensitive optimizer (loss frames, endowment, personas) mostly damage play---the risk-averse persona is the most reliably harmful cell we measure ($4/4$ families)---while truthful play remains dominant under all of them. Persona-style ``preference'' wrappers, a common ingredient of deployed agent stacks, are not neutral.

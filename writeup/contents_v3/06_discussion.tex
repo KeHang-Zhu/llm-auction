@@ -1,0 +1,97 @@
+% ============================================================================
+% 06_discussion.tex — auction-v3, Section 6: Discussion and Conclusion
+% Merges v2's 08_discussion + 09_conclusion per the revision directive:
+% (i) one scope statement — the panel is an ordinal screening tool, not a
+% calibrated model of the average human bidder (cardinal material lives in
+% app:cardinal); (ii) robustness-across-families summarized; (iii) frontier
+% and DA presented as robustness only; (iv) LLM-only cells converted into
+% explicit, falsifiable predictions for human experiments; (v) ends with the
+% directive's general conclusion. eBay/TPSB/winner's-curse material removed.
+% ============================================================================
+
+\section{Discussion and Conclusion}\label{sec:discussion}
+
+\subsection{Design Implications}\label{sec:discussion-implications}
+
+The populated map's most actionable feature is that a nearly costless lever sits close to its top. A one-sentence honest statement of the mechanism's safety invariant recovered roughly half of what a full obviously-strategy-proof redesign delivers, in every model family, without touching the allocation rule, the message space, or the extensive form. For a platform whose participants increasingly include LLM agents, that lever deploys as interface text or API documentation at approximately zero engineering cost; and it is honest in the sense of \citet{gonczarowski2023strategyproofness}---it states a true property of the mechanism rather than steering behavior through misdirection, so a designer can adopt it without the credibility costs of manipulative framing. The comparison with the menu restatement disciplines the recommendation: it is not ``more explanation'' that helps. The restatement---longer than the safety sentence, and equally accurate---moved nothing on average, and the map's second robust presentation lever, the payoff tree, carries the same invariant embedded in its case analysis. The active ingredient is the invariance content, not the volume of explanation.
+
+The backfiring cells carry an equally practical warning. Belief-formation prompts are not exotic interventions: ``think about what the other side will do'' is precisely the kind of reasoning enhancement that agent frameworks and prompt libraries routinely inject into deployed pipelines \citep{fish2024algorithmic}. In strategy-proof environments our evidence says such instructions are at best inert and at worst substantial liabilities, with the damage concentrated in the weakest models---and the bounding family shows persona-style ``preference'' wrappers are worse still (Appendix~\ref{app:prospect}). Because every lever with a human anchor moves human participants in the same direction it moves the panel (Figure~\ref{fig:ordinal}), a designer serving a mixed human--AI market need not choose between populations: on this evidence, simplicity is a common good across participant types.
+
+The trace analysis adds a rule for \emph{how} to audit any of this. The effective levers changed bids without changing what agents said (Section~\ref{sec:traces}); a designer therefore cannot certify a description by checking that participants verbalize the right principle, and cannot dismiss one because comprehension checks fail. Interventions on LLM participants should be evaluated on realized play, not on elicited understanding.
+
+\begin{center}
+\fbox{\begin{minipage}{0.93\linewidth}
+\vspace{0.4em}
+\textbf{Practitioner guidance: fielding strategy-proof mechanisms to LLM participants.}
+\begin{itemize}[leftmargin=1.4em, itemsep=2pt, topsep=3pt]
+    \item \emph{Prefer OSP implementations where available.} The ascending clock produced the best play in every family we measured, consistent with its record in human markets \citep{li2017obviously, milgrom2020clock}.
+    \item \emph{If you must keep a direct mechanism, state its safety invariant---do not merely restate its mechanics.} One honest sentence (``your bid determines \emph{whether} you win, not \emph{what} you pay'') and, where the interface permits, a payoff-tree explanation of what happens in each outcome each closed roughly half the gap to the OSP benchmark, in every family. Mechanical restatements were inactive on average and sign-mixed underneath.
+    \item \emph{Never prompt agents to model opponents.} Belief-formation prompts worsened play in nearly every configuration tested, most severely for the weakest models, by activating strategizing the mechanism makes unnecessary.
+    \item \emph{Audit vendor ``reasoning enhancements'' as potential anti-levers, and audit on behavior.} Frameworks that silently inject opponent modeling or persona framings are, in our taxonomy, backfire-family interventions; benchmark them against truthful play before deployment, and score the audit on realized actions---the best lever in our map produces zero change in what agents say they are doing.
+\end{itemize}
+\vspace{0.2em}
+\end{minipage}}
+\end{center}
+
+\subsection{The Screening Workflow and What It Costs}\label{sec:discussion-cost}
+
+The instrument's economics are the reason to want it. The full battery reported in this paper---more than 1{,}000 auctions and 5{,}000 individual agent decisions across four model families, the complete lever grid, and the external-robustness domain---cost under \$400 in API fees; a single treatment cell of 50 repetitions costs roughly \$10 and runs in minutes (Table~\ref{tab:cost}). The human experiments it screens for remain the evidentiary gold standard, and remain expensive: 548 subjects and ${\sim}\$5{,}400$ in documented payments for the main OSP laboratory test \citep{li2017obviously}; 542 subjects at \$15--26 each for the leading description experiments \citep{gonczarowski2024describing}. The workflow this paper validates is the obvious division of labor, extending the cost reduction that online laboratories brought to behavioral economics \citep{horton2011online}: the panel sweeps the design space and ranks the candidates ordinally; human experiments are reserved for the cells where the map makes novel, falsifiable predictions---exactly the cells Section~\ref{sec:predictions} lists.
+
+\begin{table}[t]
+\centering
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Instrument} & \textbf{Population} & \textbf{Scale} & \textbf{Approx.\ cost} \\
+\midrule
+OSP laboratory experiment \citep{li2017obviously} & Human & 548 subjects (144 main $+$ 404 follow-up) & $\approx\$5{,}400^{\dagger}$ \\
+Description experiments \citep{gonczarowski2024describing} & Human & 542 subjects, incentivized lab & \$15--26/subject$^{\ddagger}$ \\
+This paper: full lever battery & LLM (4 families) & $>$1{,}000 auctions; $>$5{,}000 decisions & $<\$400$ \\
+This paper: one design cell & LLM & 50 repetitions & $\sim\$10$ \\
+\bottomrule
+\end{tabular}}
+\caption{Approximate cost of instruments for screening simplicity-preserving design levers. $^{\dagger}$\citet{li2017obviously}'s main experiment paid 144 subjects an average of \$37.54 (including a \$20 show-up fee), $\approx\$5{,}400$ total, documented for the main experiment only; the one-shot follow-up added 404 subjects (\$5 show-up plus incentives) with no published average, so a grand total is not recoverable. $^{\ddagger}$\citet{gonczarowski2024describing} paid Prolific participants an average of \pounds 15.0 ($\approx\$19$) and Cornell participants \$25.5 on average, across 542 subjects (their Appendix A.1).}
+\label{tab:cost}
+\end{table}
+
+\subsection{Robustness and Scope}\label{sec:discussion-scope}
+
+\paragraph{Cross-family robustness, summarized.}
+The inclusion rule of Section~\ref{sec:metrics} was applied to every claim, and the resulting accounting is short. Four design results pass in all four families: the clock's improvement, the safety description's improvement, the payoff tree's improvement-or-null, and the belief prompts' harm-or-null. Two cells fail the rule and are confined to flagged rows and Appendix~\ref{app:heterogeneity}: the clock-framing description (helps three families, harms Gemini---in two independent paraphrases) and the menu restatement's family-level signs (null on average; sign-mixed and baseline-convention-sensitive underneath). One validation row transfers with attenuation (Gemma preserves the FPSB-vs-SPSB direction but nearly flattens the ratio). We regard the flags as outputs of the method, not blemishes on it: a single-model or single-wording study would have reported clock-framing as a clean win, and the panel exists precisely to catch that.
+
+\paragraph{The scope statement.}
+The boundary of the instrument is stated once, and the paper's claims are calibrated to it: \emph{the LLM panel is evaluated as an ordinal design-screening tool, not as a calibrated model of the average human bidder.} Human populations are heterogeneous mixtures---some participants misunderstand the rules, some respond to risk or competitive motives, some play the dominant strategy---and there is no reason a fixed panel of models should reproduce that mixture's levels. It does not: the populations err in opposite directions at baseline, and Appendix~\ref{app:cardinal} shows, over a 95-cell grid of temperature, persona, framing, and explanation knobs, that no single tuning achieves level-and-direction agreement across mechanisms---the best level-matching knob is mechanism-specific, the only direction-restoring knob breaks the first-price format where humans almost never overbid, and a persona calibrated on one family can convert mild underbidding into catastrophic overbidding on another. Level prediction (revenue, welfare magnitudes) is therefore out of scope by construction; what the instrument delivers is directions, orderings, and interactions.
+
+\paragraph{The frontier and the floor (Appendix~\ref{app:ablations}).}
+As a robustness exercise we ran the full lever grid on four frontier reasoning models. The map's positive cells compress to nothing---the frontier tier bids essentially exactly truthfully at every sealed baseline, so there is no deviation left to preserve---but the \emph{backfire} cells keep their teeth, through a distinctive failure mode: surface wording selects which memorized playbook runs. A content-free menu restatement collapses one otherwise exactly-truthful frontier model to severe underbidding (mean deviation $-\$8.71$; its traces announce and flawlessly execute the \emph{first-price} equilibrium formula), and one sentence of affiliation language in a clock description triggers a misapplied winner's-curse script that a clean IPV wording removes entirely. The design guidance above therefore survives at the frontier in asymmetric form: simplifying levers may be wasted there, but presentation choices can still do damage, so ``expose invariants, avoid gratuitous restatements'' remains binding. At the other end, a small open-weight model (Llama-3-8B; mean SMAD $57.6\%$) marks a capability floor beneath which agents cannot reliably parse the mechanism and no descriptive lever can be expected to help. The panel's regime---capable enough to transact, boundedly rational enough for design to matter---sits between these measured boundaries, and deployed high-volume agent fleets occupy it for cost reasons.
+
+\paragraph{External-domain robustness (Appendix~\ref{app:da}).}
+The description result replicates outside auctions. In a school-choice matching environment (student-proposing deferred acceptance), a safety-exposing description nearly eliminates misreporting, and unbundling the menu description isolates the mechanism: a menu variant carrying the invariance statement improves truthful reporting like a safety description, while a mechanics-only variant makes it strictly worse---the same backfire that mechanics-focused descriptions produce in human field evidence \citep{guillen2018effectiveness}. We keep this domain strictly out of the main results and use it only as evidence that the invariance-content finding is not auction-specific.
+
+\subsection{Limitations}\label{sec:discussion-limitations}
+
+\paragraph{The human benchmarks are reconstructions.}
+Our human anchors are moment-matched mixture reconstructions of published summary statistics, not experimental microdata (Section~\ref{sec:reconstruction}). We therefore confine human--LLM comparisons to rankings, directions, and comparative statics, attach no significance tests to reconstructed levels, and note that the design map itself never conditions on the reconstructions---they certify the instrument and label the map's anchors, nothing more. \TODO{Parametric-bootstrap reconstruction bands on every human anchor (Appendix~\ref{app:human}) pending.}
+
+\paragraph{One template per lever.}
+Each lever is instantiated as one wording per cell, so the estimated effects are, strictly, effects of particular texts. Three features argue against a prompt-engineering artifact: the taxonomy and its predictions were fixed ex ante from published theory (Section~\ref{sec:theory}); the menu restatement is a built-in restatement control; and roughly half the map backfires, a pattern opportunistic prompt search would neither produce nor publish. But the clock-framing cell shows wording sensitivity is real---two paraphrases of the same analogy produce different family-level profiles (Appendix~\ref{app:heterogeneity})---so invariance to paraphrase is a measurement target, not an assumption. \TODO{Paraphrase battery: three paraphrases $\times$ the two headline levers (B2, C1), per family.}
+
+\paragraph{Conventions and drift.}
+Direction-of-error shares depend on the classification convention (all bids versus deviating bids; band width), and we fix one convention throughout with the alternatives footnoted; the qualitative reversal is convention-robust. All results are estimated on pinned model snapshots; provider updates and fleet turnover can shift behavior in ways we cannot forecast. The map should be read as a measurement protocol to be re-estimated as agent populations evolve---cheaply, which is the point---not as a table of constants.
+
+\subsection{Predictions for Human Experiments}\label{sec:predictions}
+
+The map's LLM-only cells convert into concrete predictions, each testable in a single incentivized session at standard subject payments (\$15--26; Table~\ref{tab:cost}), against the synthetic cells' $\sim\$10$ cost. We state them with directions and the evidence that motivates them.
+
+\begin{enumerate}[leftmargin=1.6em, itemsep=2pt]
+    \item \textbf{Payoff Safety in auctions.} A one-sentence honest statement of the second-price auction's invariant (``your bid determines whether you win, not what you pay'') will shift human bid distributions toward value, where the menu framing of \citet{gonczarowski2023strategyproofness} did not. No human experiment has tested a bare invariant statement in an auction---as distinct from direct advice to bid truthfully, which works but reveals the strategy \citep{masuda2022net}. This is the map's cheapest, sharpest test.
+    \item \textbf{Content, not restatement.} Across description treatments, behavioral gains will concentrate in invariance-stating text and be absent-to-negative for mechanics-restating text---the auction analogue of the pattern already visible in matching-domain evidence \citep{gonczarowski2024describing, katuscak2024simpler, guillen2018effectiveness} and in our external-robustness domain (Appendix~\ref{app:da}).
+    \item \textbf{The payoff tree.} A contingency-table explanation of the sealed second-price auction (what happens if you win; what happens if you lose; what your bid does and does not determine) will improve human truthful bidding without recommending a bid---an untested scaffold in the human literature.
+    \item \textbf{Belief prompts backfire.} Prompting human bidders in a strategy-proof auction to forecast opponents' bids (or opponents' beliefs) will reduce truthful bidding relative to an untreated control, most for the least experienced subjects---the diagnostic cell of H3, never run on humans to our knowledge.
+    \item \textbf{Interactions.} Clock $\times$ safety will show no incremental gain over the clock alone (substitutes); safety $\times$ payoff-tree will outperform either alone (complements); a menu description carrying the invariance sentence will behave like the safety description (content over format). The panel versions of these cells are registered and costed (Section~\ref{sec:map-interactions}); the human versions are single-session designs. \TODO{Run the panel interaction cells (E-v3-2) before fielding the human versions.}
+\end{enumerate}
+
+\subsection{Conclusion}\label{sec:conclusion}
+
+Human participants deviate from theoretically optimal play in ways that mechanism design must reckon with, and the space of remedies---implementations, descriptions, decision support---is too large to search with human experiments alone. This paper asked whether a panel of LLM bidding agents can serve as the search instrument, and answered with a validation and a harvest. The validation: across every auction comparison with published human evidence, the panel recovers the direction of the human finding, family by family, even though the two populations err in opposite directions and no tuning matches human levels---ordinal agreement without cardinal agreement, which is precisely the combination a screening tool requires and precisely what a proxy population would not exhibit. The harvest: a theory-organized design map in which obviously strategy-proof implementation sits robustly at the top; one honest sentence exposing \emph{why} truthful play is safe recovers much of its benefit; laying out payoff contingencies helps; restating mechanics does nothing on average; and prompting agents to model opponents reliably hurts---with every claim shown family by family, every unstable cell flagged rather than averaged, and every cell lacking human evidence converted into a costed, falsifiable prediction. The traces add the auditing rule: effective designs changed what agents did, not what they said, so screening must score behavior. The general conclusion we defend is deliberately modest and, we think, useful: \emph{LLM panels can help mechanism designers rank and screen theory-defined alternatives even when they do not reproduce human behavior in levels}---and used that way, with ordinal claims, cross-family robustness rules, and human experiments reserved for the cells that matter, they turn the dark interior of the design space into a list of experiments worth running.

@@ -1,0 +1,68 @@
+% ---------------------------------------------------------------------------
+% Appendix: Model-Specific Results and Failure Cases (NEW in v3).
+% Home for every result that fails the cross-family robustness rule of
+% sec:metrics: the clock-framing description (B3) and its second paraphrase,
+% the menu restatement's family-level signs under both baseline conventions,
+% the axis-2 baseline contamination record, the legacy backward-induction
+% framing cell, and per-cell sign flags. Frontier failure cases live in
+% app:ablations and are cross-referenced, not duplicated.
+% Sources: results/merged_ranking/{auction_cells.csv, concordance.md,
+% _axis2_baseline_provenance.md}; CONVENTIONS §3 canon.
+% ---------------------------------------------------------------------------
+\section{Model-Specific Results and Failure Cases}\label{app:heterogeneity}
+
+The main text admits a result only if its direction is consistent across the four prespecified model families (Section~\ref{sec:metrics}). This appendix is the other half of that rule: the cells whose direction flips across families, depends on a particular wording, or rests on a single family. They are reported as model heterogeneity and measurement findings---informative about how fragile presentation effects can be---not as design conclusions.
+
+\subsection{Clock-Framing (B3): Two Paraphrases, Two Profiles, One Shared Victim}\label{app:heterogeneity-b3}
+
+\paragraph{The canonical text.}
+The clock-framing description keeps the one-shot sealed bid and describes the submitted number as the threshold at which an automatic proxy would exit a rising price clock \citep{breitmoser2022obviousness}. It is a description, not a mechanism change: no prices are posted, no dropouts occur, and the cells record exactly one sealed bid per bidder (the true clock cells record per-tick decisions; Appendix~\ref{app:prompts}). Against the corrected pooled baselines it moves play significantly in \emph{every} family but not in the same direction: SMAD falls from $12.1\%$ to $6.3\%$ for GPT-4o and from $26.8\%$ to $13.8\%$ for Gemma---each roughly halving its deviation---and from $8.3\%$ to $7.2\%$ for Claude (all Welch $p < 0.001$), while Gemini moves the \emph{wrong} way, from $5.1\%$ to $9.5\%$ ($p < 0.001$). The sign agrees with the human evidence in three of four families; pooled $\rho = +0.30$ with a $95\%$ CI of $[-0.77, +0.52]$ whose width is the Gemini reversal. Where it works, the framing recovers a third to a half of the gap to truthful play; the true extensive-form clock recovers nearly all of it in every family (Section~\ref{sec:map-extensive}). Words that borrow the clock's framing can help, and for some families help substantially; the clock itself helps every family, and helps far more.
+
+\paragraph{The second paraphrase.}
+A provenance audit of the legacy run grid uncovered a \emph{second} clock-framing text that had been mislabeled as a baseline cell (Section~\ref{app:heterogeneity-axis2}): a two-stage description presenting the sealed bid as an ``exit price'' at which an ascending clock would remove the bidder. Its manipulation check passes---clock-and-exit language appears in $14.3\%$ of treated plans against $0\%$ in the corrected baselines (wild-cluster $p = 0.002$)---but its behavioral effects are violently heterogeneous: it nearly fixes Gemma (mean deviation $-6.53$ to $-0.59$), sharply \emph{backfires} for Gemini ($-1.25$ to $-6.12$), and leaves Claude and GPT-4o unmoved, with GPT-4o inert in language as well as bids (zero echo of the framing). The pooled effect is a null that conceals offsetting family-level responses ($p = 0.88$ pooled).
+
+\paragraph{What the pair establishes.}
+The two texts agree on exactly one regularity---both harm Gemini, the family most reactive to clock vocabulary---and otherwise produce \emph{different} family-level profiles from the same analogy: the canonical framing helps three families; the two-stage variant helps only Gemma. This is direct evidence that description effects are sensitive to wording in a way that extensive-form changes are not (the true clock helps every family), and it is why the main text's robustness rule exists: any single wording, evaluated on any single model, would have supported a confident and wrong generalization. Clock-framing enters the design map as \emph{flagged}, and the paraphrase battery for the headline levers is a registered next run (Section~\ref{sec:discussion-limitations}).
+
+\subsection{The Axis-2 ``Baseline'' Contamination}\label{app:heterogeneity-axis2}
+
+The corrected baseline convention of Section~\ref{sec:metrics} exists because of a provenance failure worth recording. The legacy run grid organized description/scaffold cells into three axes, each with its own ``baseline'' cell; the audit (documented in \path{results/merged_ranking/_axis2_baseline_provenance.md}) found that the \texttt{axis2\_forward\_baseline} template was not a plain SPSB description at all but the two-stage sealed-bid-as-clock-exit description above. Three consequences were mechanical. First, every contrast previously computed against the axis-2 ``baseline'' was a treatment-versus-treatment comparison; the corrected pool comprises the axis-1 and axis-3 baseline cells only (per-family means $+0.54$, $-1.25$, $-2.94$, $-6.53$). Second, Gemma's ``anomalously good axis-2 baseline'' (SMAD $8.6\%$ against $20.7\%$ pooled) is explained, not noise: Gemma responds strongly to exactly this description. Third, correcting the pool \emph{raised} the cross-family concordance of the lever ordering, Kendall's $W$ from $0.43$ to $0.70$---the mislabeled treatment had been injecting noise into every axis-2 contrast. The reclassified cell is analyzed as a treatment in Section~\ref{app:heterogeneity-b3}.
+
+\subsection{The Menu Restatement's Family-Level Signs, Under Both Baseline Conventions}\label{app:heterogeneity-menu}
+
+The menu cell is null on average (sign test $p = 0.73$) and enters the design map as \emph{inactive}; its family-level signs are reported here in full because they are doubly unstable---sign-mixed across families \emph{and} sensitive to the baseline convention.
+
+\begin{table}[htbp]
+\centering
+\footnotesize
+\begin{tabular}{l cc cc}
+\toprule
+& \multicolumn{2}{c}{vs.\ corrected pooled axis baseline} & \multicolumn{2}{c}{vs.\ same-batch baseline cells} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}
+Family & $\Delta$ (\$) & tests & $\Delta$ (\$) & tests \\
+\midrule
+Claude 3.5 Haiku & $+0.82$ away & Welch $p=0.064$; MW $p<0.001$ & $+0.88$ away & Welch $p=0.042$, $d=0.24$ \\
+Gemini 2.0 Flash & $+0.12$ null & $p=0.56$ & $+1.75$ toward & Welch $p<0.001$, $d=0.50$ \\
+GPT-4o & $-1.16$ away & Welch $p=0.013$; MW $p=0.54$ & $-1.32$ away & Welch $p=0.003$, $d=-0.37$ \\
+Gemma 27B & $+2.03$ toward & $p<0.001$ & $+0.04$ null & Welch $p=0.94$ \\
+\bottomrule
+\end{tabular}
+\caption{Family-level menu-restatement contrasts under the two declared baseline conventions. ``Toward''/``away'' = toward/away from truthful bidding on the signed-deviation scale; menu endpoints are $+1.37$ (Claude), $-1.13$ (Gemini), $-4.10$ (GPT-4o), $-4.50$ (Gemma). Corrected pooled axis baselines: $+0.54$, $-1.25$, $-2.94$, $-6.53$; same-batch baselines: $+0.48$, $-2.88$, $-2.78$, $-4.54$. The pooled null is convention-invariant; the family-level attribution of ``who improves'' is not (Gemma under the corrected pool; Gemini under the same-batch cells). The corrected pool is the paper's canonical convention (Section~\ref{sec:metrics}); the predecessor draft quoted different conventions in different sections, which this table supersedes.}
+\label{tab:menu-conventions}
+\end{table}
+
+Three readings survive the instability, and only three. (i) The menu restatement has no consistent direction in any convention---the design classification \emph{inactive} is convention-robust. (ii) The pattern also survives payment-rule variation: in GPT-4o's first-price variant of the same grid, the menu cell is indistinguishable from its baseline ($p = 0.63$). (iii) Family-level menu effects are real but idiosyncratic---models react to the reworded outcome function in model-specific ways that a single-population human experiment could never have detected, and that a designer should treat as risk rather than as a lever. The frontier grid sharpens (iii) dramatically: the same restatement collapses Claude Sonnet 5 from exact truthfulness to a $35.5\%$ deviation while leaving two other frontier models exactly truthful (Appendix~\ref{app:ablations}).
+
+\subsection{Minor Flags}\label{app:heterogeneity-minor}
+
+\paragraph{Claude's Payoff-Safety sign.}
+In the trace-aligned logs, Claude's Payoff-Safety cell has a mean deviation of $+0.30$ (mild overbidding), whereas the predecessor manuscript reported $-0.30$. The magnitude and every absolute-deviation quantity are unaffected; signed summaries should quote $+0.30$ with this flag (Section~\ref{sec:map-descriptions} does).
+
+\paragraph{The legacy backward-induction framing.}
+The repository contains a ``backward-induction'' framing of the static sealed bid (repo label \texttt{axis2\_forward\_backward\_induct}; cross-family mean deviation $-1.65$ against the pooled-axis baseline $-2.55$). A one-shot bid has no forward-planning axis, so the cell has no coordinate in the design map (Table~\ref{tab:design-space} marks C2 as N/A); it is catalogued in the intervention inventory (Appendix~\ref{app:prompts}) and not analyzed further.
+
+\paragraph{Gemma's flattened difficulty ratio.}
+Gemma preserves the FPSB-vs-SPSB direction but nearly flattens the ratio ($24.80\%$ versus $19.88\%$, ratio $1.25$, against $4.4$ for reconstructed humans and $3.2$ for GPT-4o): the human-like difficulty \emph{spacing} is partly model-specific even where the ordering is not (Appendix~\ref{app:ablations}, Table~\ref{tab:gemma-fidelity}).
+
+\paragraph{Frontier failure cases.}
+The two frontier presentation failures---the menu restatement's collapse of Claude Sonnet 5 and the affiliation-wording winner's-curse misfire on the clock---are analyzed with the frontier grid in Appendix~\ref{app:ablations}; both are single-family, wording-triggered effects and are cited in the main text only as scope evidence, per the robustness rule.

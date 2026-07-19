@@ -1,0 +1,179 @@
+% ============================================================================
+% 02_theory.tex — auction-v3, Section 2: Simplicity Theory and the Design Map
+% Rewrite of contents_v2/03_framework.tex per revision directive.
+% GENERAL-FIRST PASS per Kehang (2026-07-19, example.pdf style): §2.1 now
+% defines everything for an ARBITRARY mechanism with notation — types
+% theta_i, actions A_i, outcome function g, dominant strategy sigma*,
+% strategy-proofness, and the paper's estimand: the behavioral deviation
+% D = E[d(a,theta)] (zero at the dominant action; |b-v| for bids, pairwise
+% inversions for rankings), plus general OSP / strategic-simplicity /
+% one-step / three-burden definitions. §2.2 (NEW, sec:theory-auction) then
+% instantiates the framework in the SPSB/clock scenario and states the
+% SP-but-not-OSP wedge as the identifying variation, with the DA
+% portability clause. Original directive items retained:
+% (i) plain-language accessible definitions for a non-specialist audience;
+% (ii) auction-only — DA removed to the external-robustness appendix;
+% (iii) presents the COMPLETE combinatorial design map (tab:design-space)
+% with an ex-ante prediction and an evidence label for every cell BEFORE
+% any results; (iv) hypotheses explicitly linked to the LLM-simulation
+% method (what each hypothesis predicts for bids and for stated plans);
+% (v) third price removed; the +X pair added as the unfamiliar-format
+% robustness probe (runs pending, \TODO).
+% ============================================================================
+
+\section{Simplicity Theory and the Design Map}\label{sec:theory}
+
+This section builds the framework in three steps, general first. Section~\ref{sec:theory-simplicity} defines the objects for an arbitrary mechanism---dominant strategies, strategy-proofness, the behavioral deviation the paper measures, and the simplicity notions that predict when that deviation should be small. Section~\ref{sec:theory-auction} instantiates everything in the auction scenario. Sections~\ref{sec:theory-levers}--\ref{sec:theory-hypotheses} then organize the designer's remaining choices into a design map and state, ex ante, what each cell should do.
+
+\subsection{Mechanisms, Dominant Strategies, and Behavioral Deviation}\label{sec:theory-simplicity}
+
+A mechanism asks $n$ participants to act and turns their actions into an outcome. Participant $i$ privately holds information $\theta_i \in \Theta_i$---a value for an item, a preference ranking over schools---and the mechanism specifies an action set $A_i$ (submit a bid, submit a rank-order list, answer a sequence of stay/exit queries) and an outcome function $g$ that maps every action profile $a = (a_1, \dots, a_n)$ to an allocation and payments. Participant $i$'s payoff $u_i\big(g(a), \theta_i\big)$ depends on the outcome and on her own information, and a strategy $\sigma_i$ maps her information to an action.
+
+A strategy $\sigma^{\star}_i$ is \emph{dominant} if playing it is optimal no matter what the others do: for every $\theta_i$, every alternative action $a_i \in A_i$, and every profile $a_{-i}$ of the other participants' actions,
+\[
+u_i\big(g(\sigma^{\star}_i(\theta_i),\, a_{-i}),\, \theta_i\big) \;\ge\; u_i\big(g(a_i,\, a_{-i}),\, \theta_i\big).
+\]
+A direct mechanism ($A_i = \Theta_i$) is \emph{strategy-proof} if truthful reporting, $\sigma^{\star}_i(\theta_i) = \theta_i$, is dominant. Strategy-proofness is a prized design property because it makes good play radically simple in principle: a participant needs no data about competitors, no forecasts, and no strategic sophistication; honesty is a best response to everything.
+
+The behavioral object of this paper is the gap between prescribed and observed play. Fix a distance $d(a_i, \theta_i) \ge 0$ on actions, equal to zero exactly at the dominant action---for bids, the absolute distance between the submitted and the dominant bid; for rank-order lists, the number of pairwise inversions---and call a participant population's expected distance its \emph{deviation},
+\[
+D \;=\; \mathbb{E}\big[\, d(a_i, \theta_i) \,\big],
+\]
+measured under the mechanism \emph{as implemented, described, and supported}. For fully rational participants in a strategy-proof mechanism, $D = 0$ however the mechanism is implemented, worded, or explained: that is exactly what dominance means. Empirically, $D > 0$, persistently and across institutions (Section~\ref{sec:intro}). The estimand of this paper is how the interface choices a designer still controls move $D$ while the outcome function $g$ is held fixed; Section~\ref{sec:metrics} normalizes $D$ so that it is comparable across mechanisms and across participant populations.
+
+Why is $D > 0$ at all? The dominant strategy must be \emph{recognized}, and recognizing it is a computation \citep{oprea2024decisions}. The theory of simple mechanisms characterizes when that computation is easy, at the same level of generality as the definitions above. A mechanism---now an extensive form, not necessarily a direct one---is \emph{obviously strategy-proof} (OSP) if, at every point where a participant might first deviate from $\sigma^{\star}$, even the \emph{worst} outcome from following $\sigma^{\star}$ is at least as good as the \emph{best} outcome from deviating \citep{li2017obviously}; verifying dominance in an OSP mechanism therefore requires no hypothetical, case-by-case reasoning about moves the participant cannot observe. A mechanism is \emph{strategically simple} if optimal play requires no beliefs about other participants \citep{borgers2019strategically}, and \emph{one-step simple} if it requires no multi-step foresight over one's own future moves \citep{pycia2023theory}. \citet{li2024designing} decomposes the residual cognitive burden of a mechanism into three demands, and this decomposition organizes everything that follows: \textbf{contingent reasoning} (thinking case-by-case about unobserved moves of others), \textbf{forward planning} (thinking ahead about one's own future moves), and \textbf{belief formation} (thinking about what others will do or believe). In a strategy-proof mechanism, belief formation is a tax a participant should never pay---beliefs are irrelevant to optimal play---so any behavioral response to a belief prompt signals strategizing where none is needed.
+
+\subsection{The Auction Scenario}\label{sec:theory-auction}
+
+We instantiate the framework in the canonical scenario. Private information is a value $\theta_i = v_i$, drawn independently from a known distribution; the action is a sealed bid $a_i = b_i \ge 0$; and the outcome function of the second-price sealed-bid (SPSB) auction awards the item to the highest bidder at a price $p$ equal to the \emph{second}-highest bid, giving the winner payoff $v_i - p$ and everyone else zero. Truthful bidding, $\sigma^{\star}(v_i) = v_i$, is dominant, and the argument is two sentences long: your bid affects only whether you win, not the price you pay (the price is set by someone else's bid), so bidding above value can only add wins that lose money, and bidding below value can only remove wins that make money \citep{vickrey1961counterspeculation}. SPSB is therefore strategy-proof, the deviation distance is $d(b_i, v_i) = |b_i - v_i|$, and theory predicts $D = 0$. Human subjects deliver $D > 0$ decade after decade, mostly by overbidding \citep{kagel1993independent, kagel1995individual}.
+
+The scenario also contains, within a single outcome rule, exactly the wedge the simplicity notions describe. SPSB is strategy-proof but \emph{not} OSP: to verify that truth-telling is best, a bidder must reason case by case over rival bids she cannot observe---the contingent-reasoning burden. The ascending clock auction implements the \emph{same} outcome function $g$ in a different extensive form---the price rises in small increments, each bidder chooses \emph{stay} or \emph{exit} at each price, and the last bidder standing wins at the runner-up's exit price---and it \emph{is} OSP: at every price, ``stay while the price is below my value'' beats exiting in every possible continuation, one comparison at a time. The clock is additionally one-step simple (no backward induction over future prices is needed), and both formats are strategically simple (beliefs are irrelevant in each). One allocation rule, two implementations, dominant in both, obvious in only one: this wedge is the identifying variation that every lever in the design map acts on. The same construction exists outside auctions---student-proposing deferred acceptance admits OSP implementations under suitable priority structures \citep{ashlagi2018stable}---which is what makes the framework, and the instrument built on it, portable (Appendix~\ref{app:da}).
+
+\subsection{Three Dimensions of Design}\label{sec:theory-levers}
+
+Fix the outcome function $g$: the item goes to the highest bidder at the second-highest bid, whether elicited by sealed bid or by clock. Everything a designer can still change falls along three dimensions, each of which holds the economics fixed and varies one layer of the mechanism's human---and now agent---interface. These are the columns of our design map.
+
+\paragraph{Dimension 1: Implementation (A).}
+Change the extensive form through which bids are elicited, holding the outcome rule fixed. Our implementation lever replaces the one-shot sealed bid with the ascending clock, in open (AC: dropouts observed) and closed (AC-B: dropouts unobserved) variants. Theory makes the sharpest prediction here: OSP implementations remove the contingent-reasoning burden entirely \citep{li2017obviously}, so the clock should produce the largest and most uniform improvement in truthful play. Because format familiarity is a potential confound---models, like people, have seen many descriptions of standard auctions---the map also registers the \emph{+X pair} of \citet{li2017obviously}: sealed and clock implementations of a second-price rule shifted by a commonly known premium $X$, which preserves the strategy-proof/OSP distinction while making the format unfamiliar. \TODO{2P+X and AC+X cells are registered but not yet run (E-v3-1); pin the exact +X parameterization to \citet{li2017obviously} before launching.}
+
+\paragraph{Dimension 2: Description (B).}
+Keep the sealed bid and change only the words that explain it. The theory here is due to \citet{gonczarowski2023strategyproofness}, who formalize descriptions that make a mechanism's incentive properties transparent, and the human evidence splits the dimension into three sub-levers that we keep strictly separate. \textbf{(B1) Menu restatement}: re-describe the outcome function as a menu---the opponents' bids fix a price at which you may win, and your bid merely selects whether you accept; behaviorally close to inert for human subjects \citep{gonczarowski2023strategyproofness, gonczarowski2024describing}. \textbf{(B2) Safety-exposing description}: state, in one honest sentence, the structural invariant that makes truthful play safe---``your bid determines IF you win, not WHAT you pay; if you win, you pay what others bid, not what you bid'' (\emph{Payoff Safety}, the pivotal logic of \citealp{vickrey1961counterspeculation}). No human auction experiment has tested a bare invariant statement of this kind; the nearest evidence is from matching mechanisms, where property-exposing descriptions help and mechanics-only descriptions backfire \citep{gonczarowski2024describing, katuscak2024simpler, guillen2018effectiveness}. \textbf{(B3) Clock-framing}: describe the sealed bid as the exit threshold an automatic proxy would use on a rising price clock---OSP-style language with no change to the game---which increases truthful bidding in human subjects \citep{breitmoser2022obviousness}. The accounting matters: B3 is a \emph{description} of a sealed-bid game; the actual clock is an implementation change and belongs to Dimension~1. The two are never pooled.
+
+\paragraph{Dimension 3: Reasoning support (C).}
+Keep the mechanism and its description fixed and scaffold \emph{how} the agent reasons, without revealing the dominant strategy. We index the scaffolds by the three cognitive burdens of \citet{li2024designing}. \textbf{(C1) Contingent reasoning}: the \emph{Payoff Tree} lays out the explicit tree of contingencies---``PATH A: your bid is highest $\to$ you win and pay the second-highest bid; PATH B: it is not $\to$ you lose and pay nothing''---telling the agent what \emph{happens} in each case, never what to \emph{do}. Because contingent reasoning is exactly the burden the sealed bid imposes, C1 is predicted to help. \textbf{(C2) Forward planning}: a one-shot sealed bid has no future own-moves to plan over, so this axis has nothing to bind on in our auction grid; the cell is marked N/A in the map (the clock's within-instance dynamics are one-step simple, so it does not bind there either). \textbf{(C3) Belief formation}: first-order (``what do you expect the others to bid?'') and second-order (``what do the others think \emph{you} will bid?'') prompts. Because dominant strategies are belief-free, C3 is predicted to be inert for a participant who has internalized strategy-proofness---so any measured effect is diagnostic of mis-strategizing, and for agents that treat the auction as a beliefs game, making opponents salient is predicted to \emph{backfire}.
+
+\paragraph{A bounding family (D), reported in the appendix.}
+Preference framings---risk personas, loss/endowment frames \citep{kahneman1979prospect, dreyfuss2022expectations}---alter the agent's stated objective rather than the mechanism's interface. Under a dominant strategy they are payoff-irrelevant for any monotone utility, and no designer would deploy them to improve play; we run them to bound the damage a careless or adversarial framing can do and report them in Appendix~\ref{app:prospect}. They do not enter the design map.
+
+\subsection{The Design Map}\label{sec:theory-map}
+
+Figure~\ref{fig:design-space} presents the complete map before any result: every economically meaningful cell formed from the three dimensions, its theoretical prediction, and an \emph{evidence label} recording what is known about it independently of this paper. (The fully specified reference version, with the per-cell citations, is Table~\ref{tab:design-space} in Appendix~\ref{app:tables}.) Four labels are used. \textbf{Human anchor}: a directly comparable human experiment exists. \textbf{Nearby evidence}: related but not directly matched human evidence exists (e.g., the same description content tested in a matching mechanism rather than an auction). \textbf{New prediction}: only LLM evidence will exist; the cell is a falsifiable prediction for a future human experiment. \textbf{N/A}: the combination has no coherent theoretical interpretation. Cells registered but not yet run are marked \emph{pending}. The map is intended to work the way a periodic table does: the anchored cells test whether the instrument fills known entries correctly (Section~\ref{sec:validation}); the same theoretical structure then licenses filling the unobserved entries (Section~\ref{sec:map}); and the unobserved entries become predictions for human experiments (Section~\ref{sec:discussion}).
+
+Single levers occupy most of the map, but the combinatorial structure also defines \emph{interaction} cells, and theory signs them ex ante. Implementation and safety-description should be \emph{substitutes}: the clock already makes the safety of truth-telling visible at every price, so adding the safety sentence to a clock should add nothing (a ceiling effect). Safety-description and the payoff tree should be \emph{complements} in the direct mechanism: one supplies the invariant (why truth-telling is safe), the other the case analysis (what happens in each contingency), and they relieve different parts of the same verification. A menu restatement augmented with the invariance sentence should behave like a safety description---the informative contrast being with the bare menu, which restates the computation without the invariant. And a belief prompt layered on the clock is a diagnostic: OSP should immunize play against opponent salience. These four combination cells are registered in the map; the single-lever cells are complete, and the combination cells are the map's next wave. \TODO{Combination cells A$\times$B2, B2$\times$C1, B1+invariance, A$\times$C3 registered but not yet run (E-v3-2); each carries an ex-ante predicted sign in Table~\ref{tab:design-space}.}
+
+\begin{figure}[t]
+\centering
+% ---------------------------------------------------------------------------
+% fig:design-space — the ex-ante design map as a visual (2026-07-19
+% digestibility pass). Reference table with per-cell citations:
+% tab:design-space in app:tables. Solid border = run; dashed = registered,
+% runs pending; grayed = N/A. [H]/[N]/[P] = evidence labels.
+% ---------------------------------------------------------------------------
+\begin{tikzpicture}[
+  dimhead/.style={font=\footnotesize\bfseries, anchor=north west},
+  cell/.style={draw=black!65, rounded corners=2pt, align=left, font=\scriptsize,
+               inner sep=4pt, text width=4.55cm, fill=white, anchor=north west},
+  pend/.style={dashed, fill=black!4},
+  nacell/.style={draw=black!30, text=black!55},
+  basecell/.style={draw=black!65, rounded corners=2pt, align=center, font=\scriptsize,
+               inner sep=4pt, text width=11.6cm, fill=black!8, anchor=north},
+]
+% ---- baseline strip --------------------------------------------------------
+\node[basecell] (base) at (7.35, 0.0)
+  {\textbf{Baseline: SPSB sealed bid, standard description} --- outcome rule $g$ fixed in every cell \;\textcolor{teal!60!black}{\textbf{[H]}}\ {\tiny both populations deviate}};
+% ---- column headers --------------------------------------------------------
+\node[dimhead] at (0.0, -0.85) {Dimension 1: Implementation};
+\node[dimhead] at (5.0, -0.85) {Dimension 2: Description};
+\node[dimhead] at (10.0, -0.85) {Dimension 3: Reasoning support};
+% ---- column A ---------------------------------------------------------------
+\node[cell] (a1) at (0.0, -1.3)
+  {\textbf{Ascending clock (AC / AC-B)} {\tiny(A)}\\
+   predicted $\Uparrow$ largest gain: OSP removes contingent reasoning; one-step\\
+   \textcolor{teal!60!black}{\textbf{[H]}}\ {\tiny human anchor}};
+\node[cell, pend, below=5pt of a1.south west, anchor=north west] (a2)
+  {\textbf{2P+X / AC+X pair} {\tiny(A)}\\
+   predicted: same OSP gap, format familiarity removed\\
+   \textcolor{teal!60!black}{\textbf{[H]}}\ {\tiny human anchor} $\cdot$ {\tiny pending}};
+% ---- column B ---------------------------------------------------------------
+\node[cell] (b1) at (5.0, -1.3)
+  {\textbf{Menu restatement} {\tiny(B1)}\\
+   predicted $\approx 0$: restates the rules, adds no incentive content\\
+   \textcolor{teal!60!black}{\textbf{[H]}}\ {\tiny human anchor (behavioral null)}};
+\node[cell, below=5pt of b1.south west, anchor=north west] (b2)
+  {\textbf{Payoff Safety} {\tiny(B2)}\\
+   predicted $\uparrow$ approaching OSP: states the invariant that makes truth-telling safe\\
+   \textcolor{orange!75!black}{\textbf{[N]}}\ {\tiny nearby (matching); auction cell $=$ new prediction}};
+\node[cell, below=5pt of b2.south west, anchor=north west] (b3)
+  {\textbf{Clock-framing} {\tiny(B3)}\\
+   predicted $\uparrow$: OSP-style language, game unchanged\\
+   \textcolor{teal!60!black}{\textbf{[H]}}\ {\tiny human anchor}};
+\node[cell, pend, below=5pt of b3.south west, anchor=north west] (b4)
+  {\textbf{Menu $+$ invariance sentence} {\tiny(B1$+$B2)}\\
+   predicted $\uparrow$, behaves like B2 (content over format)\\
+   \textcolor{orange!75!black}{\textbf{[N]}}\ {\tiny nearby (Appendix~\ref{app:da})} $\cdot$ {\tiny pending}};
+% ---- column C ---------------------------------------------------------------
+\node[cell] (c1) at (10.0, -1.3)
+  {\textbf{Payoff Tree} {\tiny(C1)}\\
+   predicted $\uparrow$: constructs the contingency cases (the binding axis)\\
+   \textcolor{violet!80!black}{\textbf{[P]}}\ {\tiny new prediction}};
+\node[cell, nacell, below=5pt of c1.south west, anchor=north west] (c2)
+  {\textbf{Forward planning} {\tiny(C2)}\\
+   N/A: no future own moves in a one-shot bid};
+\node[cell, below=5pt of c2.south west, anchor=north west] (c3)
+  {\textbf{First-order beliefs} {\tiny(C3)}\\
+   predicted $\downarrow$: irrelevant axis; any effect diagnoses strategizing\\
+   \textcolor{violet!80!black}{\textbf{[P]}}\ {\tiny new prediction}};
+\node[cell, below=5pt of c3.south west, anchor=north west] (c4)
+  {\textbf{Second-order beliefs} {\tiny(C3)}\\
+   predicted $\downarrow$, more severe\\
+   \textcolor{violet!80!black}{\textbf{[P]}}\ {\tiny new prediction}};
+% ---- interactions band ------------------------------------------------------
+\node[dimhead, anchor=north west] (ihead) at (0.0, -7.7) {Interactions (registered, ex-ante signs)};
+\node[cell, pend, text width=4.55cm] (i1) at (0.0, -8.15)
+  {\textbf{Clock $\times$ Safety} {\tiny(A$\times$B2)}\\
+   predicted: substitutes (ceiling)\; \textcolor{violet!80!black}{\textbf{[P]}}\ {\tiny pending}};
+\node[cell, pend, text width=4.55cm] (i2) at (5.0, -8.15)
+  {\textbf{Safety $\times$ Tree} {\tiny(B2$\times$C1)}\\
+   predicted: complements\; \textcolor{violet!80!black}{\textbf{[P]}}\ {\tiny pending}};
+\node[cell, pend, text width=4.55cm] (i3) at (10.0, -8.15)
+  {\textbf{Clock $\times$ Beliefs} {\tiny(A$\times$C3)}\\
+   predicted: inert (OSP immunizes)\; \textcolor{violet!80!black}{\textbf{[P]}}\ {\tiny pending}};
+% ---- legend ------------------------------------------------------------------
+\node[align=left, font=\tiny, anchor=north west, text width=14.6cm] at (0.0, -9.6)
+  {solid border $=$ run \; $\cdot$ \; dashed $=$ registered, runs pending \; $\cdot$ \;
+   $\Uparrow$/$\uparrow$ predicted improvement, $\downarrow$ predicted backfire, $\approx 0$ predicted inert \; $\cdot$ \;
+   \textcolor{teal!60!black}{\textbf{[H]}}\ directly comparable human experiment exists \; $\cdot$ \;
+   \textcolor{orange!75!black}{\textbf{[N]}}\ related but unmatched human evidence \; $\cdot$ \;
+   \textcolor{violet!80!black}{\textbf{[P]}}\ LLM-only cell $=$ falsifiable prediction for human subjects};
+\end{tikzpicture}
+\caption{The design map, stated before any result. Every cell holds the outcome rule (highest bidder wins at the second-highest bid) fixed; the three dimensions vary which interface layer the participant meets. Predictions are derived ex ante from the theory of Section~\ref{sec:theory-simplicity}; roughly half the map is predicted inert or harmful, which the experiments test. Preference framings (Family D) are payoff-irrelevant bounding cells, excluded from the map (Appendix~\ref{app:prospect}). The fully specified reference version, with per-cell citations, is Table~\ref{tab:design-space} in Appendix~\ref{app:tables}; verbatim prompt texts are in Appendix~\ref{app:prompts}.}
+\label{fig:design-space}
+\end{figure}
+
+\subsection{Hypotheses, and How the Instrument Tests Them}\label{sec:theory-hypotheses}
+
+The theory yields three ordered hypotheses. We state them before presenting any results, and---because this paper's method is simulation with LLM agents---we state for each one exactly what it predicts in the data the instrument produces: a \emph{bid} for every agent-instance (scored as a deviation from the dominant strategy; Section~\ref{sec:metrics}) and a \emph{stated plan} accompanying every bid (scored with the coding framework of Section~\ref{sec:traces}). Each hypothesis is a contrast between cells of Table~\ref{tab:design-space}, estimated within each model family and accepted only if its direction replicates across all four families (the robustness rule of Section~\ref{sec:metrics}).
+
+\paragraph{H1 (Implementation dominates).}
+The clock cells show the largest and most uniform reduction in bid deviations of any cell in the map, in every model family. \emph{In bids}: mean deviations compress toward zero and the left tail of severe underbids disappears. \emph{In plans}: sealed-bid plans should exhibit contingent-reasoning failures (opponent speculation, margin heuristics), while clock plans reduce to the one-step comparison ``is the price still below my value?''---the burden the OSP form removes should vanish from the language as well as from the bids. H1 is the map's calibration hypothesis: it has an unambiguous human anchor, so an instrument that fails H1 fails validation.
+
+\paragraph{H2 (Descriptions substitute when---and only when---they expose the invariant).}
+Within Dimension~2, text that states the safety invariant (B2; and the invariance-carrying menu variant, when run) approaches the clock's effect \emph{without} changing the game, while text that restates the outcome function without the invariant (B1) is null or harmful. The mechanical restatement is the built-in placebo: it adds words, length, and salience while adding no incentive content, so H2 fails if ``any extra explanation'' helps. \emph{In bids}: B2 deviations shrink in every family; B1 deviations do not move consistently. \emph{In plans}: H2 is agnostic---the description may work by changing what agents articulate or by changing behavior directly; Section~\ref{sec:traces} measures which, and finds the latter.
+
+\paragraph{H3 (Reasoning support is axis-specific; belief scaffolds are diagnostic).}
+A scaffold helps only if it relaxes the axis on which the mechanism's cognitive demand actually binds. C1 (contingent reasoning) targets the sealed bid's binding axis and should help. C2 has no axis to bind on and is N/A by design. C3 (beliefs) targets an axis that strategy-proofness makes irrelevant, so for a rational participant it must be inert---and any measured effect, in either direction, is evidence that the agent is playing a beliefs game rather than the dominant strategy. For such an agent, we predict C3 \emph{backfires}, most severely for the weakest reasoners. \emph{In bids}: C1 improves all families; C3 degrades them (or is null for families that already ignore opponents). \emph{In plans}: C3's manipulation check is that opponent-directed language rises; its diagnostic content is that bids move at all. Backfiring is not an embarrassment for the taxonomy but its predicted signature: the designer's lever space contains anti-levers, and identifying them is part of what a screening instrument is for.
+
+\paragraph{A note on taxonomy provenance.}
+The operational prompt labels in our experiment repository predate this taxonomy, and two assignments were corrected when it was built: the \emph{Payoff Tree} template was originally filed under forward planning (repo label \texttt{axis2\_forward\_tree}) and is classified here as C1, because the tree enumerates payoff \emph{contingencies}, not future own moves; and one legacy template name (\texttt{intervention\_proxy\_breitmoser}) historically referred both to the clock-framing \emph{description} and to the true iterative clock---the two are strictly separated here as B3 and Dimension~1 respectively, with distinct prompt identifiers and empirically distinct cells (the framing cells record one sealed bid per bidder; the clock cells record per-tick stay/exit decisions). The full old-to-new mapping, with run status for every template in the repository, is Table~\ref{tab:intervention-inventory} in Appendix~\ref{app:prompts}. The taxonomy and its predictions were fixed from published theory, not from prompt search; the predicted-inert and predicted-backfire cells are part of what the experiments test.
+
+With the map and its predictions on record, the next section describes the instrument itself---environments, agents, metrics, and the human benchmark layer---and asks whether the panel fills the map's anchored cells correctly.
