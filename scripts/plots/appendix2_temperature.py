@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import seaborn as sns
 import re
@@ -12,7 +14,10 @@ sns.set_theme(style="whitegrid", context="talk")
 plt.rcParams['font.size'] = 11
 
 # Base directory
-base_dir = Path('/Users/kehangzh/Desktop/llm-auction/robustness_logs')
+ROOT = Path(__file__).resolve().parents[2]
+base_dir = ROOT / "robustness_logs"
+OUT = ROOT / "writeup" / "figures"
+OUT.mkdir(parents=True, exist_ok=True)
 
 # Define auction types and their parameters
 auction_configs = {
@@ -235,7 +240,7 @@ def load_human_data():
     Returns:
         DataFrame with columns: auction, smad, ci_lower, ci_upper, has_ci
     """
-    df = pd.read_csv('./auction_human.csv')
+    df = pd.read_csv(ROOT / 'plots/auction_human.csv')
 
     # Map human format names to standard names
     format_mapping = {
@@ -314,7 +319,7 @@ def load_gpt4o_base_data():
     Returns:
         DataFrame with columns: auction, model, smad, ci_lower, ci_upper, n
     """
-    df = pd.read_csv('./theoretical_deviation_results_updated.csv')
+    df = pd.read_csv(ROOT / 'plots/theoretical_deviation_results_updated.csv')
 
     gpt4o_data = []
     for _, row in df.iterrows():
@@ -520,11 +525,11 @@ def create_comparison_plot(results_df):
     plt.tight_layout()
 
     # Save figure
-    output_path = Path('./appendix2_temperature_comparison.png')
+    output_path = OUT / 'appendix2_temperature_comparison.png'
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"\n\nPlot saved to: {output_path}")
 
-    plt.show()
+    plt.close("all")
 
 
 def perform_statistical_tests(results_df):
@@ -766,7 +771,7 @@ def main():
     results_df = process_all_models()
 
     # Save results to CSV
-    output_csv = Path('./appendix2_temperature_results.csv')
+    output_csv = OUT / 'appendix2_temperature_results.csv'
     results_df.to_csv(output_csv, index=False)
     print(f"\n\nResults saved to: {output_csv}")
 
@@ -788,7 +793,7 @@ def main():
     latex_table = generate_latex_table(test_df)
 
     # Save LaTeX table to file
-    latex_output = Path('./appendix2_temperature_latex.tex')
+    latex_output = OUT / 'appendix2_temperature_latex.tex'
     with open(latex_output, 'w') as f:
         f.write(latex_table)
     print(f"\nLaTeX table saved to: {latex_output}")

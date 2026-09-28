@@ -1,3 +1,10 @@
+from pathlib import Path
+import matplotlib
+matplotlib.use("Agg")
+ROOT = Path(__file__).resolve().parents[2]
+OUT = ROOT / "writeup" / "figures"
+OUT.mkdir(parents=True, exist_ok=True)
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -5,8 +12,8 @@ from scipy import stats
 from scipy.stats import sem
 
 # Read the data
-fpsb_df = pd.read_csv('../robustness_logs/fpsb_ipv_15_rounds/run_2026-01-11_21-38-07-616091/results/fpsb_ipv_results.csv')
-spsb_df = pd.read_csv('../robustness_logs/spsb_ipv_15_round/run_2026-01-11_20-51-34-820810/results/spsb_ipv_results.csv')
+fpsb_df = pd.read_csv(ROOT / 'robustness_logs/fpsb_ipv_15_rounds/run_2026-01-11_21-38-07-616091/results/fpsb_ipv_results.csv')
+spsb_df = pd.read_csv(ROOT / 'robustness_logs/spsb_ipv_15_round/run_2026-01-11_20-51-34-820810/results/spsb_ipv_results.csv')
 
 # Calculate MAD for FPSB (optimal bid = 2/3 * value)
 fpsb_df['optimal_bid'] = (2/3) * fpsb_df['player_value']
@@ -61,8 +68,8 @@ plt.grid(True, alpha=0.3)
 plt.tight_layout()
 
 # Save the plot
-plt.savefig('./smad_rounds.png', dpi=300, bbox_inches='tight')
-plt.savefig('./smad_rounds.pdf', bbox_inches='tight')
+plt.savefig(OUT / 'smad_rounds.png', dpi=300, bbox_inches='tight')
+plt.savefig(OUT / 'smad_rounds.pdf', bbox_inches='tight')
 print("Plot saved to plots/smad_rounds.png and plots/smad_rounds.pdf")
 
 # ===== Statistical Tests =====
@@ -159,4 +166,4 @@ print(f"  Linear trend: {'Significant' if spsb_trend_p < 0.05 else 'Not signific
 
 print("\n" + "="*60)
 
-plt.show()
+plt.close("all")
