@@ -1,0 +1,122 @@
+{
+  "status": "completed",
+  "round_count": 2,
+  "trader_decision_count": 8,
+  "exchange_settlement_acks": [
+    {
+      "round": 1,
+      "settled": "settled"
+    },
+    {
+      "round": 2,
+      "settled": "settled"
+    }
+  ],
+  "repeat_stop_condition": "Machine.is_complete()",
+  "trades": 2,
+  "tape": [
+    {
+      "round": 1,
+      "best_bid": 1275,
+      "best_bidder": "trader-B",
+      "best_ask": 1200,
+      "best_asker": "trader-D",
+      "volume": 1,
+      "price_cents": 1238,
+      "buyer": "trader-B",
+      "seller": "trader-D"
+    },
+    {
+      "round": 2,
+      "best_bid": 1250,
+      "best_bidder": "trader-A",
+      "best_ask": 1225,
+      "best_asker": "trader-C",
+      "volume": 1,
+      "price_cents": 1238,
+      "buyer": "trader-A",
+      "seller": "trader-C"
+    }
+  ],
+  "trader_decisions": [
+    {
+      "round": 1,
+      "trader": "trader-A",
+      "price_cents": 1250,
+      "rationale": "The asset's reference value is $13.00, and my strategy is to look for opportunities to buy below this value. I have enough cash to cover a bid at $12.50, which aligns with my value-buying strategy. This bid allows me to potentially acquire an additional share at a discount, increasing my inventory for future rounds.",
+      "side": "buy"
+    },
+    {
+      "round": 1,
+      "trader": "trader-B",
+      "price_cents": 1275,
+      "rationale": "As a value buyer, I aim to purchase shares below the reference value of $13.00. With $20.00 in cash, I can afford to place a bid at $12.75, which aligns with my strategy to buy shares at a discount.",
+      "side": "buy"
+    },
+    {
+      "round": 1,
+      "trader": "trader-C",
+      "price_cents": 1225,
+      "rationale": "The reference value is $13.00, and my strategy is to sell above $12.00. Setting a sell limit at $12.25 aligns with my strategy to maximize value from my inventory.",
+      "side": "sell"
+    },
+    {
+      "round": 1,
+      "trader": "trader-D",
+      "price_cents": 1200,
+      "rationale": "The reference value is $13.00, which is above my target sell price of $12.00. I own one share and will place an ask at $12.00 to potentially capture value from the market.",
+      "side": "sell"
+    },
+    {
+      "round": 2,
+      "trader": "trader-A",
+      "price_cents": 1250,
+      "rationale": "The reference value is $13.00, and I aim to buy below this value. I have $20.00 in cash, which allows me to place a bid at $12.50 (1250 cents) without exceeding my available cash. This aligns with my strategy as a value buyer to acquire shares below the reference value.",
+      "side": "buy"
+    },
+    {
+      "round": 2,
+      "trader": "trader-B",
+      "price_cents": 0,
+      "rationale": "With only 762 cents in cash, I cannot afford to place a buy order near my target of 1275 cents. Additionally, the reference value is $13.00, and I already hold 2 shares purchased below this value. Holding is prudent as I cannot buy more shares without exceeding my cash limit, and selling is not aligned with my strategy as a value buyer.",
+      "side": "hold"
+    },
+    {
+      "round": 2,
+      "trader": "trader-C",
+      "price_cents": 1225,
+      "rationale": "The reference value is $13.00, and I own one share. In the previous round, my sell order at $12.25 was not filled, but the transaction occurred at $12.38. Given my strategy to sell above $12.00, I will maintain my ask at $12.25 to maximize the chance of a sale while still capturing value above my threshold.",
+      "side": "sell"
+    },
+    {
+      "round": 2,
+      "trader": "trader-D",
+      "price_cents": 0,
+      "rationale": "I currently have no shares to sell, and the reference value is $13.00. Since I have no inventory and my strategy is to sell above $12.00, I will hold this round as I cannot sell what I do not own, and buying would not align with my strategy of value selling.",
+      "side": "hold"
+    }
+  ],
+  "ending_accounts": {
+    "trader-A": {
+      "cash_cents": 762,
+      "shares": 2
+    },
+    "trader-B": {
+      "cash_cents": 762,
+      "shares": 2
+    },
+    "trader-C": {
+      "cash_cents": 3238,
+      "shares": 0
+    },
+    "trader-D": {
+      "cash_cents": 3238,
+      "shares": 0
+    }
+  },
+  "ending_total_cash_cents": 8000,
+  "ending_total_shares": 4,
+  "machine_finished": true,
+  "completed_work_items": 10,
+  "workflow_driver": "Workflow.repeat, max_iterations=2"
+}

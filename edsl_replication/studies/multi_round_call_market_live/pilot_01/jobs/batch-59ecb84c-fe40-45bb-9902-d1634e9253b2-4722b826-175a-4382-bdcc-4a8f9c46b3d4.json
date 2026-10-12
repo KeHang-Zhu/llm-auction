@@ -1,0 +1,173 @@
+{
+  "survey": {
+    "questions": [
+      {
+        "question_type": "dict",
+        "question_name": "decision",
+        "question_text": "{{ workflow_question_texts['decision'] }}",
+        "answer_keys": [
+          "side",
+          "price_cents",
+          "rationale"
+        ],
+        "value_types": [
+          "str",
+          "int",
+          "str"
+        ],
+        "value_descriptions": [],
+        "include_comment": false,
+        "permissive": false,
+        "edsl_version": "1.0.8.dev1",
+        "edsl_class_name": "QuestionBase"
+      }
+    ],
+    "memory_plan": {
+      "survey_question_names": [
+        "decision"
+      ],
+      "survey_question_texts": [
+        "{{ workflow_question_texts['decision'] }}"
+      ],
+      "data": {}
+    },
+    "rule_collection": {
+      "question_name_to_index": {
+        "decision": 0
+      },
+      "rules": [
+        {
+          "current_q": 0,
+          "expression": "True",
+          "next_q": 1,
+          "priority": -1,
+          "before_rule": false,
+          "question_name_to_index": {}
+        }
+      ],
+      "num_questions": 1
+    },
+    "question_groups": {},
+    "edsl_version": "1.0.8.dev1",
+    "edsl_class_name": "Survey"
+  },
+  "agents": [
+    {
+      "traits": {
+        "role": "trader",
+        "strategy": "value_buyer"
+      },
+      "name": "trader-A",
+      "instruction": "You are an experimental asset-market trader. Maximize your final cash and inventory value. Follow the market rules in the question.\n\nLook for opportunities to buy below $13.00. Consider a one-share bid near $12.50 when affordable. Reassess using the tape and your inventory in the next round; do not buy beyond available cash.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "strategy": "value_buyer"
+      },
+      "name": "trader-B",
+      "instruction": "You are an experimental asset-market trader. Maximize your final cash and inventory value. Follow the market rules in the question.\n\nLook for opportunities to buy below $13.00. Consider a one-share bid near $12.75 when affordable. Reassess using the tape and your inventory in the next round; do not buy beyond available cash.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "strategy": "value_seller"
+      },
+      "name": "trader-C",
+      "instruction": "You are an experimental asset-market trader. Maximize your final cash and inventory value. Follow the market rules in the question.\n\nLook for opportunities to sell above $12.00. Consider a one-share ask near $12.25 when you own a share. Reassess using the tape and your inventory in the next round; never sell more than you own.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "strategy": "value_seller"
+      },
+      "name": "trader-D",
+      "instruction": "You are an experimental asset-market trader. Maximize your final cash and inventory value. Follow the market rules in the question.\n\nLook for opportunities to sell above $12.00. Consider a one-share ask near $12.00 when you own a share. Reassess using the tape and your inventory in the next round; never sell more than you own.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    }
+  ],
+  "models": [
+    {
+      "model": "gpt-4o",
+      "parameters": {
+        "temperature": 0.2,
+        "max_tokens": 1000,
+        "top_p": 1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "logprobs": false,
+        "top_logprobs": 3,
+        "reasoning_effort": null
+      },
+      "inference_service": "openai",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "LanguageModel"
+    }
+  ],
+  "scenarios": [
+    {
+      "workflow_work_item_id": "59ecb84c-fe40-45bb-9902-d1634e9253b2",
+      "workflow_question_texts": {
+        "decision": "Round 1 of 2. Submit one sealed order for one share: buy, sell, or hold. A buy limit is the most you will pay; a sell limit is the least you will accept. Use integer cents. For hold, enter price_cents=0. You may buy only if your cash covers your limit, and may sell only shares you own. The exchange selects the highest eligible bid and lowest eligible ask; if they cross, one share trades at their midpoint rounded to cents. Orders expire after this round.\n\nThe asset's reference value is $13.00. The public tape and your current cash, inventory, and prior orders are shown below. Use your assigned trading style, the account, and the tape to choose an action.\n\nYOUR ACCOUNT\n{'seat': 0, 'cash_cents': 2000, 'shares': 1, 'history': []}\n\nPUBLIC TAPE\n[]\n\nReturn side as buy, sell, or hold; price_cents as an integer; and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "96da342a-00df-4257-9aaa-e1f96b5eda20",
+      "workflow_question_texts": {
+        "decision": "Round 1 of 2. Submit one sealed order for one share: buy, sell, or hold. A buy limit is the most you will pay; a sell limit is the least you will accept. Use integer cents. For hold, enter price_cents=0. You may buy only if your cash covers your limit, and may sell only shares you own. The exchange selects the highest eligible bid and lowest eligible ask; if they cross, one share trades at their midpoint rounded to cents. Orders expire after this round.\n\nThe asset's reference value is $13.00. The public tape and your current cash, inventory, and prior orders are shown below. Use your assigned trading style, the account, and the tape to choose an action.\n\nYOUR ACCOUNT\n{'seat': 1, 'cash_cents': 2000, 'shares': 1, 'history': []}\n\nPUBLIC TAPE\n[]\n\nReturn side as buy, sell, or hold; price_cents as an integer; and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "10113317-0ad1-4464-87e8-4be09db69d88",
+      "workflow_question_texts": {
+        "decision": "Round 1 of 2. Submit one sealed order for one share: buy, sell, or hold. A buy limit is the most you will pay; a sell limit is the least you will accept. Use integer cents. For hold, enter price_cents=0. You may buy only if your cash covers your limit, and may sell only shares you own. The exchange selects the highest eligible bid and lowest eligible ask; if they cross, one share trades at their midpoint rounded to cents. Orders expire after this round.\n\nThe asset's reference value is $13.00. The public tape and your current cash, inventory, and prior orders are shown below. Use your assigned trading style, the account, and the tape to choose an action.\n\nYOUR ACCOUNT\n{'seat': 2, 'cash_cents': 2000, 'shares': 1, 'history': []}\n\nPUBLIC TAPE\n[]\n\nReturn side as buy, sell, or hold; price_cents as an integer; and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "57d24b80-4785-4384-83bd-cc053b274cf2",
+      "workflow_question_texts": {
+        "decision": "Round 1 of 2. Submit one sealed order for one share: buy, sell, or hold. A buy limit is the most you will pay; a sell limit is the least you will accept. Use integer cents. For hold, enter price_cents=0. You may buy only if your cash covers your limit, and may sell only shares you own. The exchange selects the highest eligible bid and lowest eligible ask; if they cross, one share trades at their midpoint rounded to cents. Orders expire after this round.\n\nThe asset's reference value is $13.00. The public tape and your current cash, inventory, and prior orders are shown below. Use your assigned trading style, the account, and the tape to choose an action.\n\nYOUR ACCOUNT\n{'seat': 3, 'cash_cents': 2000, 'shares': 1, 'history': []}\n\nPUBLIC TAPE\n[]\n\nReturn side as buy, sell, or hold; price_cents as an integer; and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    }
+  ],
+  "assignment_mode": "zip",
+  "assignments": [
+    {
+      "agent": 0,
+      "scenario": 0,
+      "model": 0
+    },
+    {
+      "agent": 1,
+      "scenario": 1,
+      "model": 0
+    },
+    {
+      "agent": 2,
+      "scenario": 2,
+      "model": 0
+    },
+    {
+      "agent": 3,
+      "scenario": 3,
+      "model": 0
+    }
+  ],
+  "edsl_version": "1.0.8.dev1",
+  "edsl_class_name": "Jobs"
+}
