@@ -88,6 +88,33 @@ This runs 360 trader decisions (12 traders × 30 rounds) using EDSL's configured
 provider credentials. A different seed and output directory define another
 independent market.
 
+## Configure trader scale
+
+The experiment builder also accepts `--traders N` to construct markets with a
+variable number of traders while preserving the per-trader endowment, order
+rules, and deterministic EDSL clearing. `--periods N` can shorten or extend the
+market horizon (the default remains 30). The three strategy styles are
+assigned in a rotating order so their counts remain balanced to within one
+trader. For example, prepare five-period specifications for a 12-, 24-, and
+48-trader scale sweep without making model calls:
+
+```sh
+for n in 12 24 48; do
+  python3 edsl_replication/studies/asset_market_pure_edsl_30r/experiment.py \
+    --traders "$n" --periods 5 --seed 153101 \
+    --output "edsl_replication/studies/asset_market_pure_edsl_30r/scaling/agents_${n}" \
+    --prepare-only
+done
+```
+
+One market per size requires 420 decisions at five periods or 2,520 at the full
+30-period horizon; repeat seeds for independent markets. Report completion,
+elapsed time, workflow state size, market trades, and model/provider usage by
+size. The scale parameter exercises population size; multi-quantity orders are
+already supported by the same machine and should be evaluated separately from
+population scale. No variable-size model runs are included in the existing
+pilot results yet.
+
 ## Pilot result
 
 The completed `pilot_02` run used `gpt-4o` through EDSL's `openai` service with

@@ -11,7 +11,7 @@ from edsl import Agent, QuestionDict, QuestionFreeText, Survey
 from edsl.sharedstate import ExecutionLimits, Runtime, SharedState, SharedStateMap, current
 from edsl.workflows import ExecutionPlan, Workflow, WorkflowExperiment, llm, role, scripted
 
-from machine_definition import PERIODS, TRADERS, build_machine
+from machine_definition import PERIODS, build_machine
 
 
 SYSTEM = (
@@ -47,11 +47,13 @@ STYLE = {
 }
 
 
-def question_text(period: int) -> str:
+def question_text(
+    period: int, trader_count: int = 12, periods: int = PERIODS
+) -> str:
     return (
-        f"Period {period} of {PERIODS}; {PERIODS - period + 1} periods remain.\n\n"
+        f"Period {period} of {periods}; {periods - period + 1} periods remain.\n\n"
         "MARKET RULES\n"
-        "There are 12 traders. Each began with $100 cash and 4 shares. Submit one "
+        f"There are {trader_count} traders. Each began with $100 cash and 4 shares. Submit one "
         "sealed limit order: buy, sell, or hold. A buy limit is the most you will "
         "pay per share; a sell limit is the least you will accept. Orders are for "
         "integer quantities. The exchange matches crossing orders by price; ties "
@@ -61,7 +63,8 @@ def question_text(period: int) -> str:
         "or sell shares you do not own. Buy quantity is limited by cash divided by "
         "your limit; sell quantity is limited by your inventory. Cash earns 5% "
         "interest each round, rounded to cents. Each share pays a common dividend "
-        "of $0.40 or $1.00, equally likely, each round. After round 30 income, each "
+        "of $0.40 or $1.00, equally likely, each round. After round "
+        f"{periods} income, each "
         "remaining share is redeemed for $14.00; you keep all cash.\n\n"
         "YOUR ACCOUNT\n"
         "Cash: ${{ shared_state.market.your_account.cash_cents / 100 }}; "
@@ -69,7 +72,10 @@ def question_text(period: int) -> str:
         "Your prior orders and fills: {{ shared_state.market.your_account.history }}\n\n"
         "PUBLIC MARKET TAPE\n{{ shared_state.market.tape }}\n\n"
         "Forecast the transaction price now and 2, 5, and 10 periods ahead, then "
-        "choose a buy, sell, or hold order. Enter all forecasts in dollars. Enter "
+        f"choose an order. If a forecast horizon extends beyond period {periods}, "
+        "enter the $14.00 terminal redemption value for that forecast. Every "
+        "forecast must be numeric; do not use null. "
+        "Choose a buy, sell, or hold order. Enter all forecasts in dollars. Enter "
         "the order limit as integer cents (for example, $14.25 is 1425). For hold, "
         "use price_cents=0 and quantity=0. Do not return null for a forecast. "
         "Return forecast_0, forecast_2, forecast_5, forecast_10, side, "
@@ -77,10 +83,12 @@ def question_text(period: int) -> str:
     )
 
 
-def _decision_question(period: int):
+def _decision_question(
+    period: int, trader_count: int = 12, periods: int = PERIODS
+):
     return QuestionDict(
         question_name="decision",
-        question_text=question_text(period),
+        question_text=question_text(period, trader_count, periods),
         answer_keys=[
             "forecast_0",
             "forecast_2",
@@ -96,32 +104,46 @@ def _decision_question(period: int):
     )
 
 
-def build(*, seed: int = 153101, model: str = "gpt-4o", service: str = "openai"):
-    strategies = ["value_buyer"] * 4 + ["value_seller"] * 4 + ["flexible_value"] * 4
+def build(
+    *, seed: int = 153101, model: str = "gpt-4o", service: str = "openai",
+    trader_count: int = 12, periods: int = PERIODS,
+):
+    if trader_count < 1:
+        raise ValueError("trader_count must be at least 1")
+    if periods < 1:
+        raise ValueError("periods must be at least 1")
+    traders = tuple(f"trader-{seat:02d}" for seat in range(trader_count))
+    strategy_order = ("value_buyer", "value_seller", "flexible_value")
+    strategies = [strategy_order[seat % len(strategy_order)] for seat in range(trader_count)]
     agents = [
         Agent(
             name=name,
             traits={"role": "trader", "strategy": strategies[seat], "seat": seat},
             instruction=SYSTEM + "\n\nTRADING STYLE\n" + STYLE[strategies[seat]],
         )
-        for seat, name in enumerate(TRADERS)
+        for seat, name in enumerate(traders)
     ]
     agents.append(Agent(name="exchange", traits={"role": "exchange"}))
 
     states = SharedStateMap(
-        SharedState(market=build_machine(seed)),
-        state_id=f"pure-edsl-call-market-seed-{seed}",
+        SharedState(market=build_machine(seed, traders=traders, periods=periods)),
+        state_id=(
+            f"pure-edsl-call-market-{trader_count}traders-"
+            f"{periods}periods-seed-{seed}"
+        ),
     )
     market = states.by("session").market
     workflow = Workflow(
-        "30-period pure EDSL call market",
+        f"{periods}-period pure EDSL call market",
         metadata={
             "seed": seed,
-            "periods": PERIODS,
-            "traders": len(TRADERS),
+            "periods": periods,
+            "traders": trader_count,
             "machine": "PureEDSLCallMarket30Round",
             "custom_market_algorithms": [],
-            "strategy_composition": {key: 4 for key in STYLE},
+            "strategy_composition": {
+                key: strategies.count(key) for key in STYLE
+            },
             "price_input": "integer cents",
             "created_at": datetime.now(timezone.utc).isoformat(),
         },
@@ -135,8 +157,8 @@ def build(*, seed: int = 153101, model: str = "gpt-4o", service: str = "openai")
     )
 
     previous = None
-    for period in range(1, PERIODS + 1):
-        decision = _decision_question(period)
+    for period in range(1, periods + 1):
+        decision = _decision_question(period, trader_count, periods)
         orders = workflow.step(
             f"orders-{period}",
             Survey([decision]),
@@ -192,14 +214,17 @@ def build(*, seed: int = 153101, model: str = "gpt-4o", service: str = "openai")
         plan,
         metadata={
             "seed": seed,
-            "economic_horizon": PERIODS,
+            "economic_horizon": periods,
             "strategy_by_trader": {
                 agent.name: agent.traits.get("strategy")
                 for agent in agents
                 if agent.traits["role"] == "trader"
             },
-            "machine_json_bytes": len(build_machine(seed).to_json()),
+            "machine_json_bytes": len(
+                build_machine(seed, traders=traders, periods=periods).to_json()
+            ),
             "custom_market_algorithms": [],
+            "trader_count": trader_count,
         },
         runtime=MACHINE_RUNTIME,
     )
@@ -209,6 +234,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=153101)
+    parser.add_argument("--traders", type=int, default=12)
+    parser.add_argument("--periods", type=int, default=PERIODS)
     parser.add_argument("--model", default="gpt-4o")
     parser.add_argument("--service", default="openai")
     parser.add_argument("--prepare-only", action="store_true")
@@ -223,7 +250,10 @@ def main():
     elif specification.exists():
         experiment = WorkflowExperiment.load(specification, runtime=MACHINE_RUNTIME)
     else:
-        experiment = build(seed=args.seed, model=args.model, service=args.service)
+        experiment = build(
+            seed=args.seed, model=args.model, service=args.service,
+            trader_count=args.traders, periods=args.periods,
+        )
     if args.prepare_only:
         experiment.save(specification)
         print(json.dumps({"status": "prepared", "path": str(specification)}))

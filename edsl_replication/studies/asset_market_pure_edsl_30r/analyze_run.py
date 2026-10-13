@@ -3,14 +3,16 @@
 from __future__ import annotations
 
 import csv
+import argparse
 import json
 import sqlite3
+from datetime import datetime
 from collections import Counter, defaultdict
 from pathlib import Path
 
 
-def main():
-    run_dir = Path(__file__).parent / "pilot_02"
+def main(run_dir: Path):
+    run_dir = Path(run_dir)
     with (run_dir / "experiment.json").open() as handle:
         spec = json.load(handle)
     strategy = {
@@ -40,11 +42,27 @@ def main():
     workflow_status = dict(workflow_db.execute(
         "select status, count(*) from workflow_instances group by status"
     ).fetchall())
+    created_at, completed_at = workflow_db.execute(
+        "select created_at, completed_at from workflow_instances limit 1"
+    ).fetchone()
     workflow_db.close()
 
     orders = market["order_log"]
     tape = market["tape"]
     accounts = market["accounts"]
+    model_call_rows = [
+        json.loads(line)
+        for line in (run_dir / "model-calls.jsonl").read_text().splitlines()
+        if line.strip()
+    ]
+    token_counts = Counter()
+    for call in model_call_rows:
+        usage = (
+            call.get("result", {}).get("raw_model_response", {})
+            .get("decision_raw_model_response", {}).get("usage", {})
+        )
+        token_counts["prompt"] += usage.get("prompt_tokens", 0)
+        token_counts["completion"] += usage.get("completion_tokens", 0)
     side_counts = Counter(order["side"] for order in orders)
     action_by_strategy = defaultdict(Counter)
     for order in orders:
@@ -73,7 +91,7 @@ def main():
 
     round_path = run_dir / "round_summary.csv"
     with round_path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(tape[0]))
+        writer = csv.DictWriter(handle, fieldnames=list(tape[0]), lineterminator="\n")
         writer.writeheader()
         writer.writerows(tape)
 
@@ -98,7 +116,9 @@ def main():
             }
         )
     with trader_path.open("w", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=list(trader_rows[0]))
+        writer = csv.DictWriter(
+            handle, fieldnames=list(trader_rows[0]), lineterminator="\n"
+        )
         writer.writeheader()
         writer.writerows(trader_rows)
 
@@ -110,7 +130,17 @@ def main():
         "model": spec["execution_plan"]["bindings"][0]["executor"]["options"]["model"],
         "service": spec["execution_plan"]["bindings"][0]["executor"]["options"]["service"],
         "seed": spec["metadata"]["seed"],
+        "trader_count": len(accounts),
+        "workflow_created_at": created_at,
+        "workflow_completed_at": completed_at,
+        "workflow_elapsed_seconds": (
+            (datetime.fromisoformat(completed_at) - datetime.fromisoformat(created_at)).total_seconds()
+            if completed_at else None
+        ),
         "completed_trader_decisions": len(responses),
+        "model_calls": len(model_call_rows),
+        "prompt_tokens": token_counts["prompt"],
+        "completion_tokens": token_counts["completion"],
         "periods_settled": len(tape),
         "state_events": state_counts,
         "machine_algorithms": spec["states"][0]["definition"]["machines"]["market"]["algorithms"],
@@ -158,4 +188,10 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--run-dir", type=Path,
+        default=Path(__file__).parent / "pilot_02",
+    )
+    args = parser.parse_args()
+    main(args.run_dir)

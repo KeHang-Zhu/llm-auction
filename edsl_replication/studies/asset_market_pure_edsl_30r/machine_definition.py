@@ -45,26 +45,25 @@ REDEMPTION_CENTS = 1_400
 INTEREST_NUMERATOR = 5
 INTEREST_DENOMINATOR = 100
 DIVIDEND_VALUES_CENTS = (40, 100)
-MAXIMUM_BUY_QUANTITY = len(TRADERS) * INITIAL_SHARES
 
 
 def _minimum(left, right):
     return choose(left <= right, left, right)
 
 
-def _priority_schedule(seed: int):
+def _priority_schedule(seed: int, traders=TRADERS, periods: int = PERIODS):
     schedule = []
-    for period in range(1, PERIODS + 1):
-        traders = list(TRADERS)
-        random.Random(f"{seed}:priority:{period}").shuffle(traders)
-        schedule.append({trader: rank for rank, trader in enumerate(traders)})
+    for period in range(1, periods + 1):
+        priority_order = list(traders)
+        random.Random(f"{seed}:priority:{period}").shuffle(priority_order)
+        schedule.append({trader: rank for rank, trader in enumerate(priority_order)})
     return schedule
 
 
-def _dividend_schedule(seed: int):
+def _dividend_schedule(seed: int, periods: int = PERIODS):
     return [
         random.Random(f"{seed}:dividend:{period}").choice(DIVIDEND_VALUES_CENTS)
-        for period in range(1, PERIODS + 1)
+        for period in range(1, periods + 1)
     ]
 
 
@@ -447,21 +446,28 @@ def _tape_after_clear():
     )
 
 
-def build_machine(seed: int = 153101) -> Machine:
-    seats = {trader: seat for seat, trader in enumerate(TRADERS)}
+def build_machine(
+    seed: int = 153101, traders=TRADERS, periods: int = PERIODS
+) -> Machine:
+    traders = tuple(traders)
+    if not traders:
+        raise ValueError("at least one trader is required")
+    if periods < 1:
+        raise ValueError("periods must be at least 1")
+    seats = {trader: seat for seat, trader in enumerate(traders)}
     constants = {
         "seed": seed,
-        "periods": PERIODS,
-        "traders": list(TRADERS),
-        "trader_count": len(TRADERS),
-        "total_shares": len(TRADERS) * INITIAL_SHARES,
-        "maximum_buy_quantity": MAXIMUM_BUY_QUANTITY,
+        "periods": periods,
+        "traders": list(traders),
+        "trader_count": len(traders),
+        "total_shares": len(traders) * INITIAL_SHARES,
+        "maximum_buy_quantity": len(traders) * INITIAL_SHARES,
         "initial_reference_cents": INITIAL_REFERENCE_CENTS,
         "redemption_cents": REDEMPTION_CENTS,
         "interest_numerator": INTEREST_NUMERATOR,
         "interest_denominator": INTEREST_DENOMINATOR,
-        "dividend_schedule": _dividend_schedule(seed),
-        "priority_schedule": _priority_schedule(seed),
+        "dividend_schedule": _dividend_schedule(seed, periods),
+        "priority_schedule": _priority_schedule(seed, traders, periods),
     }
     machine = Machine(
         name="PureEDSLCallMarket30Round",
@@ -477,7 +483,7 @@ def build_machine(seed: int = 153101) -> Machine:
                         "history": [],
                         "redeemed_shares": None,
                     }
-                    for trader in TRADERS
+                    for trader in traders
                 },
             ),
             "orders": state_field(StateType.map(), {}),
