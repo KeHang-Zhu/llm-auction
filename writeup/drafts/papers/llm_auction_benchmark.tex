@@ -1,0 +1,537 @@
+% LLMs as Auction Players: A Benchmark for Strategic Reasoning
+% Methods paper with benchmark creation flavor
+\documentclass[12pt]{article}
+
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{natbib}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\usepackage{multirow}
+\usepackage{array}
+\pgfplotsset{compat=1.17}
+
+% Custom commands
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+\newcommand{\placeholder}[1]{\textcolor{blue}{[PLACEHOLDER: #1]}}
+\newcommand{\smad}{\text{SMAD}}
+
+\title{LLMs as Auction Players: \\
+\large A Benchmark for Strategic Reasoning in Economic Environments}
+
+\author{
+Anand Shah*\\
+\textit{MIT}
+\and
+Kehang Zhu*\\
+\textit{Harvard}
+\and
+David C. Parkes\\
+\textit{Harvard}
+\and
+Additional Authors\\
+\textit{Institutions}
+}
+
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+We introduce a comprehensive benchmark for evaluating large language model (LLM) performance in auction environments. Auctions provide an ideal testbed for strategic reasoning: they have well-characterized equilibria, decades of human experimental data for comparison, and span a range of strategic complexity from dominant-strategy mechanisms to common-value settings with winner's curse. We evaluate multiple frontier LLMs (GPT-4o, GPT-5-mini, Claude Sonnet, Gemini, Llama) across private-value auctions (first-price, second-price, third-price), common-value auctions, and real-world eBay dynamics. Key findings: (1) LLMs systematically deviate from optimal strategies out of the box, (2) performance varies dramatically across models and auction formats, (3) targeted prompting interventions substantially improve behavior, and (4) LLM bidding distributions can be moment-matched to human experimental data, enabling direct SMAD comparisons. We release our benchmark suite to facilitate future research on LLM strategic reasoning.
+
+\medskip
+\noindent\textbf{Keywords:} Large language models, auction theory, benchmarks, strategic reasoning, mechanism design
+\end{abstract}
+
+%==============================================================================
+\section{Introduction}
+%==============================================================================
+
+As large language models (LLMs) are increasingly deployed as autonomous agents in economic environments---from automated negotiation to market-making---understanding their strategic reasoning capabilities becomes critical. Do LLMs play optimal strategies? How do they compare to human behavior in controlled settings? Can their behavior be improved through prompting or mechanism design?
+
+We introduce \textbf{AuctionBench}, a comprehensive benchmark for evaluating LLM performance in auction environments. Auctions are ideal for this purpose:
+
+\begin{enumerate}
+    \item \textbf{Clear optimality benchmarks}: Auction theory provides precise equilibrium predictions against which behavior can be measured.
+
+    \item \textbf{Rich human data}: Decades of experimental economics research provides human behavioral baselines for comparison.
+
+    \item \textbf{Varying complexity}: Different auction formats require different cognitive skills---from recognizing dominant strategies (SPSB) to computing equilibrium shading (FPSB) to reasoning about adverse selection (CV).
+
+    \item \textbf{Real-world relevance}: Auctions are ubiquitous in online markets, advertising, procurement, and spectrum allocation.
+\end{enumerate}
+
+\subsection{Summary of Contributions}
+
+\begin{enumerate}
+    \item \textbf{Benchmark Suite}: We provide a standardized evaluation framework for LLM auction behavior across:
+    \begin{itemize}
+        \item Private-value auctions (FPSB, SPSB, TPSB)
+        \item Common-value auctions (with winner's curse)
+        \item Real-world eBay proxy auctions
+    \end{itemize}
+
+    \item \textbf{Multi-Model Evaluation}: We evaluate five frontier LLMs, revealing substantial heterogeneity in strategic reasoning ability.
+
+    \item \textbf{Moment Matching}: We develop a methodology for comparing LLM bidding distributions to human experimental data using SMAD metrics.
+
+    \item \textbf{Intervention Analysis}: We show that prompting interventions can substantially improve LLM behavior, providing an evaluation of both base capability and scaffolding potential.
+\end{enumerate}
+
+%==============================================================================
+\section{Benchmark Design}
+%==============================================================================
+
+\subsection{Auction Formats}
+
+\subsubsection{Private Value Auctions (IPV)}
+
+In independent private value (IPV) auctions, each bidder $i$ has a private value $v_i$ drawn independently from a common distribution $F$. We use $v_i \sim U[0, 100]$ with $n=3$ bidders.
+
+\paragraph{First-Price Sealed-Bid (FPSB)} Highest bidder wins and pays their bid. The symmetric risk-neutral Nash equilibrium (RNNE) bid function is:
+\begin{equation}
+    b^*(v) = \frac{n-1}{n} v = \frac{2}{3} v \quad \text{(for } n=3 \text{)}
+\end{equation}
+
+\paragraph{Second-Price Sealed-Bid (SPSB)} Highest bidder wins and pays the second-highest bid. Truthful bidding is a dominant strategy:
+\begin{equation}
+    b^*(v) = v
+\end{equation}
+
+\paragraph{Third-Price Sealed-Bid (TPSB)} Highest bidder wins and pays the third-highest bid. The RNNE bid function is:
+\begin{equation}
+    b^*(v) = \frac{n-1}{n-2} v = 2v \quad \text{(for } n=3 \text{)}
+\end{equation}
+
+\subsubsection{Common Value Auctions (CV)}
+
+In common value auctions, the item has a single true value $x_0$ unknown to bidders. Each bidder $i$ receives a private signal $s_i = x_0 + \epsilon_i$ where $\epsilon_i \sim U[-\epsilon, +\epsilon]$. The \textbf{winner's curse} arises because winning conveys bad news about the item's value.
+
+We follow \citet{kagel1986winners} with $x_0 \sim U[50, 250]$ and various signal precisions $\epsilon \in \{12, 18, 24\}$.
+
+\subsubsection{eBay Proxy Auctions}
+
+eBay uses a proxy bidding system that is strategically equivalent to a second-price auction with a hard deadline. However, real eBay auctions feature:
+\begin{itemize}
+    \item Sniping (last-minute bidding)
+    \item Bid shilling
+    \item Reserve prices (sometimes hidden)
+    \item Reputation effects
+\end{itemize}
+
+We test LLMs on stylized eBay environments to evaluate transfer to real-world dynamics.
+
+\subsection{Metrics}
+
+\paragraph{Scaled Mean Absolute Deviation (SMAD)} Our primary metric measures percentage deviation from optimal:
+\begin{equation}
+    \smad = 100 \times \frac{E[|b - b^*(v)|]}{E[b^*(v)]}
+\end{equation}
+
+For FPSB with $b^* = (2/3)v$, $E[b^*] = (2/3) \times 50 = 33.33$ for uniform values on $[0,100]$.
+
+\paragraph{Bid-Value Ratio} The mean ratio $E[b/v]$ summarizes systematic over/underbidding:
+\begin{align}
+    \text{Optimal ratios:} \quad
+    \text{FPSB: } & 0.667 \\
+    \text{SPSB: } & 1.000 \\
+    \text{TPSB: } & 2.000
+\end{align}
+
+\paragraph{Distance from Optimal} Simple absolute deviation: $|E[b/v] - b^*/v|$.
+
+%==============================================================================
+\section{Results: Baseline LLM Performance}
+%==============================================================================
+
+\subsection{Finding 1: LLMs Are Bad Out of the Box}
+
+Table~\ref{tab:model_comparison} shows baseline performance across models and auction formats.
+
+\begin{table}[h]
+\centering
+\caption{Baseline LLM Performance Across Auction Formats}
+\label{tab:model_comparison}
+\begin{tabular}{llcccc}
+\toprule
+Auction & Model & $N$ & Mean Ratio & Optimal & SMAD \\
+\midrule
+\multirow{5}{*}{\textbf{FPSB}}
+& GPT-5-mini & 86 & \textbf{0.667} & 0.667 & \textbf{0.11} \\
+& Claude Sonnet & 89 & 0.899 & 0.667 & 35.23 \\
+& Gemini & 89 & 0.893 & 0.667 & 39.56 \\
+& Llama & 89 & 0.358 & 0.667 & 55.80 \\
+\midrule
+\multirow{5}{*}{\textbf{SPSB}}
+& GPT-5-mini & 86 & \textbf{0.996} & 1.000 & \textbf{0.19} \\
+& Claude Sonnet & 89 & 1.063 & 1.000 & 9.47 \\
+& Gemini & 86 & 0.972 & 1.000 & 2.95 \\
+& Llama & 89 & 0.508 & 1.000 & 53.51 \\
+\midrule
+\multirow{5}{*}{\textbf{TPSB}}
+& GPT-5-mini & 86 & \textbf{1.652} & 2.000 & \textbf{22.46} \\
+& Claude Sonnet & 89 & 1.052 & 2.000 & 48.17 \\
+& Gemini & 89 & 0.923 & 2.000 & 53.58 \\
+& Llama & 89 & 0.372 & 2.000 & 81.42 \\
+\bottomrule
+\end{tabular}
+\smallskip
+\begin{minipage}{0.95\textwidth}
+\footnotesize
+Notes: Bold indicates best performance. GPT-5-mini achieves near-optimal in FPSB and SPSB but still deviates substantially in TPSB. Most models show systematic overbidding in FPSB, underbidding in SPSB and TPSB.
+\end{minipage}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item \textbf{GPT-5-mini excels at FPSB and SPSB}, achieving near-perfect equilibrium play (SMAD $< 0.2$).
+    \item \textbf{Claude and Gemini systematically overbid} in FPSB (30-35\% above optimal).
+    \item \textbf{Llama severely underbids} across all formats (50-81\% SMAD).
+    \item \textbf{TPSB is hardest}: Even GPT-5-mini has 22\% SMAD; no model achieves the correct 2x multiplier.
+\end{itemize}
+
+\subsection{Finding 2: Prompting Improves Performance}
+
+\placeholder{Figure: Scatter plot showing FP vs SP bid ratios across interventions}
+
+Table~\ref{tab:intervention_effects} shows the improvement from targeted interventions.
+
+\begin{table}[h]
+\centering
+\caption{Effect of Prompting Interventions (Claude Sonnet)}
+\label{tab:intervention_effects}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{FPSB}} & \multicolumn{3}{c}{\textbf{SPSB}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+Intervention & Ratio & Dist. & SMAD & Ratio & Dist. & SMAD \\
+\midrule
+Baseline & 0.879 & 0.212 & 39.6 & 0.829 & 0.171 & 12.7 \\
+Decision Tree & \textbf{0.774} & \textbf{0.108} & \textbf{24.0} & \textbf{0.967} & \textbf{0.033} & \textbf{3.3} \\
+Two-Stage OSP & 0.940 & 0.273 & 41.6 & 0.935 & 0.065 & 8.9 \\
+Proxy/Clock & 0.972 & 0.305 & 46.2 & --- & --- & --- \\
+WTA vs WTP & 0.912 & 0.245 & 42.8 & 0.934 & 0.066 & 5.4 \\
+\midrule
+Correct Strategy & \textbf{0.666} & \textbf{0.001} & \textbf{0.1} & 1.000 & 0.000 & 0.0 \\
+\bottomrule
+\end{tabular}
+\smallskip
+\begin{minipage}{0.95\textwidth}
+\footnotesize
+Notes: Bold indicates best non-revelation intervention. Correct Strategy (revealing the equilibrium) serves as ceiling. Decision Tree achieves largest improvement for SPSB.
+\end{minipage}
+\end{table}
+
+\textbf{Key finding}: Interventions differentially affect FPSB and SPSB. Decision Tree helps both, but SPSB benefits more (80\% reduction in deviation vs. 49\% for FPSB).
+
+%==============================================================================
+\section{Moment Matching: Comparison to Human Data}
+%==============================================================================
+
+We use moment matching to generate synthetic human bidding distributions from experimental economics papers, enabling direct comparison of LLM and human SMAD.
+
+\subsection{Methodology}
+
+Following \citet{kagel1993independent}, we model human bids as:
+\begin{equation}
+    b_i = \alpha + \beta v_i + \epsilon_i, \quad \epsilon_i \sim \text{Skew-Normal}(0, \sigma, \xi)
+\end{equation}
+
+where $(\alpha, \beta, \sigma)$ are estimated from regression coefficients and R$^2$ values reported in the papers, and $\xi$ is fitted to match reported bidding frequencies.
+
+\subsection{Human vs LLM: Private Value Auctions}
+
+Table~\ref{tab:human_vs_llm_ipv} compares LLM and human bidding in private value auctions.
+
+\begin{table}[h]
+\centering
+\caption{Human vs LLM Bidding: Private Value Auctions}
+\label{tab:human_vs_llm_ipv}
+\begin{tabular}{llcccccc}
+\toprule
+& & \multicolumn{3}{c}{\textbf{Human}} & \multicolumn{3}{c}{\textbf{LLM (Baseline)}} \\
+\cmidrule(lr){3-5} \cmidrule(lr){6-8}
+Auction & Source & $n$ & Ratio & SMAD & $n$ & Ratio & SMAD \\
+\midrule
+\textbf{FPSB} & Kagel-Levin 1993 & 5 & 0.815 & 14.1 & 3 & 0.879 & 39.6 \\
+\textbf{SPSB} & Li 2017 (2P) & 4 & 1.038 & 9.3 & 3 & 0.829 & 12.7 \\
+& Breitmoser 2022 & 4 & 1.044 & 10.0 & 3 & 0.829 & 12.7 \\
+\textbf{TPSB} & Kagel-Levin 1993 & 5 & 1.545 & 9.3 & 3 & 0.829 & 55.6 \\
+\bottomrule
+\end{tabular}
+\smallskip
+\begin{minipage}{0.95\textwidth}
+\footnotesize
+Notes: Human data from moment matching on published experimental results. LLM data from Claude Sonnet baseline. Human overbid in all formats; LLM overbids in FPSB only.
+\end{minipage}
+\end{table}
+
+\textbf{Key observations:}
+\begin{itemize}
+    \item \textbf{FPSB}: Both humans and LLMs overbid, but LLMs more so (0.879 vs 0.815). LLM SMAD is 2.8x human SMAD.
+    \item \textbf{SPSB}: Humans overbid (1.038); LLMs underbid (0.829). Similar SMAD magnitudes (9.3 vs 12.7).
+    \item \textbf{TPSB}: Humans overbid moderately (1.545, optimal 1.33); LLMs severely underbid (0.829, optimal 2.0). LLM SMAD is 6x human SMAD.
+\end{itemize}
+
+\subsection{Human vs LLM: Second-Price with OSP Interventions}
+
+\citet{li2017obviously} and \citet{breitmoser2022obviousness} show that ``obviously strategy-proof'' mechanisms improve human bidding. Table~\ref{tab:osp_comparison} compares the effect of OSP-style interventions.
+
+\begin{table}[h]
+\centering
+\caption{OSP Effects: Human vs LLM}
+\label{tab:osp_comparison}
+\begin{tabular}{llcccc}
+\toprule
+& & \multicolumn{2}{c}{\textbf{Human}} & \multicolumn{2}{c}{\textbf{LLM}} \\
+\cmidrule(lr){3-4} \cmidrule(lr){5-6}
+Treatment & Source & Ratio & SMAD & Ratio & SMAD \\
+\midrule
+\textbf{2P (Sealed Bid)} & Li 2017 & 1.038 & 9.3 & 0.829 & 12.7 \\
+\textbf{AC (Ascending Clock)} & Li 2017 & 0.999 & 7.3 & --- & --- \\
+\midrule
+\textbf{2P (Sealed Bid)} & Breitmoser & 1.044 & 10.0 & 0.829 & 12.7 \\
+\textbf{2P + Passive Clock} & Breitmoser & 1.004 & 3.8 & 0.935$^\dagger$ & 8.9 \\
+\textbf{AC (Full)} & Breitmoser & 1.001 & 3.0 & 0.967$^\ddagger$ & 3.3 \\
+\bottomrule
+\end{tabular}
+\smallskip
+\begin{minipage}{0.95\textwidth}
+\footnotesize
+Notes: $^\dagger$Two-Stage OSP intervention. $^\ddagger$Decision Tree intervention. Human data from moment matching. Both humans and LLMs benefit from OSP-style framing.
+\end{minipage}
+\end{table}
+
+\textbf{Finding}: OSP-style interventions reduce SMAD for both humans (10.0 $\rightarrow$ 3.0) and LLMs (12.7 $\rightarrow$ 3.3). The magnitude of improvement is similar, suggesting shared cognitive constraints.
+
+%==============================================================================
+\section{Common Value Auctions: Winner's Curse}
+%==============================================================================
+
+\placeholder{Figure: CV auction bid distributions vs signal, showing winner's curse correction}
+
+\subsection{Theoretical Background}
+
+In common value (CV) auctions, the winner's curse arises because winning is ``bad news''---it implies you likely overestimated the item's value. Optimal bidding requires adjusting downward:
+
+\begin{equation}
+    b^*(s) = E[x_0 | s_i = s, \text{win}] = s - f(\epsilon, n)
+\end{equation}
+
+where $f$ captures the adverse selection adjustment.
+
+\subsection{Results: CV Auction Performance}
+
+Table~\ref{tab:cv_results} shows LLM performance in common value auctions compared to human data from \citet{kagel1986winners}.
+
+\begin{table}[h]
+\centering
+\caption{Common Value Auction Performance}
+\label{tab:cv_results}
+\begin{tabular}{lcccccc}
+\toprule
+& \multicolumn{3}{c}{\textbf{Human (KL86)}} & \multicolumn{3}{c}{\textbf{LLM}} \\
+\cmidrule(lr){2-4} \cmidrule(lr){5-7}
+$\epsilon$ & $n$ & WC Corr. & SMAD & $n$ & WC Corr. & SMAD \\
+\midrule
+12 & 4 & 70\% & 3.9 & 3 & \todo{X\%} & \todo{X} \\
+18 & 4 & 78\% & 4.0 & 3 & \todo{X\%} & \todo{X} \\
+24 & 4 & 84\% & 4.3 & 3 & \todo{X\%} & \todo{X} \\
+\bottomrule
+\end{tabular}
+\smallskip
+\begin{minipage}{0.95\textwidth}
+\footnotesize
+Notes: WC Corr. = Winner's Curse Correction, i.e., fraction of optimal adjustment actually made. Human data from Kagel-Levin 1986 moment matching.
+\end{minipage}
+\end{table}
+
+\todo{Add LLM CV results when available}
+
+%==============================================================================
+\section{Real-World Application: eBay Auctions}
+%==============================================================================
+
+\placeholder{Figure: eBay auction dynamics showing bid timing and sniping behavior}
+
+\subsection{eBay Proxy Mechanism}
+
+eBay uses a proxy bidding system where bidders submit maximum willingness-to-pay, and the system automatically bids the minimum necessary to win. This is strategically equivalent to a second-price auction, but the dynamic nature introduces additional complexity:
+
+\begin{itemize}
+    \item \textbf{Sniping}: Last-second bidding to prevent response
+    \item \textbf{Incremental bidding}: Bidders may update bids over time
+    \item \textbf{Information leakage}: Current price reveals information about others' bids
+\end{itemize}
+
+\subsection{LLM Performance in eBay-Style Auctions}
+
+\todo{Add eBay results when plots provided}
+
+\begin{table}[h]
+\centering
+\caption{eBay Auction Performance}
+\label{tab:ebay_results}
+\begin{tabular}{lcccc}
+\toprule
+Setting & $N$ & Win Rate & Avg Profit & Sniping Rate \\
+\midrule
+Standard eBay & \todo{X} & \todo{X\%} & \todo{\$X} & \todo{X\%} \\
+Hidden Reserve & \todo{X} & \todo{X\%} & \todo{\$X} & \todo{X\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+%==============================================================================
+\section{Benchmark Suite Description}
+%==============================================================================
+
+We release AuctionBench as a standardized evaluation suite. The benchmark includes:
+
+\subsection{Environment Specifications}
+
+\begin{enumerate}
+    \item \textbf{IPV Auctions}: FPSB, SPSB, TPSB with $n \in \{3, 5, 10\}$, values $\sim U[0, 100]$
+    \item \textbf{CV Auctions}: FP-CV, SP-CV with $\epsilon \in \{12, 18, 24\}$, $n \in \{4, 6\}$
+    \item \textbf{eBay Auctions}: Proxy bidding with various reserve price settings
+\end{enumerate}
+
+\subsection{Evaluation Metrics}
+
+\begin{itemize}
+    \item \textbf{SMAD}: Primary metric for deviation from optimal
+    \item \textbf{Bid Ratio}: Mean and std of bid/value (or bid/signal)
+    \item \textbf{Bidding Frequencies}: \% underbid, equalbid, overbid
+    \item \textbf{Winner's Curse Correction}: For CV auctions
+\end{itemize}
+
+\subsection{Prompting Interventions}
+
+We provide 20+ prompting interventions across 5 cognitive axes, enabling evaluation of:
+\begin{itemize}
+    \item \textbf{Base capability}: Performance with minimal prompting
+    \item \textbf{Scaffolding potential}: Improvement with intervention prompts
+\end{itemize}
+
+%==============================================================================
+\section{Discussion}
+%==============================================================================
+
+\subsection{What Makes Auctions Hard for LLMs?}
+
+Our results suggest several cognitive challenges:
+
+\begin{enumerate}
+    \item \textbf{Separating strategic dimensions}: LLMs struggle to separate ``how much to bid'' from ``whether to win'' (evident in SPSB underbidding).
+
+    \item \textbf{Reasoning about others}: Higher-order beliefs interventions help, suggesting LLMs benefit from explicit modeling of other bidders.
+
+    \item \textbf{Non-obvious equilibria}: TPSB (bid 2x value) is hardest, likely because overbidding value feels counterintuitive.
+\end{enumerate}
+
+\subsection{Implications for LLM Deployment}
+
+\begin{enumerate}
+    \item \textbf{Don't assume strategic competence}: LLMs fail at simple strategic tasks; careful design is needed.
+
+    \item \textbf{Intervention design matters}: Format-specific prompting can achieve near-optimal behavior.
+
+    \item \textbf{Model selection matters}: GPT-5-mini outperforms larger models on FPSB/SPSB, possibly due to training differences.
+\end{enumerate}
+
+%==============================================================================
+\section{Conclusion}
+%==============================================================================
+
+We introduce AuctionBench, a comprehensive benchmark for evaluating LLM strategic reasoning in auction environments. Our key findings:
+
+\begin{enumerate}
+    \item LLMs systematically deviate from optimal bidding out of the box, with SMAD ranging from 0.1\% (GPT-5-mini, SPSB) to 81\% (Llama, TPSB).
+
+    \item Performance varies dramatically across models, with GPT-5-mini achieving near-optimal on FPSB/SPSB while other models show large deviations.
+
+    \item Prompting interventions can reduce deviation by up to 80\%, providing a measure of scaffolding potential beyond base capability.
+
+    \item Moment matching to human experimental data enables direct SMAD comparison, revealing both similarities (OSP effects) and differences (direction of deviation) between human and LLM bidding.
+\end{enumerate}
+
+We release AuctionBench to facilitate future research on LLM strategic reasoning and provide a standardized evaluation framework for this critical capability.
+
+\appendix
+
+\section{Human Experimental Data Sources}
+
+\begin{table}[h]
+\centering
+\caption{Human Experimental Data Used for Moment Matching}
+\label{tab:human_data_sources}
+\begin{tabular}{lllp{5cm}}
+\toprule
+Paper & Auction & Key Statistics & Notes \\
+\midrule
+Kagel-Levin 1993 & FPSB, SPSB, TPSB & Regression coefficients, bidding frequencies & IPV, n=5,10 \\
+Kagel-Levin 1986 & FP-CV & WC correction coefficients & CV, n=4,6 \\
+Li 2017 & 2P, AC & Overbidding rates, SMAD & OSP comparison \\
+Breitmoser 2022 & 2P, 2P+C, AC & Overbidding rates, SMAD & Clock decomposition \\
+LKR 1996 & English CV & Signal-averaging coefficients & Dynamic CV \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Intervention Texts}
+
+\subsection{Decision Tree (FPSB)}
+\begin{quote}
+\begin{verbatim}
+Consider your decision as follows: You choose bid B.
+Then one of two things happens:
+
+PATH A: Your bid B > all other bids
+  -> You WIN
+  -> You pay: YOUR BID (B)
+  -> Your profit: (Your Value) - B
+  -> Note: Higher B increases chance of winning but
+     reduces profit if you win
+
+PATH B: Your bid B <= some other bid
+  -> You LOSE
+  -> Your profit: $0
+
+Key insight: There's a tradeoff. Higher B means you win
+more often. But higher B also means lower profit when you win.
+\end{verbatim}
+\end{quote}
+
+\subsection{Two-Stage OSP (SPSB)}
+\begin{quote}
+\begin{verbatim}
+Think of your decision in two stages:
+
+STAGE 1: Decide whether to participate
+  - If you might want the item at any price up to your
+    value, participate
+  - If not, don't bid
+
+STAGE 2: If participating, decide your maximum price
+  - What's the highest price at which you'd still be
+    happy to win?
+  - This is your value, by definition
+
+Bidding your value ensures: you win whenever profitable,
+never overpay.
+\end{verbatim}
+\end{quote}
+
+\bibliographystyle{aer}
+\bibliography{references}
+
+\end{document}

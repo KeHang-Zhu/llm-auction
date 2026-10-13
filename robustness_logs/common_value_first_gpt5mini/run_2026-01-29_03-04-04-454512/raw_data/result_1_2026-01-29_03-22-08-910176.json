@@ -1,0 +1,41 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            11,
+            36,
+            10
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 22.4
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 24.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 24.5
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Charles",
+                "price": 24.5
+            }
+        },
+        "profit": [
+            0,
+            0,
+            -2.5
+        ],
+        "common": 22,
+        "plan": [
+            "[Given signal s=11, common value C ~ Uniform{20..29}, noise uniform. Posterior of C given s is uniform, E[C|s]=24.5. Adjust for winner's curse: conditional on s being the highest, I compute E[C | s=11, s>others] \u2248 22.376. To avoid overpaying I bid that conditional expectation rounded to the nearest $0.1: 22.4.]",
+            "[I account for the winner\u2019s curse: my signal is 36 but the true common value is 20\u201329. Conditioning on my signal and on being the highest (two rivals), the expected common value \u2248 $23.98. In a symmetric second-price auction the safe bid is the expected common value conditional on winning. Thus I will shade my perceived value down to that conditional expectation to avoid overpaying. I round to the nearest $0.1.]",
+            "[Compute posterior E[common value | signal=10]. Prior C~Uniform[20,29], noise U~Uniform[-20,20]. For S=10 all C in [20,29] are feasible, so posterior is uniform on [20,29] and E[C|S=10]=24.5. In a second-price auction bidding your conditional expectation is the Bayes\u2013Nash equilibrium and mitigates the winner's curse. Thus I will bid 24.5.]"
+        ]
+    }
+}

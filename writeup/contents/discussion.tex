@@ -1,0 +1,83 @@
+\section{Benchmark Empirical Auction Data }\label{session:ebay}
+
+Having tested LLM behavior against human behavior in controlled laboratory experiment settings, we study a more complicated auction setting modeled after eBay's  auction-based marketplace. eBay's auction platform, studied by \citet{einav2011learning} and others, features various design elements---for example, a hidden reserve price (as opposed to a reserve price)
+and proxy bidding---that 
+have been shown empirically to have substantial effects on bidder behavior. 
+These differences highlight the gap between \textit{lab experiment} and \textit{real-world bidding}, where seemingly small design details can induce large shifts in timing, competition, and price discovery.
+
+We implement a simplified eBay-style environment that isolates two design parameters documented in the empirical literature: (i) a hidden reserve price and (ii) the auction \emph{closing rule}. The core mechanics of an eBay auction are simple: bidders on eBay use a proxy bidding system, which means that each bidder submits their ``maximum bid" to the platform, and the platform automatically bids on their behalf, only as much as necessary to keep the winning bidder in the lead (i.e., the second-highest bid + \$1, with incremental bidding managed automatically).
+Bidders can increase their maximum bid at any point in time, until some closing time of 
+the auction, giving this the flavor
+of an open, second-price auction.
+As described in Section~\ref{sec:data_generation}, we vary (reserve $\times$ closing rule) to obtain four treatments: (T1) standard eBay proxy bidding, (T2) proxy bidding with a soft-close (auction-extension) rule, (T3) proxy bidding with a hidden reserve, and (T4) proxy bidding with both a hidden reserve and a soft-close rule.
+
+
+\subsection{LLMs exhibit bid sniping under hard-close rules, and respond to soft-close extensions}\label{sec:ebay_sniping}
+
+
+A hallmark of hard-close online auctions is \emph{bid sniping}: bidders delay their bids until the final moments of the auction to avoid triggering competitive responses . Sniping is widely observed on eBay \footnote{For example: \url{https://www.esnipe.com/}.}, and has long been studied as a behavioral and strategic departure from the simple ``bid-your-value'' logic implied by proxy bidding \citep{roth2002last}.
+From the standpoint of market design, sniping is potentially costly because it compresses information revelation into the final moments of the auction, weakening timely price discovery. 
+A classic intervention is a \emph{soft-close} (auction-extension) rule: if a new maximum bid arrives near the end, the auction is extended, allowing additional responses. Empirically, this design detail is credited with substantial differences in bidding dynamics between early Amazon.com auctions (soft close) and eBay (hard close).
+Specifically, \citet{roth2002last} and \citet{ockenfels2006late} show that much less sniping occurred on Amazon.com, with bids on Amazon.com occurring throughout the auction compared to the empirical evidence of considerable bid
+sniping on eBay. 
+
+
+We ask whether LLM bidders respond to these temporal incentives in the same direction. We measure the \emph{final-winning-bid time}, defined as the last period in which the eventual winner changes her maximum bid. Intuitively, this statistic captures when the winner is effectively determined. Figure~\ref{fig:final_winning_bid_shift} reports histograms of this timing under hard close versus soft close, and Figure~\ref{fig:ebay_cdf_final_winning_bid} reports the corresponding CDF across the four treatments.
+
+Two patterns emerge. First, under the standard hard-close rule (T1), LLM bidders concentrate their decisive bid updates near the end of the auction, consistent with sniping behavior. Second, introducing a soft-close extension rule (T2) sharply attenuates this last-period concentration: the distribution of final-winning-bid times shifts earlier, and last-period decisive bids become substantially less frequent. Adding a hidden reserve on top of soft close (T4) further dampens last-period activity. In short, LLM bidders respond strongly to the closing rule in the same qualitative direction emphasized in the human empirical literature: soft close de-incentivizes waiting and spreads competition earlier in time, improving the timing of information revelation.
+
+%
+% \begin{figure}[h!]
+%     \centering
+%     % Non-Closing Rule Image (Top)
+%     \includegraphics[scale=0.45]{figures/ebay-winning-bid-non-closing.png} \\
+%     % Closing Rule Image (Bottom)
+%     \includegraphics[scale=0.45]{figures/ebay-final-winning-closing.png}
+
+%     \caption{\textbf{Final Winning Bid Timing: Non-Closing vs. Closing Rule Auctions.} 
+%     The closing rule introduces the auction-extension logic, with the 
+%     effect that the final winning bid timing is moved substantially earlier in the auction.
+%     \label{fig:final_winning_bid_shift}}
+% \end{figure}
+%
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.46\textwidth}
+        \centering
+        \includegraphics[scale=0.33]{figures/ebay-winning-bid-non-closing.png}
+        \caption{Standard eBay Closing
+Rule}
+        \label{fig:non_closing}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.46\textwidth}
+        \centering
+        \includegraphics[scale=0.33]{figures/ebay-final-winning-closing.png}
+        \caption{Modified eBay Closing Rule(Amazon)}
+        \label{fig:closing}
+    \end{subfigure}
+    
+    \caption{\textbf{Final Winning Bid Timing in Simulated eBay-style auctions in the IPV environment: standard eBay closing rule vs. modified eBay closing rule.}  
+    The modified closing rule introduces the auction-extension logic, moving the  timing 
+    of the final winning bid substantially earlier in the auction.}
+    \label{fig:final_winning_bid_shift}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[scale=0.42]{figures/ebay_cdf_final_bid.png}
+    \caption{\textbf{CDF of Final Winning Bid Timing Across Variations on eBay-Style auctions, IPV environment.} The cumulative distribution function of the final winning bid time for each auction format. The modified closing rule shifts the final winning bid substantially earlier, both with and without the hidden reserve.
+    \label{fig:ebay_cdf_final_winning_bid}}
+\end{figure}
+
+\subsection{Hidden reserve prices have limited revenue impact in the stylized setting}\label{sec:ebay_reserve}
+
+The use of reserve prices in auctions is well understood in auction theory. Notably, 
+\citet{myerson1981optimal} showed that setting an optimal reserve price can maximize expected revenue in certain
+private value settings (for ``regular" distributions).
+However, eBay also allows sellers (for a fee) to set a {\em hidden} reserve price: a threshold that bidders do not know until it is met by the highest maximum bid. 
+While there is some work suggesting a hidden reserve can increase expected revenue in common value settings relative to no reserve (e.g., \citet{vincent1995bidding}), in a private values environment with rational bidders using proxy bidding, the hidden reserve should not change behavior relative to a known reserve or even no reserve: bidders should still submit their maximum value upfront. While it is impossible to say whether bidders are bidding their true values, a large empirical study of hidden reserves on eBay suggests that bidders do not change bidding behavior much in the face of hidden vs.~non-hidden reserves \citep{einav2011learning}. 
+
+Our simulations echo this limited sensitivity in behavior and outcome. Focusing on revenue, Figure~\ref{fig:ebay_revenue} shows seller revenue across auction types, and Table~\ref{tab:revenue_tests} reports pairwise two-sided $t$-tests. Across the baseline proxy auction (T1), the soft-close variant (T2), hidden-reserve variants (T3), and the combined design (T4), we do not detect statistically meaningful revenue differences in our calibration.
+%
+One interpretation is that reserve prices mainly affect outcomes when they \emph{bind} (i.e., when the highest maximum bid falls near the reserve). When reserves are rarely pivotal---either because competition typically pushes maximum bids above the reserve, or because the proxy-price rule is largely pinned by the second-highest bidder---the marginal revenue effect of changing the reserve can be small.

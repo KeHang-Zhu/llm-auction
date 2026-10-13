@@ -1,0 +1,25 @@
+In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.
+At the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.
+After learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.
+The highest bidder wins the prize and pays the second-highest bid.
+
+**Decision Tree:**
+Consider your decision as follows:
+
+You choose bid B. Then one of two things happens:
+
+  PATH A: Your bid B > all other bids
+    → You WIN
+    → You pay: second-highest bid (call it P)
+    → Your profit: (Your Value) - P
+    → Note: P < B, so if Value ≥ B, then profit ≥ 0
+
+  PATH B: Your bid B ≤ some other bid
+    → You LOSE
+    → You pay: $0
+    → Your profit: $0
+
+Key insight: In PATH A, you pay P (not B). So bidding higher than your value only matters if it changes whether you're in PATH A vs PATH B.
+
+If you win, your earnings = value - second-highest bid. If you lose, your earnings = $0.
+After each auction, we will display all bids. Ties will be resolved randomly.

@@ -1,0 +1,776 @@
+{
+  "gpt4o": {
+    "axis1_contingent_baseline": {
+      "experiment": {
+        "name": "axis1_contingent_baseline",
+        "version": "V12",
+        "description": "Axis 1 Baseline - Standard SPSB with no guidance on contingent reasoning"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis1_contingent_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gpt-4o",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gpt4o/axis1_contingent_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "axis3_beliefs_baseline": {
+      "experiment": {
+        "name": "axis3_beliefs_baseline",
+        "version": "V12",
+        "description": "Axis 3 Baseline - Standard SPSB with rational opponents framing"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis3_beliefs_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gpt-4o",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gpt4o/axis3_beliefs_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nThe other bidders are rational agents who are also trying to maximize their earnings.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "intervention_menu": {
+      "experiment": {
+        "name": "intervention_menu",
+        "version": "V12",
+        "description": "Intervention Study - Menu-style auction description"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_menu.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gpt-4o",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gpt4o/intervention_menu"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nYour \u201cprice to win\u201d the item will be set to the highest bid placed by any other player. If your bid is higher than this \u201cprice to win,\u201d then you will win the item and pay this price. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    },
+    "intervention_proxy_breitmoser": {
+      "experiment": {
+        "name": "intervention_proxy_breitmoser",
+        "version": "V12",
+        "description": "Intervention Study - Two-stage proxy bidding format"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_proxy_breitmoser.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gpt-4o",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gpt4o/intervention_proxy_breitmoser"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\n    At the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\n    After learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\n**FIRST STAGE: Sealed Bid**\n    You will submit a sealed bid privately at the same time as the other bidders. This bid will serve as your automatic exit price in the next stage.\n**SECOND STAGE: Ascending Clock (Simulation)**\n    After the sealed bid stage, we will simulate an ascending clock auction.\n    The clock will start at $0 and increase in increments of ${{increment}}.\n    The clock will display the current price. You will also see that there are a total of {{num_bidders}} bidders participating, although you do not know other bidder\u2019s values.\n    If the current price on the clock reaches or exceeds your sealed bid from the first stage, you will automatically exit the auction. The auction ends when only one bidder is left remaining in the second stage based on their bid from the first stage.\n**END OF AUCTION**\nIf you win, your earnings will increase by your value for the prize and decrease by the clock price at the end of the auction. If you don't win, your earnings will remain unchanged.\n    After each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    }
+  },
+  "claude": {
+    "axis1_contingent_baseline": {
+      "experiment": {
+        "name": "axis1_contingent_baseline",
+        "version": "V12",
+        "description": "Axis 1 Baseline - Standard SPSB with no guidance on contingent reasoning"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis1_contingent_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "claude-3-5-haiku-20241022",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/claude/axis1_contingent_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "axis3_beliefs_baseline": {
+      "experiment": {
+        "name": "axis3_beliefs_baseline",
+        "version": "V12",
+        "description": "Axis 3 Baseline - Standard SPSB with rational opponents framing"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis3_beliefs_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "claude-3-5-haiku-20241022",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/claude/axis3_beliefs_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nThe other bidders are rational agents who are also trying to maximize their earnings.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "intervention_menu": {
+      "experiment": {
+        "name": "intervention_menu",
+        "version": "V12",
+        "description": "Intervention Study - Menu-style auction description"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_menu.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "claude-3-5-haiku-20241022",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/claude/intervention_menu"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nYour \u201cprice to win\u201d the item will be set to the highest bid placed by any other player. If your bid is higher than this \u201cprice to win,\u201d then you will win the item and pay this price. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    },
+    "intervention_proxy_breitmoser": {
+      "experiment": {
+        "name": "intervention_proxy_breitmoser",
+        "version": "V12",
+        "description": "Intervention Study - Two-stage proxy bidding format"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_proxy_breitmoser.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "claude-3-5-haiku-20241022",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/claude/intervention_proxy_breitmoser"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\n    At the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\n    After learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\n**FIRST STAGE: Sealed Bid**\n    You will submit a sealed bid privately at the same time as the other bidders. This bid will serve as your automatic exit price in the next stage.\n**SECOND STAGE: Ascending Clock (Simulation)**\n    After the sealed bid stage, we will simulate an ascending clock auction.\n    The clock will start at $0 and increase in increments of ${{increment}}.\n    The clock will display the current price. You will also see that there are a total of {{num_bidders}} bidders participating, although you do not know other bidder\u2019s values.\n    If the current price on the clock reaches or exceeds your sealed bid from the first stage, you will automatically exit the auction. The auction ends when only one bidder is left remaining in the second stage based on their bid from the first stage.\n**END OF AUCTION**\nIf you win, your earnings will increase by your value for the prize and decrease by the clock price at the end of the auction. If you don't win, your earnings will remain unchanged.\n    After each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    }
+  },
+  "gemini": {
+    "axis1_contingent_baseline": {
+      "experiment": {
+        "name": "axis1_contingent_baseline",
+        "version": "V12",
+        "description": "Axis 1 Baseline - Standard SPSB with no guidance on contingent reasoning"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis1_contingent_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gemini-2.0-flash",
+        "service_name": "google",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gemini/axis1_contingent_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "axis3_beliefs_baseline": {
+      "experiment": {
+        "name": "axis3_beliefs_baseline",
+        "version": "V12",
+        "description": "Axis 3 Baseline - Standard SPSB with rational opponents framing"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis3_beliefs_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          20,
+          49
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gemini-2.0-flash",
+        "service_name": "google",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gemini/axis3_beliefs_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nThe other bidders are rational agents who are also trying to maximize their earnings.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "intervention_menu": {
+      "experiment": {
+        "name": "intervention_menu",
+        "version": "V12",
+        "description": "Intervention Study - Menu-style auction description"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_menu.txt"
+      },
+      "value": {
+        "common_range": [
+          20,
+          79
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gemini-2.0-flash",
+        "service_name": "google",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": false,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gemini/intervention_menu"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nYour \u201cprice to win\u201d the item will be set to the highest bid placed by any other player. If your bid is higher than this \u201cprice to win,\u201d then you will win the item and pay this price. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    },
+    "intervention_proxy_breitmoser": {
+      "experiment": {
+        "name": "intervention_proxy_breitmoser",
+        "version": "V12",
+        "description": "Intervention Study - Two-stage proxy bidding format"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_proxy_breitmoser.txt"
+      },
+      "value": {
+        "common_range": [
+          20,
+          79
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "gemini-2.0-flash",
+        "service_name": "google",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": false,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gemini/intervention_proxy_breitmoser"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\n    At the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\n    After learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\n**FIRST STAGE: Sealed Bid**\n    You will submit a sealed bid privately at the same time as the other bidders. This bid will serve as your automatic exit price in the next stage.\n**SECOND STAGE: Ascending Clock (Simulation)**\n    After the sealed bid stage, we will simulate an ascending clock auction.\n    The clock will start at $0 and increase in increments of ${{increment}}.\n    The clock will display the current price. You will also see that there are a total of {{num_bidders}} bidders participating, although you do not know other bidder\u2019s values.\n    If the current price on the clock reaches or exceeds your sealed bid from the first stage, you will automatically exit the auction. The auction ends when only one bidder is left remaining in the second stage based on their bid from the first stage.\n**END OF AUCTION**\nIf you win, your earnings will increase by your value for the prize and decrease by the clock price at the end of the auction. If you don't win, your earnings will remain unchanged.\n    After each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    }
+  },
+  "gemma": {
+    "axis1_contingent_baseline": {
+      "experiment": {
+        "name": "axis1_contingent_baseline",
+        "version": "V12",
+        "description": "Axis 1 Baseline - Standard SPSB with no guidance on contingent reasoning"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis1_contingent_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "google/gemma-3-27b-it",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gemma/axis1_contingent_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "axis3_beliefs_baseline": {
+      "experiment": {
+        "name": "axis3_beliefs_baseline",
+        "version": "V12",
+        "description": "Axis 3 Baseline - Standard SPSB with rational opponents framing"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "axis3_beliefs_baseline.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "google/gemma-3-27b-it",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 4,
+        "output_dir": "experiment_logs/gemma/axis3_beliefs_baseline"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nThe highest bidder wins the prize and pays the second-highest bid. If you win, your earnings will increase by your value for the prize, and decrease by the second-highest bid. If you don't win, your earnings will remain unchanged.\nThe other bidders are rational agents who are also trying to maximize their earnings.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly.\n"
+    },
+    "intervention_menu": {
+      "experiment": {
+        "name": "intervention_menu",
+        "version": "V12",
+        "description": "Intervention Study - Menu-style auction description"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_menu.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "google/gemma-3-27b-it",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 2,
+        "output_dir": "experiment_logs/gemma/intervention_menu"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\nAt the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\nAfter learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\nYour \u201cprice to win\u201d the item will be set to the highest bid placed by any other player. If your bid is higher than this \u201cprice to win,\u201d then you will win the item and pay this price. If you don't win, your earnings will remain unchanged.\nAfter each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    },
+    "intervention_proxy_breitmoser": {
+      "experiment": {
+        "name": "intervention_proxy_breitmoser",
+        "version": "V12",
+        "description": "Intervention Study - Two-stage proxy bidding format"
+      },
+      "auction": {
+        "number_agents": 3,
+        "rounds": 1
+      },
+      "rule": {
+        "seal_clock": "seal",
+        "ascend_descend": "ascend",
+        "price_order": "second",
+        "private_value": "private",
+        "open_blind": "open",
+        "closing": false,
+        "reserve_price": 0,
+        "special_name": "intervention_proxy_breitmoser.txt"
+      },
+      "value": {
+        "common_range": [
+          0,
+          29
+        ],
+        "private_range": 49,
+        "increment": 0.1,
+        "seed_base": 1299
+      },
+      "llm": {
+        "model": "google/gemma-3-27b-it",
+        "temperature": 0.5
+      },
+      "prompt": {
+        "strategy_type": "plan_reflection",
+        "prompt_dir": "Prompt/",
+        "rule_template_dir": "rule_template/auctions/",
+        "include_payment_example": true
+      },
+      "execution": {
+        "repetitions": 50,
+        "parallel": true,
+        "max_workers": 2,
+        "output_dir": "experiment_logs/gemma/intervention_proxy_breitmoser"
+      },
+      "rule_text": "In this game, you will participate in an auction for a prize against {{num_bidders}} other bidders. You will play this game for {{n}} rounds.\n    At the start of each round, bidders will see their value for the prize, randomly drawn between $0 and ${{private}}, with all values equally likely.\n    After learning your value, you will submit a bid privately at the same time as the other bidders. Bids must be in ${{increment}} increments.\n**FIRST STAGE: Sealed Bid**\n    You will submit a sealed bid privately at the same time as the other bidders. This bid will serve as your automatic exit price in the next stage.\n**SECOND STAGE: Ascending Clock (Simulation)**\n    After the sealed bid stage, we will simulate an ascending clock auction.\n    The clock will start at $0 and increase in increments of ${{increment}}.\n    The clock will display the current price. You will also see that there are a total of {{num_bidders}} bidders participating, although you do not know other bidder\u2019s values.\n    If the current price on the clock reaches or exceeds your sealed bid from the first stage, you will automatically exit the auction. The auction ends when only one bidder is left remaining in the second stage based on their bid from the first stage.\n**END OF AUCTION**\nIf you win, your earnings will increase by your value for the prize and decrease by the clock price at the end of the auction. If you don't win, your earnings will remain unchanged.\n    After each auction, we will display all bids. Ties for the highest bid will be resolved randomly."
+    }
+  },
+  "_source": {
+    "baseline_csv": "Engineering_simplicity/engineer_simplicity-main/results/all_experiments_combined_20260204_114522.csv",
+    "baseline_sha256": "f973baee5cf2046145cb87f66ec319647bee305b2def8d486aecd25458ae35b8",
+    "baseline_selection": [
+      "axis1_contingent_baseline",
+      "axis3_beliefs_baseline"
+    ],
+    "baseline_source_row": "one-based CSV line number, including header",
+    "note": "Archived configuration and rule texts describe the original runs. Output paths are historical, not reproduction requirements."
+  }
+}

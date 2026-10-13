@@ -1,0 +1,1568 @@
+{
+  "statistic": "GPT-4o SMAD ordering/direction across sampling temperature T in {0.1, 0.5, 1.0}",
+  "seed": 1299,
+  "B": 2000,
+  "min_n": 30,
+  "scaling_private": 25.0,
+  "scaling_cv": 20.0,
+  "within_band_rule": "|b - b*| <= 0.02 b*; under/over are shares of the remainder",
+  "human_smad_private": {
+    "FPSB IPV": 24.7639,
+    "SPSB IPV": 5.646,
+    "SP-APV": 9.31,
+    "AC": 3.54,
+    "AC-B": 5.83
+  },
+  "human_smad_cv": {
+    "FP-CV": 47.59,
+    "SP-CV": 18.23
+  },
+  "human_direction": {
+    "SPSB IPV": {
+      "under_share_dev": 0.07818930041152262,
+      "over_share_dev": 0.9218106995884773,
+      "within_share": 0.27027027027027023,
+      "source": "plots/auction_human.csv: Second-Price IPV"
+    },
+    "SP-APV": {
+      "under_share_dev": 0.2,
+      "over_share_dev": 0.8,
+      "within_share": 0.5,
+      "source": "plots/auction_human.csv: SPSB (Li 2017)"
+    },
+    "AC": {
+      "under_share_dev": 0.45454545454545453,
+      "over_share_dev": 0.5454545454545454,
+      "within_share": 0.67,
+      "source": "plots/auction_human.csv: Ascending Clock (Li 2017)"
+    },
+    "AC-B": {
+      "under_share_dev": 0.2857142857142857,
+      "over_share_dev": 0.7142857142857143,
+      "within_share": 0.44,
+      "source": "plots/auction_human.csv: AC-B (Breitmoser2022)"
+    }
+  },
+  "json_agent_order_check": "verified on robustness_logs/ascending_clock_apv_closed_gpt4o_temp10 (12 bids): JSON value order = ['Bidder Andy', 'Bidder Betty', 'Bidder Charles']",
+  "appendix2_temperature_import": "ok",
+  "cells": {
+    "0.1": {
+      "FPSB IPV": {
+        "smad": 28.07111111111112,
+        "n": 300,
+        "source": "robustness_logs/fpsb_ipv_gpt4o_temp01 (results CSV)",
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ],
+        "within_share": 0.023333333333333334,
+        "n_deviating": 293,
+        "under_share_dev": 0.034129692832764506,
+        "over_share_dev": 0.9658703071672355
+      },
+      "SPSB IPV": {
+        "smad": 14.772789115646258,
+        "n": 294,
+        "source": "robustness_logs/spsb_ipv_gpt4o_temp01 (results CSV)",
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ],
+        "within_share": 0.16666666666666666,
+        "n_deviating": 245,
+        "under_share_dev": 0.8653061224489796,
+        "over_share_dev": 0.1346938775510204
+      },
+      "SP-APV": {
+        "smad": 12.871380471380473,
+        "n": 297,
+        "source": "robustness_logs/spsb_apv_gpt4o_temp01 (results CSV)",
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-26"
+        ],
+        "within_share": 0.030303030303030304,
+        "n_deviating": 288,
+        "under_share_dev": 0.8958333333333334,
+        "over_share_dev": 0.10416666666666667
+      },
+      "AC": {
+        "smad": null,
+        "n": 0,
+        "source": "no results CSV and no raw_data JSON"
+      },
+      "AC-B": {
+        "smad": 0.4999999999999485,
+        "n": 4,
+        "source": "robustness_logs/ascending_clock_apv_closed_gpt4o_temp01 (raw_data JSON; no results CSV)",
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-31"
+        ],
+        "within_share": 1.0,
+        "n_deviating": 0,
+        "under_share_dev": NaN,
+        "over_share_dev": NaN
+      },
+      "FP-CV": {
+        "smad": 39.0,
+        "n": 30,
+        "source": "robustness_logs/common_value_first_gpt4o_temp01 (raw_data JSON, winner profit per round)"
+      },
+      "SP-CV": {
+        "smad": 35.5125,
+        "n": 100,
+        "source": "robustness_logs/common_value_second_gpt4o_temp01 (raw_data JSON, winner profit per round)"
+      }
+    },
+    "0.5": {
+      "FPSB IPV": {
+        "smad": 27.551812865497077,
+        "n": 285,
+        "source": "experiment_logs/V10/fpsb_ipv/run_2026-01-12_21-59-13-724783/results/fpsb_ipv_results.csv",
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-12"
+        ],
+        "within_share": 0.031578947368421054,
+        "n_deviating": 276,
+        "under_share_dev": 0.14130434782608695,
+        "over_share_dev": 0.8586956521739131
+      },
+      "SPSB IPV": {
+        "smad": 8.685925925925927,
+        "n": 270,
+        "source": "experiment_logs/V10/spsb_ipv/run_2026-01-12_21-59-13-727690/results/spsb_ipv_results.csv",
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-12"
+        ],
+        "within_share": 0.3074074074074074,
+        "n_deviating": 187,
+        "under_share_dev": 0.8128342245989305,
+        "over_share_dev": 0.18716577540106952
+      },
+      "SP-APV": {
+        "smad": 10.734020618556702,
+        "n": 291,
+        "source": "experiment_logs/V10/spsb_apv/run_2026-01-12_22-28-06-038405/results/spsb_apv_results.csv",
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-12"
+        ],
+        "within_share": 0.09278350515463918,
+        "n_deviating": 264,
+        "under_share_dev": 0.9242424242424242,
+        "over_share_dev": 0.07575757575757576
+      },
+      "AC": {
+        "smad": 0.8113207547169812,
+        "n": 106,
+        "source": "experiment_logs/V10/ascending_clock_apv/ascending_clock_apv_merged_results.csv",
+        "seed_bases": [
+          1299,
+          1319,
+          1399
+        ],
+        "dates": [
+          "2026-01-06"
+        ],
+        "within_share": 0.7169811320754716,
+        "n_deviating": 30,
+        "under_share_dev": 0.5,
+        "over_share_dev": 0.5
+      },
+      "AC-B": {
+        "smad": 0.47368421052631576,
+        "n": 114,
+        "source": "experiment_logs/V10/ascending_clock_apv_closed/ascending_clock_apv_closed_merged_results.csv",
+        "seed_bases": [
+          1299,
+          1399
+        ],
+        "dates": [
+          "2026-01-06",
+          "2026-01-07"
+        ],
+        "within_share": 0.8333333333333334,
+        "n_deviating": 19,
+        "under_share_dev": 0.3684210526315789,
+        "over_share_dev": 0.631578947368421
+      },
+      "FP-CV": {
+        "smad": 59.989583333333336,
+        "n": 96,
+        "source": "experiment_logs/V10/common_value_first (raw_data JSON, winner profit per round)"
+      },
+      "SP-CV": {
+        "smad": 40.60326086956522,
+        "n": 92,
+        "source": "experiment_logs/V10/common_value_second (raw_data JSON, winner profit per round)"
+      }
+    },
+    "1.0": {
+      "FPSB IPV": {
+        "smad": 24.993041526374864,
+        "n": 297,
+        "source": "robustness_logs/fpsb_ipv_gpt4o_temp10 (results CSV)",
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ],
+        "within_share": 0.04040404040404041,
+        "n_deviating": 285,
+        "under_share_dev": 0.14035087719298245,
+        "over_share_dev": 0.8596491228070176
+      },
+      "SPSB IPV": {
+        "smad": 12.888888888888891,
+        "n": 297,
+        "source": "robustness_logs/spsb_ipv_gpt4o_temp10 (results CSV)",
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ],
+        "within_share": 0.18855218855218855,
+        "n_deviating": 241,
+        "under_share_dev": 0.8838174273858921,
+        "over_share_dev": 0.11618257261410789
+      },
+      "SP-APV": {
+        "smad": 12.749333333333334,
+        "n": 300,
+        "source": "robustness_logs/spsb_apv_gpt4o_temp10 (results CSV)",
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-26"
+        ],
+        "within_share": 0.09,
+        "n_deviating": 273,
+        "under_share_dev": 0.8498168498168498,
+        "over_share_dev": 0.15018315018315018
+      },
+      "AC": {
+        "smad": 1.0,
+        "n": 52,
+        "source": "robustness_logs/ascending_clock_apv_gpt4o_temp10 (results CSV)",
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-30"
+        ],
+        "within_share": 0.6923076923076923,
+        "n_deviating": 16,
+        "under_share_dev": 0.5,
+        "over_share_dev": 0.5
+      },
+      "AC-B": {
+        "smad": 2.1500000000000146,
+        "n": 8,
+        "source": "robustness_logs/ascending_clock_apv_closed_gpt4o_temp10 (results CSV)",
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-30"
+        ],
+        "within_share": 0.625,
+        "n_deviating": 3,
+        "under_share_dev": 1.0,
+        "over_share_dev": 0.0
+      },
+      "FP-CV": {
+        "smad": 42.91666666666667,
+        "n": 30,
+        "source": "robustness_logs/common_value_first_gpt4o_temp10 (raw_data JSON, winner profit per round)"
+      },
+      "SP-CV": {
+        "smad": 33.53030303030303,
+        "n": 99,
+        "source": "robustness_logs/common_value_second_gpt4o_temp10 (raw_data JSON, winner profit per round)"
+      }
+    }
+  },
+  "per_temperature": {
+    "0.1": {
+      "usable_private_formats": [
+        "FPSB IPV",
+        "SPSB IPV",
+        "SP-APV"
+      ],
+      "excluded_private": {
+        "AC": "no results CSV and no raw_data JSON",
+        "AC-B": "n=4 < 30"
+      },
+      "format_sets": {
+        "sealed3": {
+          "formats": [
+            "FPSB IPV",
+            "SPSB IPV",
+            "SP-APV"
+          ],
+          "n_formats": 3,
+          "human_smad": [
+            24.7639,
+            5.646,
+            9.31
+          ],
+          "llm_smad": [
+            28.07111111111112,
+            14.772789115646258,
+            12.871380471380473
+          ],
+          "llm_n": [
+            300,
+            294,
+            297
+          ],
+          "tau_point": 0.3333333333333333,
+          "fpsb_minus_spsb_llm": 13.29832199546486,
+          "fpsb_gt_spsb_llm_point": true,
+          "layer_a_llm_bootstrap": {
+            "ci95": [
+              0.3333333333333333,
+              0.3333333333333333
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1955,
+              "+1.0000": 45
+            }
+          },
+          "layer_b_human_redraws": {
+            "ci95": [
+              0.3333333333333333,
+              0.3333333333333333
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1991,
+              "+1.0000": 9
+            }
+          },
+          "layer_c_joint": {
+            "ci95": [
+              0.3333333333333333,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1946,
+              "+1.0000": 54
+            }
+          },
+          "fpsb_hardest_share_llm": 1.0,
+          "fpsb_hardest_share_human": 1.0,
+          "fpsb_hardest_share_joint": 1.0,
+          "fpsb_hardest_every_draw": true,
+          "fpsb_gt_spsb_share_llm": 1.0,
+          "fpsb_gt_spsb_share_human": 1.0,
+          "fpsb_gt_spsb_share_joint": 1.0
+        },
+        "all_usable": {
+          "formats": [
+            "FPSB IPV",
+            "SPSB IPV",
+            "SP-APV"
+          ],
+          "n_formats": 3,
+          "human_smad": [
+            24.7639,
+            5.646,
+            9.31
+          ],
+          "llm_smad": [
+            28.07111111111112,
+            14.772789115646258,
+            12.871380471380473
+          ],
+          "llm_n": [
+            300,
+            294,
+            297
+          ],
+          "tau_point": 0.3333333333333333,
+          "fpsb_minus_spsb_llm": 13.29832199546486,
+          "fpsb_gt_spsb_llm_point": true,
+          "layer_a_llm_bootstrap": {
+            "ci95": [
+              0.3333333333333333,
+              0.3333333333333333
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1955,
+              "+1.0000": 45
+            }
+          },
+          "layer_b_human_redraws": {
+            "ci95": [
+              0.3333333333333333,
+              0.3333333333333333
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1991,
+              "+1.0000": 9
+            }
+          },
+          "layer_c_joint": {
+            "ci95": [
+              0.3333333333333333,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1946,
+              "+1.0000": 54
+            }
+          },
+          "fpsb_hardest_share_llm": 1.0,
+          "fpsb_hardest_share_human": 1.0,
+          "fpsb_hardest_share_joint": 1.0,
+          "fpsb_hardest_every_draw": true,
+          "fpsb_gt_spsb_share_llm": 1.0,
+          "fpsb_gt_spsb_share_human": 1.0,
+          "fpsb_gt_spsb_share_joint": 1.0
+        }
+      },
+      "fpsb_hardest_sealed_point": true,
+      "spapv_gt_spsb_point": false,
+      "spapv_minus_spsb": -1.9014086442657856,
+      "spapv_gt_spsb_share_boot": 0.0195,
+      "clock_usable": [],
+      "clock_below_all_sealed_point": null,
+      "cv_sign": {
+        "fpcv_minus_spcv": 3.487499999999997,
+        "fpcv_gt_spcv_point": true,
+        "fpcv_gt_spcv_share_boot": 0.7625,
+        "design": "per-round |pi - pi*| resampled within each CV cell, B=2000, seed 1310"
+      },
+      "third_price_ipv_supplementary": {
+        "smad_rne": 43.230933333333326,
+        "smad_rne_capped49": 36.51626666666665,
+        "n": 250,
+        "N": 5,
+        "bstar": "(4/3) v [capped variant: min(b*, 49)]",
+        "human_anchor_kagel_levin_n5": 7.6566,
+        "source": "robustness_logs/third_price_ipv_gpt4o_temp01",
+        "note": "not in the paper's temperature table and not in any tau; shown for completeness only"
+      }
+    },
+    "0.5": {
+      "usable_private_formats": [
+        "FPSB IPV",
+        "SPSB IPV",
+        "SP-APV",
+        "AC",
+        "AC-B"
+      ],
+      "excluded_private": {},
+      "format_sets": {
+        "sealed3": {
+          "formats": [
+            "FPSB IPV",
+            "SPSB IPV",
+            "SP-APV"
+          ],
+          "n_formats": 3,
+          "human_smad": [
+            24.7639,
+            5.646,
+            9.31
+          ],
+          "llm_smad": [
+            27.551812865497077,
+            8.685925925925927,
+            10.734020618556702
+          ],
+          "llm_n": [
+            285,
+            270,
+            291
+          ],
+          "tau_point": 1.0,
+          "fpsb_minus_spsb_llm": 18.865886939571148,
+          "fpsb_gt_spsb_llm_point": true,
+          "layer_a_llm_bootstrap": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 21,
+              "+1.0000": 1979
+            }
+          },
+          "layer_b_human_redraws": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 9,
+              "+1.0000": 1991
+            }
+          },
+          "layer_c_joint": {
+            "ci95": [
+              1.0,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 28,
+              "+1.0000": 1972
+            }
+          },
+          "fpsb_hardest_share_llm": 1.0,
+          "fpsb_hardest_share_human": 1.0,
+          "fpsb_hardest_share_joint": 1.0,
+          "fpsb_hardest_every_draw": true,
+          "fpsb_gt_spsb_share_llm": 1.0,
+          "fpsb_gt_spsb_share_human": 1.0,
+          "fpsb_gt_spsb_share_joint": 1.0
+        },
+        "all_usable": {
+          "formats": [
+            "FPSB IPV",
+            "SPSB IPV",
+            "SP-APV",
+            "AC",
+            "AC-B"
+          ],
+          "n_formats": 5,
+          "human_smad": [
+            24.7639,
+            5.646,
+            9.31,
+            3.54,
+            5.83
+          ],
+          "llm_smad": [
+            27.551812865497077,
+            8.685925925925927,
+            10.734020618556702,
+            0.8113207547169812,
+            0.47368421052631576
+          ],
+          "llm_n": [
+            285,
+            270,
+            291,
+            106,
+            114
+          ],
+          "tau_point": 0.6,
+          "fpsb_minus_spsb_llm": 18.865886939571148,
+          "fpsb_gt_spsb_llm_point": true,
+          "layer_a_llm_bootstrap": {
+            "ci95": [
+              0.6,
+              0.6
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.4000": 17,
+              "+0.6000": 1973,
+              "+0.8000": 10
+            }
+          },
+          "layer_b_human_redraws": {
+            "ci95": [
+              0.4,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.2000": 11,
+              "+0.4000": 164,
+              "+0.6000": 808,
+              "+0.8000": 751,
+              "+1.0000": 266
+            }
+          },
+          "layer_c_joint": {
+            "ci95": [
+              0.4,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.2000": 12,
+              "+0.4000": 170,
+              "+0.6000": 806,
+              "+0.8000": 744,
+              "+1.0000": 268
+            }
+          },
+          "fpsb_hardest_share_llm": 1.0,
+          "fpsb_hardest_share_human": 1.0,
+          "fpsb_hardest_share_joint": 1.0,
+          "fpsb_hardest_every_draw": true,
+          "fpsb_gt_spsb_share_llm": 1.0,
+          "fpsb_gt_spsb_share_human": 1.0,
+          "fpsb_gt_spsb_share_joint": 1.0
+        }
+      },
+      "fpsb_hardest_sealed_point": true,
+      "spapv_gt_spsb_point": true,
+      "spapv_minus_spsb": 2.048094692630775,
+      "spapv_gt_spsb_share_boot": 0.994,
+      "clock_usable": [
+        "AC",
+        "AC-B"
+      ],
+      "clock_below_all_sealed_point": true,
+      "cv_sign": {
+        "fpcv_minus_spcv": 19.386322463768117,
+        "fpcv_gt_spcv_point": true,
+        "fpcv_gt_spcv_share_boot": 1.0,
+        "design": "per-round |pi - pi*| resampled within each CV cell, B=2000, seed 1310"
+      },
+      "third_price_ipv_supplementary": {
+        "smad_rne": 45.29359999999999,
+        "smad_rne_capped49": 37.416266666666665,
+        "n": 500,
+        "N": 5,
+        "bstar": "(4/3) v [capped variant: min(b*, 49)]",
+        "human_anchor_kagel_levin_n5": 7.6566,
+        "source": "experiment_logs/V10/third_price_ipv",
+        "note": "not in the paper's temperature table and not in any tau; shown for completeness only"
+      }
+    },
+    "1.0": {
+      "usable_private_formats": [
+        "FPSB IPV",
+        "SPSB IPV",
+        "SP-APV",
+        "AC"
+      ],
+      "excluded_private": {
+        "AC-B": "n=8 < 30"
+      },
+      "format_sets": {
+        "sealed3": {
+          "formats": [
+            "FPSB IPV",
+            "SPSB IPV",
+            "SP-APV"
+          ],
+          "n_formats": 3,
+          "human_smad": [
+            24.7639,
+            5.646,
+            9.31
+          ],
+          "llm_smad": [
+            24.993041526374864,
+            12.888888888888891,
+            12.749333333333334
+          ],
+          "llm_n": [
+            297,
+            297,
+            300
+          ],
+          "tau_point": 0.3333333333333333,
+          "fpsb_minus_spsb_llm": 12.104152637485972,
+          "fpsb_gt_spsb_llm_point": true,
+          "layer_a_llm_bootstrap": {
+            "ci95": [
+              0.3333333333333333,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1116,
+              "+1.0000": 884
+            }
+          },
+          "layer_b_human_redraws": {
+            "ci95": [
+              0.3333333333333333,
+              0.3333333333333333
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1991,
+              "+1.0000": 9
+            }
+          },
+          "layer_c_joint": {
+            "ci95": [
+              0.3333333333333333,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 1119,
+              "+1.0000": 881
+            }
+          },
+          "fpsb_hardest_share_llm": 1.0,
+          "fpsb_hardest_share_human": 1.0,
+          "fpsb_hardest_share_joint": 1.0,
+          "fpsb_hardest_every_draw": true,
+          "fpsb_gt_spsb_share_llm": 1.0,
+          "fpsb_gt_spsb_share_human": 1.0,
+          "fpsb_gt_spsb_share_joint": 1.0
+        },
+        "all_usable": {
+          "formats": [
+            "FPSB IPV",
+            "SPSB IPV",
+            "SP-APV",
+            "AC"
+          ],
+          "n_formats": 4,
+          "human_smad": [
+            24.7639,
+            5.646,
+            9.31,
+            3.54
+          ],
+          "llm_smad": [
+            24.993041526374864,
+            12.888888888888891,
+            12.749333333333334,
+            1.0
+          ],
+          "llm_n": [
+            297,
+            297,
+            300,
+            52
+          ],
+          "tau_point": 0.6666666666666666,
+          "fpsb_minus_spsb_llm": 12.104152637485972,
+          "fpsb_gt_spsb_llm_point": true,
+          "layer_a_llm_bootstrap": {
+            "ci95": [
+              0.6666666666666666,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.6667": 1094,
+              "+1.0000": 906
+            }
+          },
+          "layer_b_human_redraws": {
+            "ci95": [
+              0.3333333333333333,
+              0.6666666666666666
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 52,
+              "+0.6667": 1939,
+              "+1.0000": 9
+            }
+          },
+          "layer_c_joint": {
+            "ci95": [
+              0.6666666666666666,
+              1.0
+            ],
+            "frac_tau_positive": 1.0,
+            "tau_distribution": {
+              "+0.3333": 28,
+              "+0.6667": 1087,
+              "+1.0000": 885
+            }
+          },
+          "fpsb_hardest_share_llm": 1.0,
+          "fpsb_hardest_share_human": 1.0,
+          "fpsb_hardest_share_joint": 1.0,
+          "fpsb_hardest_every_draw": true,
+          "fpsb_gt_spsb_share_llm": 1.0,
+          "fpsb_gt_spsb_share_human": 1.0,
+          "fpsb_gt_spsb_share_joint": 1.0
+        }
+      },
+      "fpsb_hardest_sealed_point": true,
+      "spapv_gt_spsb_point": false,
+      "spapv_minus_spsb": -0.13955555555555677,
+      "spapv_gt_spsb_share_boot": 0.4355,
+      "clock_usable": [
+        "AC"
+      ],
+      "clock_below_all_sealed_point": true,
+      "cv_sign": {
+        "fpcv_minus_spcv": 9.38636363636364,
+        "fpcv_gt_spcv_point": true,
+        "fpcv_gt_spcv_share_boot": 0.927,
+        "design": "per-round |pi - pi*| resampled within each CV cell, B=2000, seed 1310"
+      },
+      "third_price_ipv_supplementary": {
+        "smad_rne": 47.24533333333333,
+        "smad_rne_capped49": 40.530666666666654,
+        "n": 250,
+        "N": 5,
+        "bstar": "(4/3) v [capped variant: min(b*, 49)]",
+        "human_anchor_kagel_levin_n5": 7.6566,
+        "source": "robustness_logs/third_price_ipv_gpt4o_temp10",
+        "note": "not in the paper's temperature table and not in any tau; shown for completeness only"
+      }
+    }
+  },
+  "paper_table_reproduction": {
+    "paper_table": {
+      "AC-B": [
+        0.0,
+        0.47,
+        2.15
+      ],
+      "AC": [
+        0.0,
+        0.81,
+        1.0
+      ],
+      "SPSB IPV": [
+        14.77,
+        8.69,
+        12.89
+      ],
+      "SP-APV": [
+        12.87,
+        10.73,
+        12.75
+      ],
+      "FP-CV": [
+        39.0,
+        59.99,
+        42.92
+      ],
+      "SP-CV": [
+        35.51,
+        40.6,
+        33.53
+      ],
+      "FPSB IPV": [
+        28.07,
+        27.55,
+        24.99
+      ]
+    },
+    "cells": {
+      "FP-CV": {
+        "0.1": {
+          "smad": 39.0,
+          "n": 30,
+          "source": "robustness_logs/common_value_first_gpt4o_temp01",
+          "paper_table": 39.0,
+          "status": "match",
+          "this_script_smad": 39.0,
+          "this_script_n": 30
+        },
+        "0.5": {
+          "smad": 59.989583333333336,
+          "n": 96,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 59.99,
+          "status": "match",
+          "this_script_smad": 59.989583333333336,
+          "this_script_n": 96
+        },
+        "1.0": {
+          "smad": 42.91666666666667,
+          "n": 30,
+          "source": "robustness_logs/common_value_first_gpt4o_temp10",
+          "paper_table": 42.92,
+          "status": "match",
+          "this_script_smad": 42.91666666666667,
+          "this_script_n": 30
+        }
+      },
+      "FPSB IPV": {
+        "0.1": {
+          "smad": 28.07111111111112,
+          "n": 300,
+          "source": "robustness_logs/fpsb_ipv_gpt4o_temp01/run_2026-01-26_12-42-42-253237/results/fpsb_ipv_gpt4o_temp01_results.csv",
+          "paper_table": 28.07,
+          "status": "match",
+          "this_script_smad": 28.07111111111112,
+          "this_script_n": 300
+        },
+        "0.5": {
+          "smad": 27.551812865497077,
+          "n": 285,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 27.55,
+          "status": "match",
+          "this_script_smad": 27.551812865497077,
+          "this_script_n": 285
+        },
+        "1.0": {
+          "smad": 24.993041526374864,
+          "n": 297,
+          "source": "robustness_logs/fpsb_ipv_gpt4o_temp10/run_2026-01-26_12-19-11-578637/results/fpsb_ipv_gpt4o_temp10_results.csv",
+          "paper_table": 24.99,
+          "status": "match",
+          "this_script_smad": 24.993041526374864,
+          "this_script_n": 297
+        }
+      },
+      "SP-CV": {
+        "0.1": {
+          "smad": 35.5125,
+          "n": 100,
+          "source": "robustness_logs/common_value_second_gpt4o_temp01",
+          "paper_table": 35.51,
+          "status": "match",
+          "this_script_smad": 35.5125,
+          "this_script_n": 100
+        },
+        "0.5": {
+          "smad": 40.60326086956522,
+          "n": 92,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 40.6,
+          "status": "match",
+          "this_script_smad": 40.60326086956522,
+          "this_script_n": 92
+        },
+        "1.0": {
+          "smad": 33.53030303030303,
+          "n": 99,
+          "source": "robustness_logs/common_value_second_gpt4o_temp10",
+          "paper_table": 33.53,
+          "status": "match",
+          "this_script_smad": 33.53030303030303,
+          "this_script_n": 99
+        }
+      },
+      "SP-APV": {
+        "0.1": {
+          "smad": 12.871380471380473,
+          "n": 297,
+          "source": "robustness_logs/spsb_apv_gpt4o_temp01/run_2026-01-26_12-19-12-691097/results/spsb_apv_gpt4o_temp01_results.csv",
+          "paper_table": 12.87,
+          "status": "match",
+          "this_script_smad": 12.871380471380473,
+          "this_script_n": 297
+        },
+        "0.5": {
+          "smad": 10.734020618556702,
+          "n": 291,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 10.73,
+          "status": "match",
+          "this_script_smad": 10.734020618556702,
+          "this_script_n": 291
+        },
+        "1.0": {
+          "smad": 12.749333333333334,
+          "n": 300,
+          "source": "robustness_logs/spsb_apv_gpt4o_temp10/run_2026-01-26_12-47-18-192503/results/spsb_apv_gpt4o_temp10_results.csv",
+          "paper_table": 12.75,
+          "status": "match",
+          "this_script_smad": 12.749333333333334,
+          "this_script_n": 300
+        }
+      },
+      "AC-B": {
+        "0.1": {
+          "smad": null,
+          "n": 0,
+          "source": "NO DATA (no results CSV; rendered as 0 by the generator)",
+          "paper_table": 0.0,
+          "status": "NO DATA (paper prints 0.00)",
+          "this_script_smad": 0.4999999999999485,
+          "this_script_n": 4
+        },
+        "0.5": {
+          "smad": 0.4736842105263157,
+          "n": 114,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 0.47,
+          "status": "match",
+          "this_script_smad": 0.47368421052631576,
+          "this_script_n": 114
+        },
+        "1.0": {
+          "smad": 2.1500000000000146,
+          "n": 8,
+          "source": "robustness_logs/ascending_clock_apv_closed_gpt4o_temp10/run_2026-01-30_21-10-08-282430/results/ascending_clock_apv_closed_gemini_results.csv",
+          "paper_table": 2.15,
+          "status": "match",
+          "this_script_smad": 2.1500000000000146,
+          "this_script_n": 8
+        }
+      },
+      "SPSB IPV": {
+        "0.1": {
+          "smad": 14.772789115646258,
+          "n": 294,
+          "source": "robustness_logs/spsb_ipv_gpt4o_temp01/run_2026-01-26_11-54-15-910823/results/spsb_ipv_gpt4o_temp01_results.csv",
+          "paper_table": 14.77,
+          "status": "match",
+          "this_script_smad": 14.772789115646258,
+          "this_script_n": 294
+        },
+        "0.5": {
+          "smad": 8.685925925925927,
+          "n": 270,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 8.69,
+          "status": "match",
+          "this_script_smad": 8.685925925925927,
+          "this_script_n": 270
+        },
+        "1.0": {
+          "smad": 12.888888888888891,
+          "n": 297,
+          "source": "robustness_logs/spsb_ipv_gpt4o_temp10/run_2026-01-26_11-54-15-910213/results/spsb_ipv_gpt4o_temp10_results.csv",
+          "paper_table": 12.89,
+          "status": "match",
+          "this_script_smad": 12.888888888888891,
+          "this_script_n": 297
+        }
+      },
+      "AC": {
+        "0.1": {
+          "smad": null,
+          "n": 0,
+          "source": "NO DATA (no results CSV; rendered as 0 by the generator)",
+          "paper_table": 0.0,
+          "status": "NO DATA (paper prints 0.00)",
+          "this_script_smad": null,
+          "this_script_n": 0
+        },
+        "0.5": {
+          "smad": 0.8113207547169812,
+          "n": 106,
+          "source": "plots/theoretical_deviation_results_updated.csv",
+          "paper_table": 0.81,
+          "status": "match",
+          "this_script_smad": 0.8113207547169812,
+          "this_script_n": 106
+        },
+        "1.0": {
+          "smad": 1.0,
+          "n": 52,
+          "source": "robustness_logs/ascending_clock_apv_gpt4o_temp10/run_2026-01-30_22-53-11-338221/results/ascending_clock_apv_gpt4o_temp10_results.csv",
+          "paper_table": 1.0,
+          "status": "match",
+          "this_script_smad": 1.0,
+          "this_script_n": 52
+        }
+      }
+    },
+    "mismatches": [],
+    "no_data_rendered_as_zero": [
+      [
+        "AC-B",
+        "0.1"
+      ],
+      [
+        "AC",
+        "0.1"
+      ]
+    ]
+  },
+  "between_temperature_rank_correlation": [
+    {
+      "T1": "0.1",
+      "T2": "0.5",
+      "rule": "n_ge_30_both",
+      "k": 5,
+      "formats": [
+        "FP-CV",
+        "FPSB IPV",
+        "SP-CV",
+        "SP-APV",
+        "SPSB IPV"
+      ],
+      "spearman_rho": 0.8999999999999998,
+      "spearman_p": 0.03738607346849875,
+      "kendall_tau_b": 0.7999999999999999,
+      "kendall_p": 0.08333333333333333,
+      "ordering_T1": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV",
+      "ordering_T2": "FP-CV > SP-CV > FPSB IPV > SP-APV > SPSB IPV",
+      "discordant_pairs": [
+        [
+          "SP-APV",
+          "SPSB IPV"
+        ]
+      ]
+    },
+    {
+      "T1": "0.1",
+      "T2": "0.5",
+      "rule": "any_data_both",
+      "k": 6,
+      "formats": [
+        "FP-CV",
+        "FPSB IPV",
+        "SP-CV",
+        "SP-APV",
+        "AC-B",
+        "SPSB IPV"
+      ],
+      "spearman_rho": 0.942857142857143,
+      "spearman_p": 0.004804664723032055,
+      "kendall_tau_b": 0.8666666666666666,
+      "kendall_p": 0.016666666666666666,
+      "ordering_T1": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV > AC-B",
+      "ordering_T2": "FP-CV > SP-CV > FPSB IPV > SP-APV > SPSB IPV > AC-B",
+      "discordant_pairs": [
+        [
+          "SP-APV",
+          "SPSB IPV"
+        ]
+      ]
+    },
+    {
+      "T1": "0.5",
+      "T2": "1.0",
+      "rule": "n_ge_30_both",
+      "k": 6,
+      "formats": [
+        "FP-CV",
+        "FPSB IPV",
+        "SP-CV",
+        "SP-APV",
+        "SPSB IPV",
+        "AC"
+      ],
+      "spearman_rho": 0.942857142857143,
+      "spearman_p": 0.004804664723032055,
+      "kendall_tau_b": 0.8666666666666666,
+      "kendall_p": 0.016666666666666666,
+      "ordering_T1": "FP-CV > SP-CV > FPSB IPV > SP-APV > SPSB IPV > AC",
+      "ordering_T2": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV > AC",
+      "discordant_pairs": [
+        [
+          "SP-APV",
+          "SPSB IPV"
+        ]
+      ]
+    },
+    {
+      "T1": "0.5",
+      "T2": "1.0",
+      "rule": "any_data_both",
+      "k": 7,
+      "formats": [
+        "FP-CV",
+        "FPSB IPV",
+        "SP-CV",
+        "SP-APV",
+        "AC-B",
+        "SPSB IPV",
+        "AC"
+      ],
+      "spearman_rho": 0.9285714285714288,
+      "spearman_p": 0.0025194724037946874,
+      "kendall_tau_b": 0.8095238095238096,
+      "kendall_p": 0.010714285714285714,
+      "ordering_T1": "FP-CV > SP-CV > FPSB IPV > SP-APV > SPSB IPV > AC > AC-B",
+      "ordering_T2": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV > AC-B > AC",
+      "discordant_pairs": [
+        [
+          "SP-APV",
+          "SPSB IPV"
+        ],
+        [
+          "AC-B",
+          "AC"
+        ]
+      ]
+    },
+    {
+      "T1": "0.1",
+      "T2": "1.0",
+      "rule": "n_ge_30_both",
+      "k": 5,
+      "formats": [
+        "FP-CV",
+        "FPSB IPV",
+        "SP-CV",
+        "SP-APV",
+        "SPSB IPV"
+      ],
+      "spearman_rho": 0.9999999999999999,
+      "spearman_p": 1.4042654220543672e-24,
+      "kendall_tau_b": 0.9999999999999999,
+      "kendall_p": 0.016666666666666666,
+      "ordering_T1": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV",
+      "ordering_T2": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV",
+      "discordant_pairs": []
+    },
+    {
+      "T1": "0.1",
+      "T2": "1.0",
+      "rule": "any_data_both",
+      "k": 6,
+      "formats": [
+        "FP-CV",
+        "FPSB IPV",
+        "SP-CV",
+        "SP-APV",
+        "AC-B",
+        "SPSB IPV"
+      ],
+      "spearman_rho": 1.0,
+      "spearman_p": 0.0,
+      "kendall_tau_b": 0.9999999999999999,
+      "kendall_p": 0.002777777777777778,
+      "ordering_T1": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV > AC-B",
+      "ordering_T2": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV > AC-B",
+      "discordant_pairs": []
+    }
+  ],
+  "orderings": {
+    "formats_usable_at_all_T": [
+      "FP-CV",
+      "FPSB IPV",
+      "SP-CV",
+      "SP-APV",
+      "SPSB IPV"
+    ],
+    "by_T": {
+      "0.1": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV",
+      "0.5": "FP-CV > SP-CV > FPSB IPV > SP-APV > SPSB IPV",
+      "1.0": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV"
+    },
+    "formats_usable_at_T05_and_T10": [
+      "FP-CV",
+      "FPSB IPV",
+      "SP-CV",
+      "SP-APV",
+      "SPSB IPV",
+      "AC"
+    ],
+    "by_T_T05_T10": {
+      "0.5": "FP-CV > SP-CV > FPSB IPV > SP-APV > SPSB IPV > AC",
+      "1.0": "FP-CV > SP-CV > FPSB IPV > SPSB IPV > SP-APV > AC"
+    }
+  },
+  "max_abs_smad_change_by_format": {
+    "FP-CV": {
+      "max_abs_change": 20.989583333333336,
+      "T_max": "0.5",
+      "T_min": "0.1",
+      "smad_by_T": {
+        "0.1": 39.0,
+        "0.5": 59.989583333333336,
+        "1.0": 42.91666666666667
+      },
+      "rel_to_T05": 0.34988713318284426,
+      "max_over_min_ratio": 1.5381944444444444,
+      "any_cell_n_lt_30": false,
+      "temps_with_data": [
+        "0.1",
+        "0.5",
+        "1.0"
+      ]
+    },
+    "FPSB IPV": {
+      "max_abs_change": 3.078069584736255,
+      "T_max": "0.1",
+      "T_min": "1.0",
+      "smad_by_T": {
+        "0.1": 28.07111111111112,
+        "0.5": 27.551812865497077,
+        "1.0": 24.993041526374864
+      },
+      "rel_to_T05": 0.11171931225588781,
+      "max_over_min_ratio": 1.123157062796379,
+      "any_cell_n_lt_30": false,
+      "temps_with_data": [
+        "0.1",
+        "0.5",
+        "1.0"
+      ]
+    },
+    "SP-CV": {
+      "max_abs_change": 7.0729578392621875,
+      "T_max": "0.5",
+      "T_min": "1.0",
+      "smad_by_T": {
+        "0.1": 35.5125,
+        "0.5": 40.60326086956522,
+        "1.0": 33.53030303030303
+      },
+      "rel_to_T05": 0.17419679325716,
+      "max_over_min_ratio": 1.210942258197607,
+      "any_cell_n_lt_30": false,
+      "temps_with_data": [
+        "0.1",
+        "0.5",
+        "1.0"
+      ]
+    },
+    "SP-APV": {
+      "max_abs_change": 2.1373598528237707,
+      "T_max": "0.1",
+      "T_min": "0.5",
+      "smad_by_T": {
+        "0.1": 12.871380471380473,
+        "0.5": 10.734020618556702,
+        "1.0": 12.749333333333334
+      },
+      "rel_to_T05": 0.1991201553245349,
+      "max_over_min_ratio": 1.199120155324535,
+      "any_cell_n_lt_30": false,
+      "temps_with_data": [
+        "0.1",
+        "0.5",
+        "1.0"
+      ]
+    },
+    "AC-B": {
+      "max_abs_change": 1.6763157894736989,
+      "T_max": "1.0",
+      "T_min": "0.5",
+      "smad_by_T": {
+        "0.1": 0.4999999999999485,
+        "0.5": 0.47368421052631576,
+        "1.0": 2.1500000000000146
+      },
+      "rel_to_T05": 3.53888888888892,
+      "max_over_min_ratio": 4.53888888888892,
+      "any_cell_n_lt_30": true,
+      "temps_with_data": [
+        "0.1",
+        "0.5",
+        "1.0"
+      ]
+    },
+    "SPSB IPV": {
+      "max_abs_change": 6.086863189720331,
+      "T_max": "0.1",
+      "T_min": "0.5",
+      "smad_by_T": {
+        "0.1": 14.772789115646258,
+        "0.5": 8.685925925925927,
+        "1.0": 12.888888888888891
+      },
+      "rel_to_T05": 0.7007730945013172,
+      "max_over_min_ratio": 1.7007730945013173,
+      "any_cell_n_lt_30": false,
+      "temps_with_data": [
+        "0.1",
+        "0.5",
+        "1.0"
+      ]
+    },
+    "AC": {
+      "max_abs_change": 0.18867924528301883,
+      "T_max": "1.0",
+      "T_min": "0.5",
+      "smad_by_T": {
+        "0.5": 0.8113207547169812,
+        "1.0": 1.0
+      },
+      "rel_to_T05": 0.23255813953488366,
+      "max_over_min_ratio": 1.2325581395348837,
+      "any_cell_n_lt_30": false,
+      "temps_with_data": [
+        "0.5",
+        "1.0"
+      ]
+    }
+  },
+  "cell_provenance_seed_bases_dates": {
+    "0.1": {
+      "FPSB IPV": {
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ]
+      },
+      "SPSB IPV": {
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ]
+      },
+      "SP-APV": {
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-26"
+        ]
+      },
+      "AC-B": {
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-31"
+        ]
+      }
+    },
+    "0.5": {
+      "FPSB IPV": {
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-12"
+        ]
+      },
+      "SPSB IPV": {
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-12"
+        ]
+      },
+      "SP-APV": {
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-12"
+        ]
+      },
+      "AC": {
+        "seed_bases": [
+          1299,
+          1319,
+          1399
+        ],
+        "dates": [
+          "2026-01-06"
+        ]
+      },
+      "AC-B": {
+        "seed_bases": [
+          1299,
+          1399
+        ],
+        "dates": [
+          "2026-01-06",
+          "2026-01-07"
+        ]
+      }
+    },
+    "1.0": {
+      "FPSB IPV": {
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ]
+      },
+      "SPSB IPV": {
+        "seed_bases": [
+          1299
+        ],
+        "dates": [
+          "2026-01-26"
+        ]
+      },
+      "SP-APV": {
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-26"
+        ]
+      },
+      "AC": {
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-30"
+        ]
+      },
+      "AC-B": {
+        "seed_bases": [
+          1399
+        ],
+        "dates": [
+          "2026-01-30"
+        ]
+      }
+    }
+  },
+  "verdict_flags": {
+    "fpsb_hardest_sealed_every_T": true,
+    "fpsb_gt_spsb_every_T": true,
+    "fpsb_gt_spsb_min_boot_share": 1.0,
+    "fpcv_gt_spcv_every_T": true,
+    "fpcv_gt_spcv_min_boot_share": 0.7625,
+    "spapv_gt_spsb_by_T": {
+      "0.1": false,
+      "0.5": true,
+      "1.0": false
+    },
+    "spapv_minus_spsb_by_T": {
+      "0.1": -1.9014086442657856,
+      "0.5": 2.048094692630775,
+      "1.0": -0.13955555555555677
+    },
+    "spapv_gt_spsb_share_boot_by_T": {
+      "0.1": 0.0195,
+      "0.5": 0.994,
+      "1.0": 0.4355
+    },
+    "clock_below_all_sealed_by_T": {
+      "0.1": null,
+      "0.5": true,
+      "1.0": true
+    },
+    "tau_sealed3_by_T": {
+      "0.1": 0.3333333333333333,
+      "0.5": 1.0,
+      "1.0": 0.3333333333333333
+    },
+    "tau_sealed3_positive_every_T": true,
+    "tau_all_usable_by_T": {
+      "0.1": 0.3333333333333333,
+      "0.5": 0.6,
+      "1.0": 0.6666666666666666
+    },
+    "p_tau_pos_joint_sealed3_by_T": {
+      "0.1": 1.0,
+      "0.5": 1.0,
+      "1.0": 1.0
+    },
+    "p_tau_pos_joint_all_usable_by_T": {
+      "0.1": 1.0,
+      "0.5": 1.0,
+      "1.0": 1.0
+    },
+    "spsb_under_dominated_every_T": true,
+    "spapv_under_dominated_every_T": true,
+    "human_spsb_under_share_dev": 0.07818930041152262,
+    "human_spapv_under_share_dev": 0.2,
+    "largest_swing_format": "FP-CV"
+  }
+}

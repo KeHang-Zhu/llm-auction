@@ -1,0 +1,81 @@
+{
+  "statistic": "Kendall tau-b, human vs GPT-4o SMAD ranking, 5 in-scope formats",
+  "formats": [
+    "FPSB IPV",
+    "SPSB IPV",
+    "SP-APV",
+    "AC",
+    "AC-B"
+  ],
+  "human_smad": [
+    24.7639,
+    5.646,
+    9.31,
+    3.54,
+    5.83
+  ],
+  "llm_smad": [
+    27.551812865497077,
+    8.685925925925927,
+    10.734020618556702,
+    0.8113207547169812,
+    0.47368421052631576
+  ],
+  "llm_n": [
+    285,
+    270,
+    291,
+    106,
+    114
+  ],
+  "tau_point": 0.6,
+  "seed": 1299,
+  "B": 2000,
+  "layer_a_llm_bootstrap": {
+    "design": "resample per-bid |b-b*(v)| with replacement within each format cell; recompute SMAD vector; tau-b vs fixed human canonical ranking; percentile CI",
+    "ci95": [
+      0.6,
+      0.6
+    ],
+    "frac_tau_positive": 1.0,
+    "frac_fpsb_gt_spsb_llm": 1.0,
+    "tau_distribution": {
+      "0.4": 17,
+      "0.6": 1973,
+      "0.8": 10
+    }
+  },
+  "layer_b_human_redraws": {
+    "design": "reconstruction-calibration re-draws replicating reconstruction_bands.fragility_checks (seed 1299+7); tau-b vs fixed GPT-4o canonical ranking",
+    "ci95": [
+      0.4,
+      1.0
+    ],
+    "frac_tau_positive": 1.0,
+    "frac_fpsb_gt_spsb_human": 1.0,
+    "crosscheck_frac_acb_lt_spapv_published_0.926": 0.926,
+    "tau_distribution": {
+      "0.2": 11,
+      "0.4": 164,
+      "0.6": 808,
+      "0.8": 751,
+      "1.0": 266
+    }
+  },
+  "layer_c_joint": {
+    "design": "pair LLM-bootstrap draw b with human re-draw b (independent streams); tau-b between the two redrawn vectors",
+    "ci95": [
+      0.4,
+      1.0
+    ],
+    "frac_tau_positive": 1.0,
+    "frac_fpsb_gt_spsb_both_sides": 1.0,
+    "tau_distribution": {
+      "0.2": 12,
+      "0.4": 170,
+      "0.6": 806,
+      "0.8": 744,
+      "1.0": 268
+    }
+  }
+}

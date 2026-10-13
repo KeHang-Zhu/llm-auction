@@ -1,0 +1,416 @@
+% Standalone document: no external bibliography, figures, or input files.
+% Compile with: pdflatex phase1_evidence_assessment.tex (twice for references).
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{amsmath}
+\usepackage{booktabs,tabularx,array,longtable}
+\usepackage{float}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{xurl}
+
+\definecolor{supported}{RGB}{24,96,65}
+\definecolor{conditional}{RGB}{130,83,0}
+\definecolor{missing}{RGB}{154,38,38}
+\newcommand{\yes}{\textcolor{supported}{\textbf{Demonstrated}}}
+\newcommand{\partiallydemonstrated}{\textcolor{conditional}{\textbf{Partially demonstrated}}}
+\newcommand{\needed}{\textcolor{missing}{\textbf{Still needed}}}
+\newcommand{\evidence}[1]{\textnormal{[E#1]}}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\clubpenalty=10000
+\widowpenalty=10000
+\brokenpenalty=10000
+\setlist[itemize]{leftmargin=*,topsep=3pt,itemsep=3pt,parsep=0pt}
+\setlist[enumerate]{leftmargin=*,topsep=3pt,itemsep=4pt,parsep=0pt}
+\renewcommand{\arraystretch}{1.16}
+\hypersetup{
+  pdftitle={Phase I Evidence Assessment: Multi-Agent LLM Auction Experiments},
+  pdfsubject={Demonstrated capabilities, existing results, and remaining evidence gaps}
+}
+
+\title{Phase I Evidence Assessment\\\large Multi-Agent LLM Auction Experiments}
+\author{}
+\date{October 6, 2026}
+
+\begin{document}
+\begin{center}
+{\LARGE\bfseries Phase I Evidence Assessment\par}
+{\large Multi-Agent LLM Auction Experiments\par}
+October 6, 2026
+\end{center}
+
+\section{Assessment and scope}
+
+\textbf{The existing work demonstrates a functioning multi-agent auction
+environment, substantive market mechanics, behavioral classification and
+comparison, and greater than 90\% allocative surplus efficiency in specified
+recorded experiments. It does not yet establish every Phase I requirement.}
+The principal outstanding items are verified operation with at least ten LLMs
+and confirmation that the implemented public-information updates meet the
+intended ``news feed'' requirement. A requirement for a trained behavioral
+classifier would also need additional evidence.
+
+This assessment applies the six Phase I requirements supplied for the related
+DARPA SBIR effort to the repository accompanying \emph{LLM Bidders Preserve the
+Mechanism-Level Orderings of Human Bidders}. It distinguishes executed
+experiments from configurable capabilities and distinguishes previously
+reported findings from a new analysis of already collected data. It does not
+claim that these experiments were performed under, or funded by, the SBIR
+grant. Collaboration, deception, influence, and development of human-like
+reference agents are outside this Phase I assessment.
+
+The evidence consists of the manuscript, simulator code, archived
+configurations and prompts, recorded auction outcomes, and analysis outputs.
+An offline audit calculated allocation efficiency from existing outcomes;
+it did not generate new model responses. Evidence identifiers below refer to
+the repository artifacts listed in Section~\ref{sec:artifacts}.
+
+\begin{table}[H]
+\small
+\caption{Requirement-by-requirement assessment. Status applies to the scope stated.}
+\label{tab:assessment}
+\begin{tabularx}{\textwidth}{@{}L{0.25\textwidth}Y@{}}
+\toprule
+Requirement & Evidence status and remaining issue \\
+\midrule
+1. Interacting AI agents & \yes. Agents compete in executed auctions with shared allocation and payment rules. \evidence{1--3} \\
+2. Market mechanics & \partiallydemonstrated. Multiple formats, bids, prices, allocations, simulated payoffs, timing, and changing public market information are implemented. Quantity is one object; an external news feed is not established. \evidence{2--4} \\
+3. At least ten LLMs & \needed. Six distinct models have recorded evidence. A configurable EDSL interface is present, but ten-model execution has not been verified. \evidence{3,5} \\
+4. Behavioral classifiers & \yes\ for rule-based economic classification and cross-model measurement. A trained classifier and its predictive validation are not established. \evidence{6--7} \\
+5. Economic behavior; efficiency above 90\% & \yes\ for completed GPT-4o private-value baseline auctions under the surplus definition in Section~\ref{sec:efficiency}. This is not a universal result across models. \evidence{8} \\
+6. AI--AI and AI--human comparison & \yes\ across model-specific experiments and published human benchmarks. Mixed-model auctions and participant-level human records are not established by this evidence. \evidence{1--2,7} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\section{What the existing experiments demonstrate}
+
+\subsection{Multiple agents participate in an actual auction}
+
+\yes. The simulator instantiates separate bidders with private values or
+signals, elicits their actions through EDSL, and applies a common auction
+mechanism to determine the winner and payments. The baseline private-value
+experiments audited here have three bidders. Submitted bids affect other
+agents' winning chances and prices; clock and proxy auctions additionally
+support responses to an evolving auction state. This is an executed strategic
+interaction, rather than a collection of independent hypothetical bidding
+questions. Raw results contain bidder values, actions, a recorded winner,
+price, profits, and available free-text plans. \evidence{2--3}
+
+\textbf{Scope.} The main model comparisons use separate auctions populated by
+one model at a time. Interaction among multiple agents is demonstrated;
+competition among different model types within the same auction is not
+demonstrated by the main experimental panel. \evidence{1}
+
+\subsection{Market structures, payoffs, timing, and public information}
+
+\yes\ for the following mechanics:
+\begin{itemize}
+  \item \textbf{Multiple structures and information environments.} The main
+  paper covers first-price and second-price independent-private-value auctions,
+  sealed second-price affiliated-private-value auctions, open and closed
+  ascending-clock affiliated-private-value auctions, and first-price and
+  second-price common-value auctions. Additional recorded experiments cover
+  eBay-style proxy bidding and hard versus soft closing rules.
+  \item \textbf{Bids, prices, assets, quantities, and timing.} Bidders compete
+  for one object per auction. The simulator records numeric bids or dynamic
+  bidding decisions, determines prices and allocations, and implements clock
+  periods and proxy-auction closing rules. Asset quantity is fixed at one;
+  variable-quantity trading and multi-asset portfolios are not evidenced here.
+  \item \textbf{Incentives and utility.} Prompts instruct bidders to maximize
+  profits. Allocation and payment rules produce simulated monetary payoffs;
+  for the audited private-value auctions, the winner's payoff is value minus
+  price and losers receive zero. These are numerical economic incentives,
+  not actual cash transfers to the models.
+  \item \textbf{Outcome measurement.} Existing analyses measure bidding
+  deviations, profit deviations in common-value auctions, and timing. The
+  recorded allocations and values also support the efficiency calculation
+  in Section~\ref{sec:efficiency}.
+\end{itemize}
+These capabilities are supported by the simulator and archived runs, not just
+by proposed configurations. \evidence{2--4,7--8}
+
+\partiallydemonstrated\ for the ``news feed'' requirement. Open-clock bidders receive
+updates on prices and dropouts; eBay bidders receive the current price and a
+price-history transcript; repeated-auction experiments provide outcome
+feedback across auctions. These constitute changing public \emph{market}
+information. No separate stream of external news, public fundamental-value
+shocks, or announcements is established by the inspected evidence.
+\textbf{Still needed:} determine whether endogenous market updates satisfy
+the requirement. If exogenous news is required, provide evidence of such a
+feed and agents' responses to it, or implement and demonstrate that capability.
+\evidence{2--4}
+
+\subsection{Model coverage}
+
+\partiallydemonstrated. The recorded data establish six distinct model identifiers:
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Model & Recorded identifier \\
+\midrule
+GPT-4o & \texttt{gpt-4o} \\
+Claude 3.5 Haiku & \texttt{claude-3-5-haiku-20241022} \\
+Gemini 2.0 Flash & \texttt{gemini-2.0-flash} \\
+GPT-5-mini & \texttt{gpt-5-mini} \\
+Llama-3-8B-Instruct & \texttt{meta-llama/Meta-Llama-3-8B-Instruct} \\
+Gemma-3-27B & \texttt{google/gemma-3-27b-it} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The first five appear in the main model comparison; Gemma supplies additional
+framing evidence. The historical directory suffix \texttt{claude\_sonnet}
+contains Claude 3.5 \emph{Haiku} observations and must not be counted as a
+separate model. Different temperatures or prompts likewise do not increase
+the distinct-model count. \evidence{2,5}
+
+The simulator accepts configurable model and provider identifiers through
+EDSL. That interface provides a route to broader coverage, but is not a
+demonstration of successful auctions with ten models. \textbf{Still needed:}
+locate qualifying existing runs for at least four additional distinct LLMs,
+or execute and archive them in the required environment. Preserve model
+identifiers, configurations, valid actions, completed outcomes, and failures.
+The current data also have missing or thin model--format cells, including
+missing GPT-5-mini clock outcomes. \evidence{2--3,5}
+
+\subsection{Behavioral classification and differences}
+
+\yes\ for explicit rule-based classifiers. The analysis defines an economic
+benchmark $b^*(v)$ and labels each bid as within a tolerance band, below the
+benchmark, or above it:
+\[
+\begin{aligned}
+\text{Within band:}\quad & |b-b^*(v)|\leq 0.02\,b^*(v),\\
+\text{Underbid:}\quad & b<b^*(v)\quad\text{outside the band},\\
+\text{Overbid:}\quad & b>b^*(v)\quad\text{outside the band}.
+\end{aligned}
+\]
+For three-bidder first-price independent-private-value auctions the benchmark
+is $b^*(v)=2v/3$; in the truthful formats it is $b^*(v)=v$.
+The analysis reports the within-band share among all bids and the under/over
+split among deviating bids. Clock bid-direction analyses exclude winners
+because their exit values are censored. \evidence{6}
+
+Existing outputs also report scaled mean absolute deviations, uncertainty
+intervals, cross-format rankings, and framing effects. For example, first-price
+private-value bid deviations are approximately 27.6\% for GPT-4o, 24.1\% for
+Claude 3.5 Haiku, 27.1\% for Gemini, 0.1\% for GPT-5-mini, and 38.2\% for
+Llama. These percentages describe the paper's normalized bidding-error metric,
+\emph{not} allocation efficiency. \evidence{7}
+
+There is also a measured timing response to market rules: the eventual
+winner's last maximum-bid increase occurs in period 10 in 63.3\% of hard-close
+auctions versus 6.7\% of soft-close auctions, with 30 recorded auctions per
+treatment. \evidence{4}
+
+\textbf{Still needed, if required by the classifier specification:} a trained
+detector with defined labels, held-out evaluation, and predictive-performance
+metrics. The existing rule-based classifications support statements about
+observable bidding tendencies and differences; they do not by themselves
+identify the psychological causes of those differences.
+
+\subsection{Comparisons across models and with human behavior}
+
+\yes. The main analysis compares five LLMs across seven auction settings,
+with missing or thin cells identified. It compares deviation magnitudes,
+directions, and mechanism-level orderings with human experimental benchmarks.
+The three non-reasoning large models reproduce important human orderings,
+including larger first-price than second-price deviations, while differing
+from humans in error magnitudes and often in error directions.
+\evidence{1--2,7}
+
+\textbf{Qualification.} The human evidence consists of published summary
+statistics and synthetic reconstructions calibrated to those statistics,
+not observed participant-level human records. Some benchmark designs differ
+in bidder count, and human category definitions need not match the LLM
+tolerance rule exactly. This supports comparisons with \emph{comparable}
+economic environments and specified normalization, not a claim of identical
+protocols or validated human-level fidelity. \textbf{Still needed only if
+explicitly required:} matched participant-level human data, or auctions in
+which different model types compete directly. \evidence{1--2}
+
+\section{Allocative efficiency from existing data}
+\label{sec:efficiency}
+
+\yes\ for the recorded GPT-4o private-value baseline auctions under the
+following explicit measure. For auction $a$, let $v_{ia}$ be bidder $i$'s
+value and $w(a)$ the recorded winner. With one object, no reserve, and seller
+opportunity cost taken as zero, realized total surplus is $v_{w(a),a}$ and
+the maximum feasible surplus is $\max_i v_{ia}$. Payments transfer surplus
+between buyer and seller. Aggregate allocative surplus efficiency is
+\begin{equation}
+\label{eq:efficiency}
+E_{\mathrm{surplus}}=
+100\times\frac{\sum_a v_{w(a),a}}{\sum_a\max_i v_{ia}}.
+\end{equation}
+This is distinct from both the unweighted mean of per-auction surplus ratios
+and the frequency with which a highest-value bidder wins. The audit reports
+all three. The main results below use Equation~\eqref{eq:efficiency}.
+
+\begin{table}[H]
+\centering
+\small
+\caption{GPT-4o allocation outcomes calculated from saved completed auctions.}
+\label{tab:efficiency}
+\begin{tabularx}{\textwidth}{@{}Yrrr@{}}
+\toprule
+Auction format & Auctions & \shortstack{Surplus\\efficiency} & \shortstack{Highest-value\\winner} \\
+\midrule
+First-price, independent private values & 95 & 99.77\% & 95.79\% \\
+Second-price, independent private values & 90 & 99.72\% & 96.67\% \\
+Second-price, affiliated private values & 97 & 99.09\% & 89.69\% \\
+Open ascending clock, affiliated private values & 53 & 100.00\% & 100.00\% \\
+Closed ascending clock, affiliated private values & 57 & 100.00\% & 100.00\% \\
+\midrule
+Total completed auctions & 392 & & \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+Each of the five GPT-4o settings exceeds 90\% surplus efficiency. The
+unweighted mean per-auction efficiencies also exceed 90\% in all five settings
+(99.42\%, 99.51\%, 99.08\%, 100\%, and 100\%, respectively).
+These are new calculations from existing data, rather than efficiency
+statistics previously reported in the manuscript. \evidence{8}
+
+\textbf{Limits of the claim.} These descriptive results concern completed,
+saved auctions and do not establish performance across failed or missing runs,
+unseen auctions, or all models. Llama's second-price independent-private-value
+cell has only 85.32\% surplus efficiency. High allocation efficiency also
+does not imply equilibrium bidding, accurate human simulation, or uniformly
+positive bidder profits.
+
+If DARPA instead defines efficiency as the percentage of auctions awarded to
+a highest-value bidder, the affiliated sealed second-price GPT-4o cell is
+89.69\% and does not meet the threshold. The other four GPT-4o cells exceed
+90\% on that measure. Value ties count as efficient allocations.
+\textbf{Still needed:} align the acceptance metric and its scope---for example,
+whether it must hold for every model and format---with the grant requirement.
+
+\subsection{Audit and reproducibility}
+
+The offline audit covers 802 completed raw auctions in five private-value
+formats across the five main models. It reads recorded winners directly and
+maps bidder names to the saved value arrays; it does not infer clock winners
+from potentially tied exit prices. It checks model identifiers and relevant
+configuration fields, records source-file hashes, and checks profit accounting.
+It excludes common-value, eBay, framing, temperature, repeated-round, and
+duplicated robustness datasets from the efficiency calculation. \evidence{8}
+
+An independent comparison against existing bidder-level CSV exports matched
+800 auction allocations and prices, with prices compared to eight decimal
+places. Two Llama clock records had no matching CSV export. One Gemini open-clock
+record reports winner profit 10 although recorded value 37 minus price 28
+equals 9. Those discrepancies are preserved in the audit; the source data
+were not altered. All 392 GPT-4o auctions in Table~\ref{tab:efficiency} match
+their CSV exports and pass the profit-accounting check.
+
+\textbf{Still needed for a clean broader evidence package:} reconcile the
+Gemini profit discrepancy and document or restore the two missing Llama
+exports. These issues do not affect the GPT-4o efficiency claim. An audit flag
+for fewer than 30 completed auctions identifies small cells; it is not an
+asserted DARPA sample-size requirement.
+
+\begin{samepage}
+To reproduce the audit from the repository root:
+\begin{quote}
+\ttfamily\small python3 scripts/audit\_phase1\_evidence.py
+\end{quote}
+\end{samepage}
+The script uses the Python standard library and existing local records.
+Outputs include a model inventory, per-auction efficiency records, a summary
+table, and a JSON audit manifest. Export row counts in the model inventory
+may overlap and must not be treated as independent observation counts.
+
+\section{Remaining evidence needed}
+
+\begin{enumerate}
+  \item \textbf{Ten-model execution: outstanding demonstration.} Supply
+  completed auction evidence for at least four additional distinct models,
+  from existing archives if available or from additional runs. General EDSL
+  availability is not sufficient evidence of execution in this environment.
+  \item \textbf{News feed: resolve the requirement definition.} If changing
+  endogenous public market information qualifies, document the existing
+  price, dropout, and history updates. If external news is required,
+  demonstrate an exogenous information feed and resulting agent behavior.
+  \item \textbf{Classifier: resolve the required type and validation.} The
+  current rule-based labels and comparisons are implemented and supported by
+  outputs. A requirement for learned classification, predictive validation,
+  or a broader taxonomy of biases requires additional evidence.
+  \item \textbf{Efficiency: specify metric and coverage.} Use the defined
+  surplus measure and the completed-run scope when claiming the threshold.
+  A requirement that every model or format exceed 90\%, or that the result
+  satisfy a statistical confidence bound, is not established by this audit.
+  \item \textbf{Comparison scope and mechanics: confirm any stricter terms.}
+  Variable quantities, multiple assets, direct mixed-model competition, and
+  participant-level matched human experiments are not demonstrated here.
+  They need further evidence only if the actual Phase I specification
+  requires them.
+  \item \textbf{Data reconciliation: limited cleanup.} Resolve the one
+  recorded profit discrepancy and the two missing CSV exports before
+  presenting the full cross-model audit as reconciled.
+\end{enumerate}
+
+These items concern evidence and acceptance of Phase I capabilities. They
+do not require claiming completion of the proposed Phase II research on
+collaboration, deception, influence, or human-like reference agents.
+
+\section{Suggested statement of demonstrated capability}
+
+\begin{quote}
+Existing experiments demonstrate an EDSL-based multi-agent auction
+environment with multiple auction mechanisms, explicit allocation and
+payment rules, evolving public market information, and behavioral
+comparisons across six LLMs and published human benchmarks. Analysis of 392
+completed GPT-4o private-value auctions shows aggregate allocative surplus
+efficiency above 99\% in each of five auction settings. Existing rule-based
+classifiers identify systematic bidding deviations and differences across
+models and mechanisms. The current evidence does not yet demonstrate
+operation with ten distinct LLMs; whether the public-information updates
+and rule-based classifiers satisfy the corresponding Phase I requirements
+depends on their specified definitions.
+\end{quote}
+
+\section{Evidence artifacts}
+\label{sec:artifacts}
+
+Paths are relative to the repository root. The inspected source revision is
+\path{0ba2ecebcfe2f49add765a337dd81aba5c68e89c}; the Phase I audit script,
+generated audit outputs, and this memo were added locally after that revision.
+The manuscript and data map describe the September 2026 paper revision.
+This document is self-contained and does not load external figures, tables,
+or a bibliography at compile time.
+
+\small
+\begin{longtable}{@{}L{0.06\textwidth}L{0.88\textwidth}@{}}
+\toprule
+ID & Artifact and evidentiary role \\
+\midrule
+\endfirsthead
+\toprule
+ID & Artifact and evidentiary role (continued) \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+E1 & \path{writeup/main.tex}; \path{README.md}. Current manuscript and project overview: experimental design, model comparisons, findings, and limitations. \\
+E2 & \path{data_map.md}; \path{experiment_logs/V10/}; \path{robustness_logs/}; \path{experiment_logs/paper_interventions/}. Provenance, raw outcomes, configurations, prompts, human reconstruction methods, and missing-data qualifications. \\
+E3 & \path{scripts/main.py}; \path{src/util_plan.py}. Experiment orchestration, EDSL model configuration, bidder instantiation, sealed-bid and clock interaction, allocation, payments, and information updates. \\
+E4 & \path{src/util_ebay.py}; \path{Prompt/ebay_asking.txt}; \path{scripts/plots/ebay_closing_rule_only.py}; \path{results/analysis/ebay_closing_rule_summary.csv}. Dynamic proxy-auction mechanics, public price histories, and recorded timing comparisons. \\
+E5 & \path{results/phase1_evidence/recorded_models.csv}. Inventory of six model identifiers found in recorded CSV exports, including supplementary framing data. \\
+E6 & \path{scripts/plots/figure2_models.py}; \path{results/analysis/direction_shares_models.csv}; \path{writeup/figures/figure2_models_direction.png}. Rule-based classification and per-model bid-direction results. \\
+E7 & \path{results/analysis/model_smad_results.csv}; \path{results/analysis/difficulty_concordance_models.csv}; \path{results/analysis/interventions_models.csv}; \path{plots/auction_human.csv}; \path{writeup/figures/figure1_bands_gp.png}. Model differences, rankings, framing effects, and human benchmark comparisons. \\
+E8 & \path{scripts/audit_phase1_evidence.py}; \path{results/phase1_evidence/allocative_efficiency_summary.csv}; \path{results/phase1_evidence/allocative_efficiency_auctions.csv}; \path{results/phase1_evidence/audit.json}. Reproducible efficiency calculation, auction-level provenance and hashes, CSV cross-checks, and recorded discrepancies. \\
+\end{longtable}
+
+\end{document}

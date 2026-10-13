@@ -1,0 +1,55 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            23,
+            18,
+            39,
+            38,
+            16
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 23.0
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 24.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 49.0
+                },
+                {
+                    "agent": "Bidder David",
+                    "bid": 22.8
+                },
+                {
+                    "agent": "Bidder Ethel",
+                    "bid": 21.3
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Charles",
+                "price": 23.0
+            }
+        },
+        "profit": [
+            0,
+            0,
+            16.0,
+            0,
+            0
+        ],
+        "common": 0,
+        "plan": [
+            "[With five bidders and a third-price rule, the winner pays the third-highest opponent bid. Without history and given independent private values, overbidding risks winning when the third-price exceeds my value. A conservative, robust approach is to bid my true value ($23), which avoids deliberate overbidding losses while still winning when the third-price is below my value. This is a safe baseline given no prior rounds to learn opponent behavior.]",
+            "[Assume other bidders bid their true values. If I bid b and win, that means all four others \u2264 b; then expected third-highest equals the second-highest among four draws = (3/5)b. Win probability = (b/49)^4. Expected profit = (b/49)^4*(18 - 0.6b). Maximize w.r.t b \u2192 b = (4/3)*18 = 24. So overbidding to $24 maximizes expected payoff under this model.]",
+            "[I treat other bidders' values as iid uniform; if they bid their values then bidding b wins with prob (b/49)^4 and the payment conditional on winning \u2248 expected 2nd-highest among 4 equals (3/5)b. Expected payoff \u221d (b/49)^4*(39 - 0.6b), which is increasing for b\u226449 (optimum at b=52>49). So bid the maximum 49 to maximize expected profit.]",
+            "[Given a third-price sealed-bid with 5 bidders and independent uniform values, a symmetric equilibrium bids the expected third-highest conditional on winning. If my value is v, the four opponents are iid on [0,v], and their second-highest (the auction payment) has expectation 3/5\u00b7v. To maximize long-run profit I therefore bid 0.6\u00d738 = 22.8, balancing win probability against expected payment.]",
+            "[This is a 3rd-price auction with n=5 and uniform independent values. The symmetric Bayes\u2013Nash equilibrium bidding function for k=3 is b(v) = ((n-1)/(n-k+1))\u00b7v = (4/3)\u00b7v. With my value v = 16, the equilibrium bid is 64/3 \u2248 21.33. Rounding to the required $0.1 increment gives a bid of $21.3, which maximizes expected profit in the long run under symmetric play.]"
+        ]
+    }
+}

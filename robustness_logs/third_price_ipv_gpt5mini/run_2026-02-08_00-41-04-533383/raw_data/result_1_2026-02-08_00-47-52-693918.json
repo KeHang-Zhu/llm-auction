@@ -1,0 +1,55 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            30,
+            35,
+            6,
+            10,
+            19
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 30.0
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 46.7
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 8.0
+                },
+                {
+                    "agent": "Bidder David",
+                    "bid": 13.3
+                },
+                {
+                    "agent": "Bidder Ethel",
+                    "bid": 25.3
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Betty",
+                "price": 25.3
+            }
+        },
+        "profit": [
+            0,
+            9.7,
+            0,
+            0,
+            0
+        ],
+        "common": 0,
+        "plan": [
+            "[No prior rounds to learn from. With 5 bidders and third-price payment, the third-order statistic of five uniform draws has mean ~24.5, so bidding my true value is a safe, near-optimal strategy: it wins when the third-highest is below my value and avoids overbidding risk that could produce negative payoff. I will bid my private value to maximize expected surplus while keeping downside limited.]",
+            "[Assume opponents bid their values (uniform 0\u201349). If I bid b and win, the expected payment is the second-highest of four opponents = 0.6b, and win probability=(b/49)^4. Maximizing expected surplus (35\u22120.6b)*(b/49)^4 yields optimal b\u2248140/3\u224846.67. This increases my win chance while keeping expected payment below my value. Use 0.1 granularity, so bid 46.7. If opponents shade differently, this aggressive bid still raises long-run profit by capturing high-value wins.]",
+            "[Value = $6, no prior history. Assuming other bidders bid their values, if I win by bidding b I pay the second-highest among the other four with expected payment 0.6b and win probability (b/49)^4. Expected profit \u2248 (b/49)^4*(6\u22120.6b). Maximizing this on [0,10] gives interior optimum at b=8. Bid $8 to balance higher win probability against overpayment risk.]",
+            "[With 5 bidders and a third-price rule, overbidding slightly above my value increases win probability while the price paid (the third-highest) stays relatively low. For uniform values, the symmetric optimal bid is about (n-1)/(n-2)*v = 4/3 * 10 \u2248 13.33. That maximizes expected profit against likely opponent behavior while respecting independent redraws. I\u2019ll bid $13.3.]",
+            "[I assume opponents bid their true values (uniform 0\u201349). If I bid b, win probability = (b/49)^4 and conditional on winning the expected payment is the 2nd-highest of 4 opponents = 0.6b, so expected payoff \u221d b^4(19\u22120.6b). Maximizing gives b = 76/3 \u2248 25.33. This produces positive expected surplus when I win. With $0.1 increments I will bid 25.3 to approximate the optimum and maximize long-run expected profit under these assumptions.]"
+        ]
+    }
+}

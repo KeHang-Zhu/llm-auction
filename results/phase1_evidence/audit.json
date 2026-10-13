@@ -1,0 +1,30 @@
+{
+  "source_commit": "0ba2ecebcfe2f49add765a337dd81aba5c68e89c",
+  "recorded_models": 6,
+  "completed_auctions_audited": 802,
+  "methodology": "Audit existing Phase I evidence without model calls or third-party packages.\n\nRun: python3 scripts/audit_phase1_evidence.py\n\nEfficiency covers completed raw auctions in the five private-value baseline\nformats and five main models. Each auction sells one object with zero reserve.\nWith seller opportunity cost taken as zero, realized total surplus is the\nwinner's value: bidder profit plus seller revenue. Optimal surplus is max(value).\nWe report both sum(realized)/sum(optimal) and mean(realized/optimal), as well as\nthe distinct statistic P(winner has a highest value), counting value ties as\nefficient. These are descriptive statistics of saved completed runs, not a\nguarantee about failed/missing runs or unseen auctions.\n\nRead the recorded winner directly; do not reconstruct clock winners from exit\nprices. The value-array order is Andy, Betty, Charles (util_plan.build_bidders).\nCheck profit accounting separately and retain discrepancies in the audit.\nCommon-value, eBay, framing, temperature, repeated-round, and duplicated V10\nrobustness data are excluded from efficiency. CSV model inventory also includes\nthe framing experiments, but its row counts are not independent observation\ncounts because exports can overlap.\n",
+  "profit_accounting_discrepancies": [
+    {
+      "raw_file": "robustness_logs/ascending_clock_apv_gemini/run_2026-01-31_00-44-21-380406/raw_data/result_1_2026-01-31_00-44-21-393794.json",
+      "round": "round_0",
+      "recorded_profit": [
+        10,
+        0,
+        0
+      ],
+      "expected_profit": [
+        9,
+        0.0,
+        0.0
+      ]
+    }
+  ],
+  "independent_csv_crosscheck": {
+    "matching_auction_allocations_and_prices": 800,
+    "price_comparison_decimal_places": 8,
+    "raw_auctions_without_matching_csv_export": [
+      "robustness_logs/ascending_clock_apv_llama/run_2026-01-30_20-05-58-584915/raw_data/result_1_2026-01-30_20-05-58-625651.json",
+      "robustness_logs/ascending_clock_apv_llama/run_2026-01-30_20-58-07-072994/raw_data/result_1_2026-01-30_21-30-51-511773.json"
+    ]
+  }
+}

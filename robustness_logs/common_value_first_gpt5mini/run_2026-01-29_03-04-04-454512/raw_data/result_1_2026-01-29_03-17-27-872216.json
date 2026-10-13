@@ -1,0 +1,41 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            36,
+            22,
+            48
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 24.5
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 24.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 28.5
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Charles",
+                "price": 28.5
+            }
+        },
+        "profit": [
+            0,
+            0,
+            0.5
+        ],
+        "common": 29,
+        "plan": [
+            "[I account for winner\u2019s curse in this common-value, second-price-style auction. With my signal s=36, the common value c is uniform on [20,29] (noise is uniform and s\u2212c stays within its support), so E[c|s]=24.5. In a second-price auction the optimal bid is the expected true value conditional on my signal, so I bid $24.5 to maximize long-run profit.]",
+            "[My signal is 22. With uniform prior V\u2208[20,29] and noise \u00b120, the posterior mean E[V|signal]=24.5. To avoid the winner's curse I will shade my bid slightly below that unconditional expectation. No history to learn from; a modest downward adjustment balances winning probability and avoiding overpayment. I therefore place a conservative bid near but under 24.5 to capture positive expected surplus while limiting downside.]",
+            "[Compute posterior: with s=48 only common values C=28 or 29 are possible (equal prior likelihood). Given I win (my signal highest), update weights by P(others' signals<48): (40/41)^2 for C=28 and (39/41)^2 for C=29. This yields E[C | s=48 and I win] \u2248 28.49. In a second-price auction with interdependent values the optimal bid \u2248 E[common value | my signal and winning]. Bid the nearest $0.1 to 28.49 to avoid the winner's curse while capturing expected surplus.]"
+        ]
+    }
+}

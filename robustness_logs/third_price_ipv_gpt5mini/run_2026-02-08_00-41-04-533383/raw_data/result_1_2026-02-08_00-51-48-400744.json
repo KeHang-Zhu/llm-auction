@@ -1,0 +1,55 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            15,
+            36,
+            42,
+            35,
+            17
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 20.0
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 48.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 49.0
+                },
+                {
+                    "agent": "Bidder David",
+                    "bid": 46.7
+                },
+                {
+                    "agent": "Bidder Ethel",
+                    "bid": 22.7
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Charles",
+                "price": 46.7
+            }
+        },
+        "profit": [
+            0,
+            0,
+            -4.700000000000003,
+            0,
+            0
+        ],
+        "common": 0,
+        "plan": [
+            "[In a 5-bidder third-price sealed-bid auction, the symmetric equilibrium bidding rule for uniform values is \u03b2(v) = v * (n-1)/(n-k+1) with n=5, k=3. That gives \u03b2(15)=15*(4/3)=20. Bidding 20 maximizes my expected payoff given others follow the equilibrium. I account for 0.1 bid increments and random tie-breaking. ]",
+            "[In a 5-bidder third-price auction, the symmetric equilibrium inflates values by factor (n-1)/(n-2)=4/3. Best-response analysis (win prob t^4, expected payment \u22480.6t) yields optimal bid t=(4/3)v, capped by the support. With v=$36, the optimal bid is 36*(4/3)=48. I will bid $48.0 (allowed in $0.1 increments) to maximize expected long-run profit under symmetric play.]",
+            "[With 5 bidders and third-price rule (k=3), the symmetric equilibrium bidding function for uniform values scales as b(v) = (n-1)/(n-k+1) * v = 4/3 * v. This overbids relative to value because the winner pays the third-highest other bid. With v=42 this gives 56, but bids above the support are pointless, so cap at the maximum possible other value $49. No past rounds to learn from, so play the equilibrium-derived bid capped at $49.]",
+            "[Third-price, 5 bidders, values iid Uniform[0,49]. In symmetric equilibrium one shows b(v)= (4/3)v (derived via the first-order condition for optimal z and order-statistics of 4 opponents). For v=35 this gives 140/3 \u2248 46.6667. Round to the nearest $0.1 to maximize long-run expected profit.]",
+            "[With value v=17 and no history, assume opponents bid their values (iid Uniform[0,49]). If I bid b, I win iff all four others \u2264 b; the payment if I win is the 2nd-highest of the four, E=3/5 b. Expected profit = (b/49)^4*(17 - 0.6b). Maximizing gives b = 68/3 \u2248 22.667. Round to $0.1 increments. This bid trades higher win probability against expected payment to maximize long-run profit under these assumptions.]"
+        ]
+    }
+}

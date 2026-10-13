@@ -1,0 +1,41 @@
+{
+    "round_0": {
+        "round": 0,
+        "value": [
+            13,
+            15,
+            47
+        ],
+        "history": {
+            "bidding history": [
+                {
+                    "agent": "Bidder Andy",
+                    "bid": 26.0
+                },
+                {
+                    "agent": "Bidder Betty",
+                    "bid": 30.0
+                },
+                {
+                    "agent": "Bidder Charles",
+                    "bid": 49.0
+                }
+            ],
+            "winner": {
+                "winner": "Bidder Charles",
+                "price": 26.0
+            }
+        },
+        "profit": [
+            0,
+            0,
+            21.0
+        ],
+        "common": 0,
+        "plan": [
+            "[Assume no history so opponents likely bid their values. For uniform[0,49], if others bid values, my win probability = (b/49)^2 and expected payment (conditioned on winning) = b/3. Maximize (b/49)^2*(13 - b/3) by calculus gives optimal b=26, which is <3v so winning yields positive surplus. Bid 26 to maximize expected profit.]",
+            "[I will bid $30 (twice my value). Rationale: with three bidders the winner pays the lowest bid. Assuming opponents bid near their values, my win probability \u2248(b/49)^2 and expected payment conditional on winning \u2248b/3; maximizing expected payoff gives b\u22482v. With v=15, b=30 balances higher win chance against payment risk. No prior rounds to learn from, so use this aggressive, value-scaled bid to maximize long-run profit under independent draws.]",
+            "[In a 3-player third-price auction the winner pays the minimum of the other two bids, so my bid only affects win probability, not the price if I win. With v=47 and opponents' values uniform [0,49], the expected minimum is ~16.33, well below 47. To maximize long-run profit I should bid the highest plausible value (49) to maximize win probability while avoiding overbidding above opponents' support. ]"
+        ]
+    }
+}

@@ -1,0 +1,49 @@
+# LLM Auction 实验配置模板
+# 复制此文件并根据你的实验需求修改参数
+
+# 实验元数据
+experiment:
+  name: ""                    # 实验名称，例如 "spsb_ipv"
+  version: "V10"              # 版本号
+  description: ""             # 实验描述
+
+# 拍卖配置
+auction:
+  number_agents: 3            # 参与者数量
+  rounds: 15                  # 拍卖轮数
+
+# 规则配置
+rule:
+  seal_clock: "seal"          # "seal" (密封拍卖) / "clock" (时钟拍卖)
+  ascend_descend: "ascend"    # "ascend" (升序) / "descend" (降序)，仅clock有效
+  price_order: "second"       # "first" / "second" / "third" / "allpay"
+  private_value: "private"    # "private" (IPV) / "affiliated" (APV) / "common"
+  open_blind: "open"          # "open" (公开信息) / "blind" (盲拍)
+  closing: false              # 软关闭规则（soft closing）
+  reserve_price: 0            # 保留价
+  special_name: ""            # 特殊规则模板名称（可选），例如 "private_second_price.txt"
+
+# 价值生成配置
+value:
+  common_range: [20, 79]      # 共同价值范围 [最小值, 最大值]
+  private_range: 99           # 私有价值范围
+  increment: 1                # 出价增量
+  seed_base: 1299             # 基础随机种子（private: 1299, affiliated: 1399）
+
+# LLM配置
+llm:
+  model: "gpt-4o"             # 模型名称: "gpt-4o" / "gpt-4" / "deepseek"
+  temperature: 0.5            # 温度参数 (0.0 - 1.0)
+
+# Prompt配置
+prompt:
+  strategy_type: "plan_reflection"  # "plan_reflection" / "direct" / "ebay" / "json"
+  prompt_dir: "Prompt/"             # Prompt文件目录
+  rule_template_dir: "rule_template/V10/"  # 规则模板目录
+
+# 执行配置
+execution:
+  repetitions: 5              # 重复实验次数
+  parallel: false             # 是否并行执行
+  max_workers: 4              # 并行线程数（仅在parallel=true时有效）
+  output_dir: "experiment_logs"  # 输出目录

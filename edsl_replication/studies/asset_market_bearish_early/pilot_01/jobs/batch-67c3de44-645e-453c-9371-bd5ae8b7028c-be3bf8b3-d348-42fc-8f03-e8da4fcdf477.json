@@ -1,0 +1,391 @@
+{
+  "survey": {
+    "questions": [
+      {
+        "question_type": "dict",
+        "question_name": "decision",
+        "question_text": "{{ workflow_question_texts['decision'] }}",
+        "answer_keys": [
+          "forecast_0",
+          "forecast_2",
+          "forecast_5",
+          "forecast_10",
+          "side",
+          "price",
+          "quantity",
+          "rationale"
+        ],
+        "value_types": [
+          "float",
+          "float",
+          "float",
+          "float",
+          "str",
+          "float",
+          "int",
+          "str"
+        ],
+        "value_descriptions": [],
+        "include_comment": false,
+        "permissive": false,
+        "edsl_version": "1.0.8.dev1",
+        "edsl_class_name": "QuestionBase"
+      }
+    ],
+    "memory_plan": {
+      "survey_question_names": [
+        "decision"
+      ],
+      "survey_question_texts": [
+        "{{ workflow_question_texts['decision'] }}"
+      ],
+      "data": {}
+    },
+    "rule_collection": {
+      "question_name_to_index": {
+        "decision": 0
+      },
+      "rules": [
+        {
+          "current_q": 0,
+          "expression": "True",
+          "next_q": 1,
+          "priority": -1,
+          "before_rule": false,
+          "question_name_to_index": {}
+        }
+      ],
+      "num_questions": 1
+    },
+    "question_groups": {},
+    "edsl_version": "1.0.8.dev1",
+    "edsl_class_name": "Survey"
+  },
+  "agents": [
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "bearish_news",
+        "behavior": "momentum",
+        "seat": 0
+      },
+      "name": "trader-00",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is momentum buying. Build a position early rather than waiting for perfect evidence. If transaction prices rise, infer that demand is strengthening, raise your forecasts and bid more aggressively. If there is no transaction history yet, open with a buy limit around $15\u2013$16 for one share. Buy additional shares when you see an upswing. If a rally stalls or turns down, reduce your position to protect gains. State the price trend you are reacting to; do not invent trades absent from the tape.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "bearish_news",
+        "behavior": "momentum",
+        "seat": 1
+      },
+      "name": "trader-01",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is momentum buying. Build a position early rather than waiting for perfect evidence. If transaction prices rise, infer that demand is strengthening, raise your forecasts and bid more aggressively. If there is no transaction history yet, open with a buy limit around $15\u2013$16 for one share. Buy additional shares when you see an upswing. If a rally stalls or turns down, reduce your position to protect gains. State the price trend you are reacting to; do not invent trades absent from the tape.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "no_news",
+        "behavior": "momentum",
+        "seat": 2
+      },
+      "name": "trader-02",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is momentum buying. Build a position early rather than waiting for perfect evidence. If transaction prices rise, infer that demand is strengthening, raise your forecasts and bid more aggressively. If there is no transaction history yet, open with a buy limit around $15\u2013$16 for one share. Buy additional shares when you see an upswing. If a rally stalls or turns down, reduce your position to protect gains. State the price trend you are reacting to; do not invent trades absent from the tape.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "no_news",
+        "behavior": "momentum",
+        "seat": 3
+      },
+      "name": "trader-03",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is momentum buying. Build a position early rather than waiting for perfect evidence. If transaction prices rise, infer that demand is strengthening, raise your forecasts and bid more aggressively. If there is no transaction history yet, open with a buy limit around $15\u2013$16 for one share. Buy additional shares when you see an upswing. If a rally stalls or turns down, reduce your position to protect gains. State the price trend you are reacting to; do not invent trades absent from the tape.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "no_news",
+        "behavior": "bubble_rider",
+        "seat": 4
+      },
+      "name": "trader-04",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is to ride speculative booms. You believe resale demand can push prices above dividend value. Take an early position, accept a meaningful premium when you expect other buyers to follow, and open with a buy limit around $16\u2013$18 for one or two shares even before the first transaction. Plan to sell into a later rally rather than hold to redemption. Do not wait for a price trend before placing an opening buy order. Keep orders within cash and inventory constraints.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "bearish_news",
+        "behavior": "bubble_rider",
+        "seat": 5
+      },
+      "name": "trader-05",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is to ride speculative booms. You believe resale demand can push prices above dividend value. Take an early position, accept a meaningful premium when you expect other buyers to follow, and open with a buy limit around $16\u2013$18 for one or two shares even before the first transaction. Plan to sell into a later rally rather than hold to redemption. Do not wait for a price trend before placing an opening buy order. Keep orders within cash and inventory constraints.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "no_news",
+        "behavior": "bubble_rider",
+        "seat": 6
+      },
+      "name": "trader-06",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is to ride speculative booms. You believe resale demand can push prices above dividend value. Take an early position, accept a meaningful premium when you expect other buyers to follow, and open with a buy limit around $16\u2013$18 for one or two shares even before the first transaction. Plan to sell into a later rally rather than hold to redemption. Do not wait for a price trend before placing an opening buy order. Keep orders within cash and inventory constraints.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "bearish_news",
+        "behavior": "bubble_rider",
+        "seat": 7
+      },
+      "name": "trader-07",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is to ride speculative booms. You believe resale demand can push prices above dividend value. Take an early position, accept a meaningful premium when you expect other buyers to follow, and open with a buy limit around $16\u2013$18 for one or two shares even before the first transaction. Plan to sell into a later rally rather than hold to redemption. Do not wait for a price trend before placing an opening buy order. Keep orders within cash and inventory constraints.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "bearish_news",
+        "behavior": "profit_taker",
+        "seat": 8
+      },
+      "name": "trader-08",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is an active profit taker who supplies shares to the market. Offer part of your initial inventory early; in the first five periods, offer one share around $13\u2013$14.50 to create a chance of an early fill. If the market rallies, raise your ask and sell into the rise; if offers do not fill after several periods, lower your ask gradually. Keep some shares for dividends and terminal redemption.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "no_news",
+        "behavior": "profit_taker",
+        "seat": 9
+      },
+      "name": "trader-09",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is an active profit taker who supplies shares to the market. Offer part of your initial inventory early; in the first five periods, offer one share around $13\u2013$14.50 to create a chance of an early fill. If the market rallies, raise your ask and sell into the rise; if offers do not fill after several periods, lower your ask gradually. Keep some shares for dividends and terminal redemption.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "bearish_news",
+        "behavior": "profit_taker",
+        "seat": 10
+      },
+      "name": "trader-10",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is an active profit taker who supplies shares to the market. Offer part of your initial inventory early; in the first five periods, offer one share around $13\u2013$14.50 to create a chance of an early fill. If the market rallies, raise your ask and sell into the rise; if offers do not fill after several periods, lower your ask gradually. Keep some shares for dividends and terminal redemption.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    },
+    {
+      "traits": {
+        "role": "trader",
+        "treatment": "no_news",
+        "behavior": "profit_taker",
+        "seat": 11
+      },
+      "name": "trader-11",
+      "instruction": "You are a participant in a multi-period experimental asset market. Try to maximize your final cash wealth. Use your own account, the public price history, and any private information shown to you. Your private information is not automatically visible to other traders.\n\nBEHAVIORAL INSTRUCTIONS\nYour trading style is an active profit taker who supplies shares to the market. Offer part of your initial inventory early; in the first five periods, offer one share around $13\u2013$14.50 to create a chance of an early fill. If the market rallies, raise your ask and sell into the rise; if offers do not fill after several periods, lower your ask gradually. Keep some shares for dividends and terminal redemption.",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Agent"
+    }
+  ],
+  "models": [
+    {
+      "model": "gpt-4o",
+      "parameters": {
+        "temperature": 0.5,
+        "max_tokens": 1000,
+        "top_p": 1,
+        "frequency_penalty": 0,
+        "presence_penalty": 0,
+        "logprobs": false,
+        "top_logprobs": 3,
+        "reasoning_effort": null
+      },
+      "inference_service": "openai",
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "LanguageModel"
+    }
+  ],
+  "scenarios": [
+    {
+      "workflow_work_item_id": "67c3de44-645e-453c-9371-bd5ae8b7028c",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nPRIVATE BEARISH ANALYST UPDATE (received before period 1): A widely followed institutional research desk reports that expected resale demand has weakened and that substantial selling pressure may emerge. Its downside scenario says resale prices could fall toward $10.00 by period 10. The desk advises caution about paying a premium and says rallies may be temporary. This is an uncertain market forecast, not a guaranteed outcome: dividends and the exchange's actual terminal redemption rule are unchanged at $14.00. Do not disclose this private message to other traders unless you choose to do so.\n\nYOUR ACCOUNT\nCash: $109.0; shares: 4.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 14.0, 'forecast_10': 12.0, 'forecast_2': 13.5, 'forecast_5': 13.0, 'price': 15.0, 'quantity': 1, 'rationale': \"As a momentum buyer, I aim to build a position early. Despite the bearish private update, there is no transaction history yet, so I will start with a buy limit around $15 to see if there is any upward momentum. If prices rise, I'll increase my forecasts and buy more aggressively. I acknowledge the risk of potential selling pressure, but I am positioning to catch any early rally.\", 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 0, 'interest': 5.0, 'limit_cents': 1500, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-00', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "6fc05b53-2531-4b9f-9b16-90524c25bc04",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nPRIVATE BEARISH ANALYST UPDATE (received before period 1): A widely followed institutional research desk reports that expected resale demand has weakened and that substantial selling pressure may emerge. Its downside scenario says resale prices could fall toward $10.00 by period 10. The desk advises caution about paying a premium and says rallies may be temporary. This is an uncertain market forecast, not a guaranteed outcome: dividends and the exchange's actual terminal redemption rule are unchanged at $14.00. Do not disclose this private message to other traders unless you choose to do so.\n\nYOUR ACCOUNT\nCash: $109.0; shares: 4.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 15.0, 'forecast_10': 12.0, 'forecast_2': 14.5, 'forecast_5': 13.5, 'price': 15.5, 'quantity': 1, 'rationale': \"As a momentum trader, I aim to build a position early. Despite the bearish news, there's no transaction history yet, so I'll start with a buy limit around $15-$16 for one share. If prices rise, I'll adjust my strategy accordingly. The private bearish update suggests caution, but my role is to react to actual market movements.\", 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 0, 'interest': 5.0, 'limit_cents': 1550, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-01', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "6530d129-b47b-454f-9aea-c97e545df3c9",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nNo private analyst update has been issued to you.\n\nYOUR ACCOUNT\nCash: $109.0; shares: 4.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 15.0, 'forecast_10': 16.5, 'forecast_2': 15.5, 'forecast_5': 16.0, 'price': 15.0, 'quantity': 1, 'rationale': 'As a momentum buyer, I aim to establish an early position anticipating a price increase. With no transaction history yet, I will open with a buy limit around $15 for one share. This initial forecast assumes a gradual price increase as demand potentially strengthens.', 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 0, 'interest': 5.0, 'limit_cents': 1500, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-02', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "387e8327-29a8-41f9-9431-0232005e93cc",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nNo private analyst update has been issued to you.\n\nYOUR ACCOUNT\nCash: $109.0; shares: 4.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 15.0, 'forecast_10': 16.5, 'forecast_2': 15.5, 'forecast_5': 16.0, 'price': 15.0, 'quantity': 1, 'rationale': 'As a momentum buyer, I aim to build a position early. With no transaction history yet, I will start with a buy limit around $15 for one share to test the market. I expect prices to rise as demand strengthens, so I forecast gradual increases over the next few periods.', 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 0, 'interest': 5.0, 'limit_cents': 1500, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-03', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "eb160a86-37bc-4d8b-8a60-e495f43464e2",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nNo private analyst update has been issued to you.\n\nYOUR ACCOUNT\nCash: $109.0; shares: 4.\nYour prior orders and fills: [{'accepted_quantity': 2, 'decision': {'forecast_0': 16.0, 'forecast_10': 19.0, 'forecast_2': 17.0, 'forecast_5': 18.0, 'price': 17.0, 'quantity': 2, 'rationale': \"As a bubble rider, I anticipate that speculative buying will push prices above fundamental value early on. I'm placing an opening buy order at $17 for 2 shares to position myself for the potential price increase. This strategy aligns with my belief in resale demand driving prices up, allowing me to sell later at a premium.\", 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 0, 'interest': 5.0, 'limit_cents': 1700, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-04', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "04035043-8e6c-4c2c-abdc-dff20ea4722d",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nPRIVATE BEARISH ANALYST UPDATE (received before period 1): A widely followed institutional research desk reports that expected resale demand has weakened and that substantial selling pressure may emerge. Its downside scenario says resale prices could fall toward $10.00 by period 10. The desk advises caution about paying a premium and says rallies may be temporary. This is an uncertain market forecast, not a guaranteed outcome: dividends and the exchange's actual terminal redemption rule are unchanged at $14.00. Do not disclose this private message to other traders unless you choose to do so.\n\nYOUR ACCOUNT\nCash: $109.0; shares: 4.\nYour prior orders and fills: [{'accepted_quantity': 2, 'decision': {'forecast_0': 16.0, 'forecast_10': 14.0, 'forecast_2': 17.0, 'forecast_5': 18.0, 'price': 16.0, 'quantity': 2, 'rationale': 'Despite the bearish private update, my strategy as a bubble rider is to take an early position in anticipation of a speculative boom. I expect initial enthusiasm to push prices above intrinsic value, so I am placing a buy order at $16 for 2 shares. This allows me to participate in potential early rallies and sell into a later rally, rather than holding until redemption. My forecasts reflect a short-term price increase followed by stabilization around the redemption value.', 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 0, 'interest': 5.0, 'limit_cents': 1600, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-05', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "57ef9dd3-e6c1-4b09-b4c9-07850fb0cbb4",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nNo private analyst update has been issued to you.\n\nYOUR ACCOUNT\nCash: $78.98; shares: 6.\nYour prior orders and fills: [{'accepted_quantity': 2, 'decision': {'forecast_0': 16.0, 'forecast_10': 20.0, 'forecast_2': 17.0, 'forecast_5': 18.0, 'price': 17.0, 'quantity': 2, 'rationale': 'As a bubble rider, I aim to take an early position anticipating speculative demand will push prices above fundamental value. I forecast an initial transaction price around $16.00 and expect prices to rise in the short term as more traders enter the market. By period 10, I anticipate the speculative bubble will have inflated prices further, hence my higher forecasts. I will place a buy order for 2 shares at a limit price of $17.00 to secure an early position.', 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 2, 'interest': 3.48, 'limit_cents': 1700, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-06', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "89466166-4162-4d1c-ac5f-de8fc4dfddf1",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nPRIVATE BEARISH ANALYST UPDATE (received before period 1): A widely followed institutional research desk reports that expected resale demand has weakened and that substantial selling pressure may emerge. Its downside scenario says resale prices could fall toward $10.00 by period 10. The desk advises caution about paying a premium and says rallies may be temporary. This is an uncertain market forecast, not a guaranteed outcome: dividends and the exchange's actual terminal redemption rule are unchanged at $14.00. Do not disclose this private message to other traders unless you choose to do so.\n\nYOUR ACCOUNT\nCash: $78.98; shares: 6.\nYour prior orders and fills: [{'accepted_quantity': 2, 'decision': {'forecast_0': 15.0, 'forecast_10': 14.0, 'forecast_2': 16.0, 'forecast_5': 17.0, 'price': 17.0, 'quantity': 2, 'rationale': \"Despite the bearish private update, my strategy is to ride potential speculative booms. I anticipate that early periods may see increased buying interest, pushing prices above fundamental value. I'll place an early buy order at a moderate premium to secure a position for potential resale demand. If a rally occurs, I plan to sell into it before any potential downturn. My forecasts reflect short-term optimism but acknowledge longer-term risks of prices reverting to fundamental values.\", 'side': 'buy'}, 'dividend_per_share': 1.0, 'fill': 2, 'interest': 3.48, 'limit_cents': 1700, 'period': 1, 'rejection': None, 'side': 'buy', 'trader': 'trader-07', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "1dd59ce4-64a8-4682-880f-e30696159acd",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nPRIVATE BEARISH ANALYST UPDATE (received before period 1): A widely followed institutional research desk reports that expected resale demand has weakened and that substantial selling pressure may emerge. Its downside scenario says resale prices could fall toward $10.00 by period 10. The desk advises caution about paying a premium and says rallies may be temporary. This is an uncertain market forecast, not a guaranteed outcome: dividends and the exchange's actual terminal redemption rule are unchanged at $14.00. Do not disclose this private message to other traders unless you choose to do so.\n\nYOUR ACCOUNT\nCash: $124.01; shares: 3.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 13.5, 'forecast_10': 11.0, 'forecast_2': 13.0, 'forecast_5': 12.5, 'price': 13.5, 'quantity': 1, 'rationale': 'Given the bearish private information suggesting potential selling pressure and price decline towards $10 by period 10, I will start by selling one share at $13.50. This price is above the expected decline and allows for profit-taking early in the game. The forecasts reflect a cautious outlook with prices gradually declining, aligning with the bearish sentiment.', 'side': 'sell'}, 'dividend_per_share': 1.0, 'fill': -1, 'interest': 5.76, 'limit_cents': 1350, 'period': 1, 'rejection': None, 'side': 'sell', 'trader': 'trader-08', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "2e3cb52d-3ee8-4e73-a6e1-43821dc079be",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nNo private analyst update has been issued to you.\n\nYOUR ACCOUNT\nCash: $124.01; shares: 3.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 14.0, 'forecast_10': 14.0, 'forecast_2': 14.0, 'forecast_5': 14.0, 'price': 13.5, 'quantity': 1, 'rationale': 'With no prior market data and no private information, the best estimate is the terminal value of $14. As an active profit taker, I will offer one share slightly below the redemption value to encourage early trading and establish a market price.', 'side': 'sell'}, 'dividend_per_share': 1.0, 'fill': -1, 'interest': 5.76, 'limit_cents': 1350, 'period': 1, 'rejection': None, 'side': 'sell', 'trader': 'trader-09', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "24016ef0-7d3b-4d7a-a08e-10a8eb4e3171",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nPRIVATE BEARISH ANALYST UPDATE (received before period 1): A widely followed institutional research desk reports that expected resale demand has weakened and that substantial selling pressure may emerge. Its downside scenario says resale prices could fall toward $10.00 by period 10. The desk advises caution about paying a premium and says rallies may be temporary. This is an uncertain market forecast, not a guaranteed outcome: dividends and the exchange's actual terminal redemption rule are unchanged at $14.00. Do not disclose this private message to other traders unless you choose to do so.\n\nYOUR ACCOUNT\nCash: $124.01; shares: 3.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 13.5, 'forecast_10': 12.0, 'forecast_2': 13.2, 'forecast_5': 12.8, 'price': 13.5, 'quantity': 1, 'rationale': 'Given the bearish analyst update indicating potential selling pressure and a possible price decline, I will start by offering to sell one share at $13.50 to take advantage of any initial buying interest. This strategy aligns with my role as a profit taker, aiming to capitalize on early market conditions before a potential decline in prices.', 'side': 'sell'}, 'dividend_per_share': 1.0, 'fill': -1, 'interest': 5.76, 'limit_cents': 1350, 'period': 1, 'rejection': None, 'side': 'sell', 'trader': 'trader-10', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    },
+    {
+      "workflow_work_item_id": "30b9542a-5c12-417b-8282-1ea8950bd527",
+      "workflow_question_texts": {
+        "decision": "Period 2 of 30; 29 periods remain.\n\nMARKET RULES\nThere are 12 traders. Each began with $100 cash and 4 shares. Submit one sealed limit order: buy, sell, or hold. A buy limit is the most you will pay per share; a sell limit is the least you will accept. The exchange matches crossing orders and all filled orders receive one clearing price. Unmatched orders expire. You cannot borrow or short shares. Buy quantities are capped by cash divided by your limit; sells by your inventory. Quotes round to cents. After trading, cash earns 5% interest, then each held share pays the same dividend: $0.40 or $1.00, equally likely. After period 30's income, each remaining share is redeemed for $14; you keep all cash.\n\nYOUR PRIVATE UPDATE\nNo private analyst update has been issued to you.\n\nYOUR ACCOUNT\nCash: $124.01; shares: 3.\nYour prior orders and fills: [{'accepted_quantity': 1, 'decision': {'forecast_0': 14.0, 'forecast_10': 14.0, 'forecast_2': 14.0, 'forecast_5': 14.0, 'price': 13.5, 'quantity': 1, 'rationale': 'As an active profit taker, I aim to sell a share early at a competitive price to ensure a fill and start realizing profits. The initial forecast is based on the terminal redemption value, given no market data yet. Setting the price slightly below $14 at $13.50 increases the likelihood of a transaction.', 'side': 'sell'}, 'dividend_per_share': 1.0, 'fill': -1, 'interest': 5.76, 'limit_cents': 1350, 'period': 1, 'rejection': None, 'side': 'sell', 'trader': 'trader-11', 'transaction_price': 15.25}]\n\nPUBLIC MARKET TAPE\n[{'dividend': 1.0, 'period': 1, 'price': 15.25, 'reference_price': 15.25, 'total_cash': 1308.0, 'total_interest': 60.0, 'total_shares': 48, 'volume': 4}]\n\nForecast the transaction price now and 2, 5, and 10 periods ahead, then choose a buy, sell, or hold order with a limit price and integer quantity. For any forecast horizon beyond period 30, enter the known terminal redemption value, $14.00. Do not return null for a forecast. All prices are dollars. For hold, use price=0 and quantity=0. Return forecast_0, forecast_2, forecast_5, forecast_10, side, price, quantity, and a brief rationale."
+      },
+      "edsl_version": "1.0.8.dev1",
+      "edsl_class_name": "Scenario"
+    }
+  ],
+  "assignment_mode": "zip",
+  "assignments": [
+    {
+      "agent": 0,
+      "scenario": 0,
+      "model": 0
+    },
+    {
+      "agent": 1,
+      "scenario": 1,
+      "model": 0
+    },
+    {
+      "agent": 2,
+      "scenario": 2,
+      "model": 0
+    },
+    {
+      "agent": 3,
+      "scenario": 3,
+      "model": 0
+    },
+    {
+      "agent": 4,
+      "scenario": 4,
+      "model": 0
+    },
+    {
+      "agent": 5,
+      "scenario": 5,
+      "model": 0
+    },
+    {
+      "agent": 6,
+      "scenario": 6,
+      "model": 0
+    },
+    {
+      "agent": 7,
+      "scenario": 7,
+      "model": 0
+    },
+    {
+      "agent": 8,
+      "scenario": 8,
+      "model": 0
+    },
+    {
+      "agent": 9,
+      "scenario": 9,
+      "model": 0
+    },
+    {
+      "agent": 10,
+      "scenario": 10,
+      "model": 0
+    },
+    {
+      "agent": 11,
+      "scenario": 11,
+      "model": 0
+    }
+  ],
+  "edsl_version": "1.0.8.dev1",
+  "edsl_class_name": "Jobs"
+}

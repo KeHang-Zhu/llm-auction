@@ -1,0 +1,205 @@
+diff --git a/edsl/workflows/definition.py b/edsl/workflows/definition.py
+index 0000000..0000000 100644
+--- a/edsl/workflows/definition.py
++++ b/edsl/workflows/definition.py
+@@ -8,7 +8,7 @@ from typing import Any, Mapping, Sequence
+ 
+ from edsl._data_contracts import check_arity, symbolic_bool, validate_data
+-from edsl.sharedstate import StateRead, StateWrite, step_from_dict, step_to_dict
++from edsl.sharedstate import StateCondition, StateRead, StateWrite, step_from_dict, step_to_dict
+ from edsl.surveys import Survey
+@@
+ class StepCompletedCondition(WorkflowCondition):
+@@
+     def dependencies(self) -> frozenset[str]:
+         return frozenset({self.step_name})
+ 
+ 
++@dataclass(frozen=True)
++class MachineCompleteCondition(WorkflowCondition):
++    """Read a Machine's declared completion predicate without closing it."""
++
++    state_condition: StateCondition
++
++    def __post_init__(self) -> None:
++        if not isinstance(self.state_condition, StateCondition):
++            raise TypeError("machine completion condition requires StateCondition")
++
++    def to_dict(self) -> dict[str, Any]:
++        return {
++            "type": "machine_complete",
++            "state_condition": self.state_condition.to_dict(),
++        }
++
++    @property
++    def dependencies(self) -> frozenset[str]:
++        return frozenset()
++
++
+ @dataclass(frozen=True)
+ class AllCondition(WorkflowCondition):
+@@
+ def condition_from_dict(data: Mapping[str, Any]) -> WorkflowCondition:
+     kind = data.get("type")
++    if kind == "machine_complete":
++        return MachineCompleteCondition(
++            StateCondition.from_dict(data["state_condition"])
++        )
+     if kind == "answer_equals":
+         return AnswerCondition.from_dict(data)
+diff --git a/edsl/workflows/authoring.py b/edsl/workflows/authoring.py
+index 0000000..0000000 100644
+--- a/edsl/workflows/authoring.py
++++ b/edsl/workflows/authoring.py
+@@ -7,7 +7,7 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
+ 
+-from edsl.sharedstate import StateRead, StateWrite
++from edsl.sharedstate import StateCondition, StateRead, StateWrite
+ from edsl.surveys import Survey
+@@
+     HumanWorkflow,
++    MachineCompleteCondition,
+@@
+     def stop_when(self, condition: WorkflowCondition) -> None:
++        if isinstance(condition, StateCondition):
++            condition = MachineCompleteCondition(condition)
++        if not isinstance(condition, WorkflowCondition):
++            raise TypeError(
++                "repeat stop condition must be a WorkflowCondition or "
++                "a scoped Machine.is_complete() condition"
++            )
+         self.until = condition
+diff --git a/edsl/workflows/coordinator.py b/edsl/workflows/coordinator.py
+index 0000000..0000000 100644
+--- a/edsl/workflows/coordinator.py
++++ b/edsl/workflows/coordinator.py
+@@ -13,7 +13,8 @@ from uuid import uuid4
+ from edsl._data_contracts import definition_fingerprint, validate_data
+ from edsl.agents import Agent
+-from edsl.sharedstate import StateBackend, WriteOperation, resolve_read, resolve_write
++from edsl.sharedstate import StateBackend, StateCondition, WriteOperation, resolve_read, resolve_write
++from edsl.sharedstate.refs import AnswerRef, ContextRef
+ from edsl.sharedstate.steps import StepContext
+ from edsl.sharedstate.dsl_runtime import Runtime
+ from edsl.surveys import Survey
+ 
+-from .definition import HumanWorkflow
++from .definition import (
++    AllCondition,
++    AnyCondition,
++    HumanWorkflow,
++    MachineCompleteCondition,
++    NotCondition,
++)
+@@
+         for rule in self.workflow.pause_rules:
+@@
+                 raise ValueError(
+                     "pause rule and state backend use different definitions"
+                 )
++        for block in self.workflow.repeat_blocks:
++            for iteration in block.iterations:
++                for condition in self._condition_nodes(iteration.until):
++                    if isinstance(condition, MachineCompleteCondition):
++                        self._validate_machine_condition(condition.state_condition)
++
++    @staticmethod
++    def _condition_nodes(condition):
++        if condition is None:
++            return
++        yield condition
++        if isinstance(condition, (AllCondition, AnyCondition)):
++            for child in condition.conditions:
++                yield from WorkflowCoordinator._condition_nodes(child)
++        elif isinstance(condition, NotCondition):
++            yield from WorkflowCoordinator._condition_nodes(condition.condition)
++
++    def _validate_machine_condition(self, condition: StateCondition) -> None:
++        backend = self._backend(condition.state_id)
++        if backend.state_map.state_id != condition.state_id or (
++            definition_fingerprint(backend.state_map.definition.to_dict())
++            != definition_fingerprint(condition.definition.to_dict())
++        ):
++            raise ValueError(
++                "repeat condition and state backend use different definitions"
++            )
++        if condition.target not in condition.definition.machines:
++            raise ValueError("repeat condition references an unknown Machine")
++
++        def has_dynamic_scope(value):
++            if isinstance(value, (AnswerRef, ContextRef)):
++                return True
++            if isinstance(value, Mapping):
++                return any(has_dynamic_scope(item) for item in value.values())
++            if isinstance(value, (tuple, list)):
++                return any(has_dynamic_scope(item) for item in value)
++            return False
++
++        if has_dynamic_scope(condition.scope):
++            raise ValueError(
++                "Machine completion repeat conditions require a fixed shared-state scope"
++            )
+@@
+             StepCompletedCondition,
++            MachineCompleteCondition,
+         )
+@@
+         if isinstance(condition, StepCompletedCondition):
+             return self._step_succeeded(instance_id, condition.step_name)
++        if isinstance(condition, MachineCompleteCondition):
++            state_condition = condition.state_condition
++            backend = self._backend(state_condition.state_id)
++            snapshot = backend.snapshot(state_condition.scope)
++            machine = state_condition.definition.machines[state_condition.target]
++            runtime = getattr(backend, "runtime", None) or Runtime()
++            return runtime.complete(machine, snapshot.state[state_condition.target])
+         if isinstance(condition, AllCondition):
+diff --git a/edsl/workflows/__init__.py b/edsl/workflows/__init__.py
+index 0000000..0000000 100644
+--- a/edsl/workflows/__init__.py
++++ b/edsl/workflows/__init__.py
+@@ -31,6 +31,7 @@ from .definition import (
+     ExpressionCondition,
+     HumanStep,
+     HumanWorkflow,
++    MachineCompleteCondition,
+@@
+     "HumanWorkflow",
++    "MachineCompleteCondition",
+diff --git a/edsl/workflows/experiment.py b/edsl/workflows/experiment.py
+index 0000000..0000000 100644
+--- a/edsl/workflows/experiment.py
++++ b/edsl/workflows/experiment.py
+@@ -11,7 +11,7 @@ from pathlib import Path
+ from edsl import Agent, Model, Scenario, Survey
+ from edsl._data_contracts import definition_fingerprint, validate_data
+-from edsl.sharedstate import SharedStateMap, SQLiteStateBackend
++from edsl.sharedstate import SharedStateMap, SQLiteStateBackend
+@@
+         for op in operations:
+@@
+                 raise ValueError(
+                     "workflow references an absent or different state definition"
+                 )
++        for block in self.workflow.repeat_blocks:
++            for iteration in block.iterations:
++                condition = iteration.until
++                if condition is None:
++                    continue
++                from .coordinator import WorkflowCoordinator
++                from .definition import MachineCompleteCondition
++
++                for node in WorkflowCoordinator._condition_nodes(condition):
++                    if not isinstance(node, MachineCompleteCondition):
++                        continue
++                    state_condition = node.state_condition
++                    state_map = maps.get(state_condition.state_id)
++                    if state_map is None or definition_fingerprint(
++                        state_map.definition.to_dict()
++                    ) != definition_fingerprint(
++                        state_condition.definition.to_dict()
++                    ):
++                        raise ValueError(
++                            "repeat condition references an absent or different state definition"
++                        )
+         for step in self.workflow.steps:
