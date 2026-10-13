@@ -89,6 +89,31 @@ STYLE = {
     ),
 }
 
+QUOTE_POLICIES = {
+    "patient": {},
+    "narrow_spread": {
+        "value_buyer": (
+            "QUOTE POLICY: Use your forecast_0 as the reference price. If you buy, "
+            "submit a limit price exactly $1.25 above forecast_0. Treat that as "
+            "your maximum acceptable price; if it exceeds what the asset is worth "
+            "to you, hold instead."
+        ),
+        "value_seller": (
+            "QUOTE POLICY: Use your forecast_0 as the reference price. If you sell, "
+            "submit a limit price exactly $1.25 below forecast_0. Treat that as "
+            "your minimum acceptable price; if it is below what the asset is worth "
+            "to you, hold instead."
+        ),
+        "flexible_value": (
+            "QUOTE POLICY: Use your forecast_0 as the reference price. If you buy, "
+            "submit a limit price exactly $1.25 above forecast_0. If you sell, "
+            "submit a limit price exactly $1.25 below forecast_0. These are your "
+            "maximum buy and minimum sell prices; if the relevant limit is not "
+            "acceptable given your payoff expectations, hold instead."
+        ),
+    },
+}
+
 
 def build_market(seed: int):
     # The native settlement algorithm is used for the call market with zero
@@ -186,9 +211,14 @@ def question_text(period: int) -> str:
     )
 
 
-def build(*, arm: str, replicate: int = 1, model="gpt-4o", service="openai"):
+def build(
+    *, arm: str, replicate: int = 1, model="gpt-4o", service="openai",
+    quote_policy: str = "patient",
+):
     if arm not in ARMS:
         raise ValueError(f"arm must be one of {tuple(ARMS)}")
+    if quote_policy not in QUOTE_POLICIES:
+        raise ValueError(f"quote_policy must be one of {tuple(QUOTE_POLICIES)}")
     if replicate < 1:
         raise ValueError("replicate must be at least 1")
     seed = SEED_BASE + replicate
@@ -196,22 +226,32 @@ def build(*, arm: str, replicate: int = 1, model="gpt-4o", service="openai"):
     agents = [
         Agent(
             name=name,
-            traits={"role": "trader", "strategy": styles[i], "seat": i},
-            instruction=SYSTEM + "\n\nTRADING STYLE\n" + STYLE[styles[i]],
+            traits={
+                "role": "trader", "strategy": styles[i], "seat": i,
+                "quote_policy": quote_policy,
+            },
+            instruction=(
+                SYSTEM + "\n\nTRADING STYLE\n" + STYLE[styles[i]]
+                + (
+                    "\n\n" + QUOTE_POLICIES[quote_policy][styles[i]]
+                    if quote_policy != "patient" else ""
+                )
+            ),
         )
         for i, name in enumerate(TRADERS)
     ]
     agents.append(Agent(name="exchange", traits={"role": "exchange"}))
     market_state = SharedStateMap(
         SharedState(market=build_market(seed)),
-        state_id=f"fundamental-news-{arm}-replicate-{replicate}",
+        state_id=f"fundamental-news-{quote_policy}-{arm}-replicate-{replicate}",
     )
     market = market_state.by("session").market
     workflow = Workflow(
-        f"30-period payoff-news market: {arm}, replicate {replicate}",
+        f"30-period payoff-news market: {arm}, {quote_policy}, replicate {replicate}",
         metadata={
             "arm": arm,
             "replicate": replicate,
+            "quote_policy": quote_policy,
             "news_period": NEWS_PERIOD,
             "news_timing": "after period 5 settlement, before period 6 orders",
             "terminal_redemption_cents": ARMS[arm]["redemption_cents"],
@@ -272,6 +312,7 @@ def build(*, arm: str, replicate: int = 1, model="gpt-4o", service="openai"):
         workflow.compile(), [market_state], agents, plan,
         metadata={
             "seed": seed, "arm": arm, "replicate": replicate,
+            "quote_policy": quote_policy,
             "news_period": NEWS_PERIOD,
             "terminal_redemption_cents": ARMS[arm]["redemption_cents"],
             "strategy_by_trader": {a.name: a.traits.get("strategy") for a in agents if a.traits["role"] == "trader"},
@@ -287,6 +328,7 @@ def main():
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--model", default="gpt-4o")
     parser.add_argument("--service", default="openai")
+    parser.add_argument("--quote-policy", choices=QUOTE_POLICIES, default="patient")
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--resume", action="store_true")
     args = parser.parse_args()
@@ -300,6 +342,7 @@ def main():
         experiment = build(
             arm=args.arm, replicate=args.replicate,
             model=args.model, service=args.service,
+            quote_policy=args.quote_policy,
         )
     if args.prepare_only:
         experiment.save(specification)

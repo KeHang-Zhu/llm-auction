@@ -1,6 +1,7 @@
 """Summarize pilot_02 arms and plot forecasts and submitted quote frontiers."""
 
 from collections import Counter
+import argparse
 import json
 from pathlib import Path
 import statistics
@@ -17,8 +18,8 @@ ARMS = ("positive", "negative", "control")
 COLORS = {"positive": "#2a7f62", "negative": "#b5413e", "control": "#4e6f91"}
 
 
-def load_arm(arm):
-    output = ROOT / arm
+def load_arm(arm, root):
+    output = root / arm
     experiment = WorkflowExperiment.load(output / "experiment.json")
     backend = SQLiteStateBackend(
         experiment.states[0], output / "state-0.sqlite", runtime=experiment.runtime
@@ -27,10 +28,10 @@ def load_arm(arm):
     return experiment, market
 
 
-def main():
+def main(root=ROOT):
     data = {}
     for arm in ARMS:
-        experiment, market = load_arm(arm)
+        experiment, market = load_arm(arm, root)
         orders = market["order_log"]
         prices = [row["price"] for row in market["tape"] if row["volume"]]
         data[arm] = {
@@ -38,6 +39,10 @@ def main():
             "market": market,
             "orders": orders,
             "prices": prices,
+            "trade_tape": [
+                {"period": row["period"], "price": row["price"], "volume": row["volume"]}
+                for row in market["tape"] if row["volume"]
+            ],
             "volume": sum(row["volume"] for row in market["tape"]),
             "trade_periods": sum(bool(row["volume"]) for row in market["tape"]),
             "mean_forecast_5": statistics.mean(
@@ -94,7 +99,7 @@ def main():
     ax.spines[["top", "right"]].set_visible(False)
     ax.legend(frameon=False, ncol=3, loc="upper left")
     fig.tight_layout()
-    fig.savefig(ROOT / "forecast_paths.png", dpi=220, bbox_inches="tight")
+    fig.savefig(root / "forecast_paths.png", dpi=220, bbox_inches="tight")
     plt.close(fig)
 
     fig, axes = plt.subplots(3, 1, figsize=(8.3, 7.0), sharex=True)
@@ -129,7 +134,7 @@ def main():
     fig.text(0.12, 0.01, "Shaded gaps indicate the highest buy limit remained below the lowest sell limit.",
              fontsize=8, color="#555555")
     fig.tight_layout(rect=(0, 0.04, 1, 1))
-    fig.savefig(ROOT / "order_frontiers.png", dpi=220, bbox_inches="tight")
+    fig.savefig(root / "order_frontiers.png", dpi=220, bbox_inches="tight")
     plt.close(fig)
 
     # Direct manipulation check: compare each trader's buy limit immediately
@@ -148,9 +153,12 @@ def main():
             for period in (5, 6)
         }
         both = sorted(set(by_period[5]) & set(by_period[6]))
+        paired_differences = [
+            by_period[6][trader] - by_period[5][trader] for trader in both
+        ]
         paired_changes[arm] = {
             "n": len(both),
-            "mean": statistics.mean(by_period[6][trader] - by_period[5][trader] for trader in both),
+            "mean": statistics.mean(paired_differences) if paired_differences else None,
         }
         for trader in both:
             xs = (0, 1)
@@ -166,8 +174,9 @@ def main():
                    facecolors="none", edgecolors=COLORS[arm], marker="s", s=48,
                    linewidth=1.5, zorder=3)
         delta = paired_changes[arm]["mean"]
+        delta_label = f"{delta:+.2f}" if delta is not None else "n/a"
         ax.set_title(f"{arm.title()} arm")
-        ax.text(0.04, 0.96, f"Paired buyers: n={len(both)}\nMean change: {delta:+.2f}",
+        ax.text(0.04, 0.96, f"Paired buyers: n={len(both)}\nMean change: {delta_label}",
                 transform=ax.transAxes, va="top", ha="left", fontsize=9,
                 bbox={"facecolor": "white", "edgecolor": "none", "alpha": 0.8})
         ax.set_xticks((0, 1), ("Before\n(period 5)", "After\n(period 6)"))
@@ -179,21 +188,24 @@ def main():
              "Each line follows the same trader who bought in both periods; open markers indicate a buyer in only one period.",
              ha="center", fontsize=8, color="#555555")
     fig.tight_layout(rect=(0, 0.05, 1, 0.96))
-    fig.savefig(ROOT / "bids_before_after.png", dpi=240, bbox_inches="tight")
+    fig.savefig(root / "bids_before_after.png", dpi=240, bbox_inches="tight")
     plt.close(fig)
 
     summary = {
         arm: {key: value for key, value in values.items() if key not in {"experiment", "market", "orders", "prices"}}
         for arm, values in data.items()
     }
-    (ROOT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
-    (ROOT / "paired_bid_changes.json").write_text(json.dumps(paired_changes, indent=2) + "\n")
+    (root / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (root / "paired_bid_changes.json").write_text(json.dumps(paired_changes, indent=2) + "\n")
     machine = data["control"]["experiment"].states[0].definition.machines["market"]
     machine.show_diagram(
-        filename=str(ROOT / "fundamental_news_machine.png"),
+        filename=str(root / "fundamental_news_machine.png"),
         renderer="pydot", detail=True,
     )
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--root", type=Path, default=ROOT)
+    args = parser.parse_args()
+    main(args.root)

@@ -59,3 +59,45 @@ traders within one shared market are not 12 independent replications. Pilot
 sessions can reveal workflow or prompt problems but are not enough to establish
 an effect. A larger number of independent markets per arm should be chosen from
 a power analysis using pilot-level variation.
+
+## Follow-up: narrow-spread price discovery
+
+The original pilot forecasts moved after news, but the quotes did not cross:
+at period 6 the best bid/ask were $19/$21 after positive news, $9.50/$10 after
+negative news, and $13.90/$15 in control. The narrow_spread quote policy is
+designed to produce observable transaction prices while leaving treatment
+assignment and payoff rules unchanged. Buyers use their current-price forecast
+plus $1.25 as their maximum buy limit; sellers use their forecast minus $1.25
+as their minimum sell limit. Flexible traders use the same rule for either
+side. The fixed offset applies in every arm, so any news response is compared
+against the same quote policy in control.
+
+Run one paired replicate (the same dividend and priority seed is used for all
+three arms):
+
+    for arm in positive negative control; do
+      python3 edsl_replication/studies/asset_market_fundamental_news/experiment.py \
+        --arm "$arm" --replicate 2 --quote-policy narrow_spread \
+        --output "edsl_replication/studies/asset_market_fundamental_news/quote_overlap/replicate_02/$arm"
+    done
+
+Use another replicate number for each independent market set. Summarize a
+completed set with:
+
+    python3 edsl_replication/studies/asset_market_fundamental_news/summarize_pilots.py \
+      --root edsl_replication/studies/asset_market_fundamental_news/quote_overlap/replicate_02
+
+Compare the period-5-to-6 transaction price (and the first post-news trade if
+there is no period-6 trade), trade volume, and allocation across the three
+arms. Keep forecasts and submitted quotes as manipulation checks. The prior
+pilot motivates the quote policy but is not pooled with this treatment; this
+first follow-up is still a pilot, not a replicated treatment effect.
+
+The completed run is documented in
+[`quote_overlap/replicate_02/analysis.md`](quote_overlap/replicate_02/analysis.md),
+with per-period transaction prices and volume in its `summary.json`. The
+positive market's price rose from $14.40 in period 5 to $20.25 in period 6;
+the negative market's first post-news trade was $8.35 in period 6 (no period-5
+trade); and control moved from $14.40 to $14.48. Each treatment direction
+appeared in one market, so these results demonstrate that the design can
+produce observable prices but do not estimate a reliable treatment effect.
