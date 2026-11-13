@@ -5,7 +5,7 @@
 - `experiments/`: sealed-bid, common-value, eBay-style, and description-intervention examples.
 - `clock/`: open and closed ascending-clock configurations by model and temperature.
 - `robustness/`: alternative-model and temperature configurations.
-- `interventions/`, `intervention_claude/`, `intervention_gpt5/`: additional historical intervention designs.
+- `others/`: repeated-auction (15-round) configurations.
 - `template.yaml`: starting point for a new configuration.
 
 ## Quick Start

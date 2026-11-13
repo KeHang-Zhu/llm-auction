@@ -1,6 +1,6 @@
 # Data Map for LLM Auction Experiments
 
-Last updated: 2026-09-28. This map describes the data used by the current manuscript and by `scripts/reproduce_paper.py`. Older experiments remain in the repository, but are not automatically pooled into the published comparisons.
+Last updated: 2026-09-28. This map describes the data used by the current manuscript and by `scripts/reproduce_paper.py`. Experiments not used by the manuscript were removed in November 2026 and remain available in the Git history.
 
 ## Directory Structure Overview
 
@@ -40,7 +40,7 @@ Other model cells are in `robustness_logs/<format>_<suffix>/`:
 | `gpt5mini` | `gpt-5-mini` |
 | `llama` | `meta-llama/Meta-Llama-3-8B-Instruct` |
 
-The analysis excludes the duplicated `robustness_logs/V10/` tree. GPT-5-mini's clock runs produce no usable tick-by-tick bids; they are missing observations, not zero-error measurements. Other thin clock cells are flagged. Rank comparisons require at least 30 usable bids per format.
+GPT-5-mini's clock runs produce no usable tick-by-tick bids; they are missing observations, not zero-error measurements. Other thin clock cells are flagged. Rank comparisons require at least 30 usable bids per format.
 
 `model_smad_results.csv` has 42 rows: seven formats by the human benchmark and five models. For each model cell it reports the scaled mean absolute deviation (SMAD), confidence interval, standard error, and sample count. `direction_shares_models.csv` has 30 rows: five private-value formats by those same six sources.
 
@@ -91,6 +91,6 @@ The repeated-auction figure uses `robustness_logs/fpsb_ipv_15_rounds/` and `robu
 
 ## Reproduction and historical files
 
-Run `python scripts/reproduce_paper.py --check` from the root after installing `requirements-analysis.txt`. It regenerates the analyses from released inputs without network calls and compares the five principal CSV outputs with their saved versions. The current manuscript source is `writeup/main.tex`; older sources and notebooks remain as historical material.
+Run `python scripts/reproduce_paper.py --check` from the root after installing `requirements-analysis.txt`. It regenerates the analyses from released inputs without network calls and compares the five principal CSV outputs with their saved versions. The current manuscript source is `writeup/main.tex`; older sources and notebooks were removed and remain available in the Git history.
 
 Raw EDSL cache JSONL files are excluded from Git. Their absence does not prevent offline reproduction, which uses the exported CSVs and result JSONs described above. Generating new model responses requires the simulator dependencies and provider credentials and is distinct from reproducing the reported results.

@@ -19,9 +19,9 @@ soft-close extensions), matching the paper's T = 10 and the prompt's "day k".
 Three timing definitions are in circulation for the "final winning bid":
   winner_last  (paper text; PLOTTED)  last period in which the eventual
                winner changes her maximum bid
-  price_final  (existing Figs/ebay_*.png, notebooks/ebay_analysis.ipynb)
+  price_final  (existing Figs/ebay_*.png, historical notebooks/ebay_analysis.ipynb)
                first period in which current_price reaches its final value
-  any_last     (notebooks/eBay_dynamics.ipynb hard-coded lists)
+  any_last     (historical notebooks/eBay_dynamics.ipynb hard-coded lists)
                last period in which any bidder places a bid
 All three are computed and written to the summary CSV so the text can be
 matched to whichever definition it quotes.

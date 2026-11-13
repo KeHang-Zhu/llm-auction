@@ -25,7 +25,7 @@ We compare three features of behavior: the magnitude and direction of deviations
 - [Data sources and provenance](data_map.md)
 - [Earlier paper version](https://openreview.net/forum?id=XZ71GHf8aB)
 
-The existing directory organization is retained: `src/` and `scripts/` contain the simulator, `configs/`, `Prompt/`, and `rule_template/` describe experiments, `experiment_logs/` and `robustness_logs/` contain recorded runs, `analysis/` and `scripts/plots/` contain analysis, and `results/` and `writeup/` contain outputs.
+The existing directory organization is retained: `src/` and `scripts/` contain the simulator, `configs/`, `Prompt/`, and `rule_template/` describe experiments, `experiment_logs/` and `robustness_logs/` contain recorded runs used by the manuscript, `analysis/` and `scripts/plots/` contain analysis, and `results/` and `writeup/` contain outputs.
 
 If you build on this work, please cite:
 
@@ -134,7 +134,7 @@ Run all steps with `python scripts/reproduce_paper.py --check`, or run individua
 | Repeated-auction appendix | `python scripts/plots/appendix1_learning.py` | `writeup/figures/smad_rounds.png` |
 | Original temperature appendix figure | `python scripts/plots/appendix2_temperature.py` | `writeup/figures/appendix2_temperature_comparison.png` |
 
-The current manuscript uses `writeup/figures/` and `writeup/tables/`. The scorecard and human-band LaTeX tables are maintained summaries of the generated results. Other historical analysis scripts and notebooks remain available; the commands above are the supported reproduction path for the current revision.
+The current manuscript uses `writeup/figures/` and `writeup/tables/`. The scorecard and human-band LaTeX tables are maintained summaries of the generated results. Analyses, data, and drafts not used by the current manuscript were removed in November 2026 and remain available in the Git history; the commands above are the supported reproduction path for the current revision.
 
 ### 3. Interpreting the data
 

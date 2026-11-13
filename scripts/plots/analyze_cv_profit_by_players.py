@@ -9,7 +9,7 @@ from scipy import stats
 import os
 
 # Define paths to all common value first-price auction experiments
-base_path = "/Users/kehangzh/Desktop/llm-auction/experiment_logs/V10"
+base_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "experiment_logs", "V10")
 experiments = {
     # 3: f"{base_path}/common_value_first/run_2026-01-12_22-28-21-388751/results/common_value_first_results.csv",
     4: f"{base_path}/common_value_first_4player/run_2026-02-03_23-53-01-685040/results/common_value_first_results.csv",
