@@ -14,6 +14,7 @@ from edsl.prompts import Prompt
 from edsl.questions import QuestionNumerical
 from jinja2 import Template
 import re
+import time
 import yaml
 from functools import lru_cache
 
@@ -57,7 +58,9 @@ class Rule_plan:
                  price_order = "second",
                  common_range=[10, 80], private_range=20, increment=1, number_agents=3, special_name="", start_price=0, turns=20, closing= False, reserve_price = 0,
                  include_payment_example=False, payment_example_key=None, payment_examples_path=None,
-                 templates_dir=None):
+                 templates_dir=None,
+                 programmed_opponents=False, opponent_strategy="truthful", llm_bidder_index=0,
+                 observe_after_win=True, survey_retries=5):
         self.seal_clock = seal_clock
         self.ascend_descend = ascend_descend
         self.private_value = private_value
@@ -72,6 +75,12 @@ class Rule_plan:
         self.start_price= start_price
         self.closing = closing
         self.reserve_price = reserve_price
+        # Clock design with one LLM bidder and programmed opponents (see Clock).
+        self.programmed_opponents = programmed_opponents
+        self.opponent_strategy = opponent_strategy
+        self.llm_bidder_index = llm_bidder_index
+        self.observe_after_win = observe_after_win
+        self.survey_retries = survey_retries
 
         # Use provided templates_dir or fall back to global default
         if templates_dir is None:
@@ -477,9 +486,47 @@ class Clock():
         self.transcript = []
         self.exit_list = []
         self.winner = None
-    
+        # One-LLM design: the other bidders follow a fixed program.
+        self.programmed = bool(getattr(rule, "programmed_opponents", False))
+        self.llm_agent = agents[getattr(rule, "llm_bidder_index", 0)] if self.programmed else None
+        self.llm_exit = None          # LLM exit price, also observed after a win in the blind format
+        self.llm_censored = None      # True if the LLM exit is censored by the end of the auction
+        self.max_price = rule.common_range[1] + rule.private_range
+
     def __repr__(self):
         return f'Clock Auction: (bid_list={self.bid_list})'
+
+    def is_programmed(self, agent):
+        return self.programmed and agent is not self.llm_agent
+
+    def programmed_action(self, agent):
+        '''Fixed opponent rule. "truthful": stay while the next price does not exceed value
+        (the dominant strategy in the ascending clock with private values).'''
+        strategy = getattr(self.rule, "opponent_strategy", "truthful")
+        if strategy == "truthful":
+            return "yes" if self.current_price + self.rule.increment <= agent.current_value else "no"
+        raise ValueError(f"Unknown opponent_strategy {strategy}")
+
+    def run_survey(self, questions):
+        '''Run one EDSL survey with retries and backoff on errors or empty answers.'''
+        attempts = getattr(self.rule, "survey_retries", 5)
+        last_error = None
+        for k in range(attempts):
+            try:
+                result = Survey(questions=questions).by(self.model).run(cache=self.cache)
+                answers = [result.select(q.question_name).to_list()[0] for q in questions]
+                if all(a is not None for a in answers):
+                    return answers
+                last_error = ValueError("empty answer from model")
+            except Exception as e:  # remote timeouts, 5xx, model lookup failures
+                last_error = e
+            wait = min(60, 2 ** k)
+            print(f"[Clock] survey attempt {k+1}/{attempts} failed: {last_error}; retrying in {wait}s")
+            time.sleep(wait)
+        raise RuntimeError(f"Survey failed after {attempts} attempts: {last_error}")
+
+    def price_str(self, price):
+        return f"{round(price, 2):g}"
 
     def parse_plan_and_action_clock(self, text):
         """
@@ -539,24 +586,38 @@ class Clock():
 
     def dynamic(self):
         if self.rule.ascend_descend == "ascend":
-            self.current_price +=self.change
+            self.current_price = round(self.current_price + self.change, 6)
         elif self.rule.ascend_descend == "descend":
-            self.current_price -=self.change
+            self.current_price = round(self.current_price - self.change, 6)
         else:
             raise ValueError(f"Rule {self.rule.ascend_descend} not allowed")
     
-    def run_one_clock(self, counterfact=None):
-        '''run for one period using parallel Survey (Mechanism 1: within-period parallelization)'''
+    def run_one_clock(self, counterfact=None, observe_only=False):
+        '''Run one clock period. LLM bidders are queried in one parallel Survey;
+        programmed bidders (one-LLM design) act by rule without a model call.
+
+        observe_only: the auction has already ended (blind format, LLM is the winner);
+        keep asking the LLM only to observe its uncensored exit price.'''
         self.exit_number = 0
         print("===========",self.current_price)
         agent_in_play = self.agent_left[:]  # Keep snapshot mechanism
 
-        # STEP 1: Build prompts for all active agents upfront
+        # STEP 1: Build prompts for the active LLM bidders
         agent_prompts = []
         agent_metadata = []
+        actions = {}
 
         for agent in agent_in_play:
-            other_agent_names = ', '.join([a.name for a in agent_in_play if a is not agent])
+            if self.is_programmed(agent):
+                actions[agent.name] = ("[programmed opponent: " + self.rule.opponent_strategy + "]",
+                                       self.programmed_action(agent))
+                continue
+            if self.rule.open_blind == "blind":
+                # Blind clock: dropouts are not revealed, so always list every other bidder.
+                others = [a for a in self.agents if a is not agent]
+            else:
+                others = [a for a in agent_in_play if a is not agent]
+            other_agent_names = ', '.join([a.name for a in others])
             instruction_str = Prompt.from_txt(os.path.join(prompt_dir,"instruction.txt"))
             instruction = str(instruction_str.render(
                 {"name":agent.name, "other_agent_names": other_agent_names})
@@ -576,8 +637,8 @@ class Clock():
                 "history_section": history_section,
                 "clock_cycle": self.clock + 1,
                 "current_value": agent.current_value,
-                "current_price": self.current_price,
-                "next_price": self.current_price + self.rule.increment,
+                "current_price": self.price_str(self.current_price),
+                "next_price": self.price_str(self.current_price + self.rule.increment),
                 "transcript": transcript
             }))
 
@@ -585,34 +646,25 @@ class Clock():
             agent_prompts.append(full_prompt)
             agent_metadata.append({'agent': agent})
 
-        # STEP 2: Create parallel Survey with unique question names
-        questions = []
-        for i, full_prompt in enumerate(agent_prompts):
-            agent = agent_metadata[i]['agent']
-            agent_name = agent.name.replace(" ", "_")
+        # STEP 2-3: Execute all LLM calls of this period in one Survey (with retries)
+        if agent_prompts:
+            questions = []
+            for i, full_prompt in enumerate(agent_prompts):
+                agent_name = agent_metadata[i]['agent'].name.replace(" ", "_")
+                questions.append(QuestionFreeText(
+                    question_name=f"q_action_{agent_name}_clock_{self.clock}",
+                    question_text=full_prompt
+                ))
+            answers = self.run_survey(questions)
+            for i, metadata in enumerate(agent_metadata):
+                agent = metadata['agent']
+                actions[agent.name] = self._parse_and_validate_clock_action(
+                    answers[i], agent, agent_prompts[i]
+                )
 
-            q_action = QuestionFreeText(
-                question_name=f"q_action_{agent_name}_clock_{self.clock}",
-                question_text=full_prompt
-            )
-            questions.append(q_action)
-
-        # STEP 3: Execute all LLM calls in parallel
-        survey = Survey(questions=questions)
-        result = survey.by(self.model).run(cache=self.cache)
-
-        # STEP 4: Parse all responses and process dropout decisions
-        for i, metadata in enumerate(agent_metadata):
-            agent = metadata['agent']
-            agent_name = agent.name.replace(" ", "_")
-            question_name = f"q_action_{agent_name}_clock_{self.clock}"
-
-            response_text = result.select(question_name).to_list()[0]
-
-            # Call helper method to handle parsing and retries
-            plan, action = self._parse_and_validate_clock_action(
-                response_text, agent, agent_prompts[i]
-            )
+        # STEP 4: Process dropout decisions in the original bidder order
+        for agent in agent_in_play:
+            plan, action = actions[agent.name]
 
             # Store the plan
             if len(agent.reasoning) <= self.clock:
@@ -622,6 +674,12 @@ class Clock():
 
             print("=========", agent.name, action)
 
+            if observe_only:
+                if action.lower() == 'no':
+                    self.agent_left.remove(agent)
+                    self.llm_exit = self.current_price
+                continue
+
             # Process dropout decision (keep existing logic)
             if self.rule.ascend_descend == 'ascend':
                 if action.lower() == 'no':
@@ -630,6 +688,9 @@ class Clock():
                     agent.exit_price.append(str(self.current_price))
                     self.exit_number += 1
                     self.exit_list.append({"agent":agent.name,"bid": self.current_price})
+                    if agent is self.llm_agent:
+                        self.llm_exit = self.current_price
+                        self.llm_censored = False
                 else:
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": action.lower()})
             elif self.rule.ascend_descend == 'descend':
@@ -641,7 +702,8 @@ class Clock():
                     self.bid_list.append({"agent":agent.name,"bid": self.current_price, "decision": action.lower()})
 
         ## update the shared information
-        self.transcript.append(self.share_information())
+        if not observe_only:
+            self.transcript.append(self.share_information())
 
         print("One clock done")
 
@@ -690,14 +752,13 @@ class Clock():
                 attempt += 1
 
                 if attempt < retry_attempts:
-                    # Retry individually for this agent only
+                    # Retry individually for this agent only. The attempt number keeps the
+                    # prompt distinct so that a cached malformed answer is not replayed.
                     q_retry = QuestionFreeText(
                         question_name="q_action_retry",
-                        question_text=full_prompt + bid_warning
+                        question_text=full_prompt + bid_warning + f" (attempt {attempt + 1})"
                     )
-                    survey_retry = Survey(questions=[q_retry])
-                    result_retry = survey_retry.by(self.model).run(cache=self.cache)
-                    response = result_retry.select("q_action_retry").to_list()[0]
+                    response = self.run_survey([q_retry])[0]
 
         raise RuntimeError(f"Failed to process action for {agent.name} after {retry_attempts} attempts")
 
@@ -789,7 +850,23 @@ class Clock():
             ## calculate the next clock price
             self.dynamic()
             print(self.__repr__())
-                
+
+        if self.programmed and self.llm_exit is None:
+            # The LLM won, so its exit was not reached before the auction ended.
+            self.llm_censored = True
+            if self.rule.open_blind == "blind" and getattr(self.rule, "observe_after_win", True):
+                # In the blind clock the LLM cannot observe that the auction has ended, so
+                # its information set is unchanged; keep asking until it exits or the price
+                # passes the maximum value. Payment still uses the actual closing price.
+                self.agent_left = [self.llm_agent]
+                while self.agent_left and self.current_price <= self.max_price:
+                    self.bid_list = []
+                    self.run_one_clock(observe_only=True)
+                    self.clock += 1
+                    self.dynamic()
+                if self.llm_exit is not None:
+                    self.llm_censored = False
+
         print(self.winner)
         for agent in self.agents:
             if agent.name == self.winner["winner"]:
@@ -799,7 +876,19 @@ class Clock():
             else:
                 agent.profit.append(0)
                 agent.winning.append(False)
-        return {'bidding history':self.exit_list, 'winner':self.winner}
+        out = {'bidding history':self.exit_list, 'winner':self.winner}
+        if self.programmed:
+            out.update({
+                'design': 'one_llm_programmed_opponents',
+                'opponent_strategy': self.rule.opponent_strategy,
+                'llm_bidder': self.llm_agent.name,
+                'llm_value': self.llm_agent.current_value,
+                'llm_exit': self.llm_exit,
+                'llm_censored': self.llm_censored,
+                'llm_won': self.winner['winner'] == self.llm_agent.name,
+                'clock_periods': self.clock,
+            })
+        return out
 
     # DEPRECATED: parse_action() has been replaced by parse_plan_and_action_clock()
     # Old method kept for reference but no longer used
@@ -892,14 +981,15 @@ class Auction_plan():
     '''
     This class manages the auction process using specified agents and rules.
     '''
-    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=None, model='gpt-4o',temperature = 0, service_name=None):
+    def __init__(self, number_agents, rule, output_dir, timestring=None,cache=None, model='gpt-4o',temperature = 0, service_name=None, model_params=None):
         self.rule = rule        # Instance of Rule
         self.agents = []  # List of Agent instances
         self.number_agents = number_agents
+        extra = dict(model_params or {})
         if service_name:
-            self.model= Model(model, temperature=temperature, service_name=service_name)
+            self.model= Model(model, temperature=temperature, service_name=service_name, **extra)
         else:
-            self.model= Model(model, temperature=temperature)
+            self.model= Model(model, temperature=temperature, **extra)
         self.cache = cache
         self.output_dir = output_dir
         self.timestring =timestring

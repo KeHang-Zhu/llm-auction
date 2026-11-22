@@ -80,6 +80,12 @@ def flatten_results_to_csv(config_path: str, result_json_path: str, output_csv_p
             player_plan = plans[player_idx]
             is_winner = (player_name == winner_name)
 
+            # One-LLM clock design: flag the LLM bidder and its (possibly uncensored) exit.
+            hist = round_data['history']
+            is_llm = hist.get('llm_bidder', player_name) == player_name
+            llm_exit = hist.get('llm_exit') if 'llm_bidder' in hist and is_llm else None
+            llm_censored = hist.get('llm_censored') if 'llm_bidder' in hist and is_llm else None
+
             row = {
                 # Round-specific data (priority - at front)
                 'round': round_num,
@@ -87,6 +93,9 @@ def flatten_results_to_csv(config_path: str, result_json_path: str, output_csv_p
                 'player_value': player_value,
                 'bid': player_bid,
                 'is_winner': is_winner,
+                'is_llm': is_llm,
+                'llm_exit': llm_exit,
+                'llm_censored': llm_censored,
                 'final_price': final_price,
                 'profit': player_profit,
 

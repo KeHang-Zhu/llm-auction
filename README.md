@@ -18,14 +18,14 @@ This repository contains the auction simulator, recorded experiment data, and an
 We compare three features of behavior: the magnitude and direction of deviations from theory, and the ordering of auction formats by those deviations. The main finding is that three non-reasoning large models preserve key orderings without task-specific fine-tuning or calibration to human bids, even though their error magnitudes and directions differ from those of human bidders. More accurate equilibrium play does not necessarily make a model a better simulator of human behavior.
 
 <p align="center">
-  <img src="writeup/figures/figure1_bands_gp.png" alt="Human benchmarks and three non-reasoning language models compared across seven auction formats" width="750">
+  <img src="TEAC_submission/figures/smad_profiles_gp.png" alt="Human benchmarks and three non-reasoning language models compared across seven auction formats" width="750">
 </p>
 
-- [Current manuscript source](writeup/main.tex)
+- [Current manuscript source](TEAC_submission/main.tex)
 - [Data sources and provenance](data_map.md)
 - [Earlier paper version](https://openreview.net/forum?id=XZ71GHf8aB)
 
-The existing directory organization is retained: `src/` and `scripts/` contain the simulator, `configs/`, `Prompt/`, and `rule_template/` describe experiments, `experiment_logs/` and `robustness_logs/` contain recorded runs used by the manuscript, `analysis/` and `scripts/plots/` contain analysis, and `results/` and `writeup/` contain outputs.
+The existing directory organization is retained: `src/` and `scripts/` contain the simulator, `configs/`, `Prompt/`, and `rule_template/` describe experiments, `experiment_logs/` and `robustness_logs/` contain recorded runs used by the manuscript, `analysis/` and `scripts/plots/` contain analysis, `data/` holds the human benchmark inputs, `results/` contains analysis outputs, figures, and tables, and `TEAC_submission/` contains the manuscript.
 
 If you build on this work, please cite:
 
@@ -124,17 +124,17 @@ Run all steps with `python scripts/reproduce_paper.py --check`, or run individua
 | --- | --- | --- |
 | Human reconstruction uncertainty | `python analysis/reconstruction_bands.py` | `results/reconstruction_bands/bands.csv` |
 | Model-by-format deviations | `python scripts/plots/model_comparison_main.py` | `results/analysis/model_smad_results.csv` |
-| Main comparison figure | `python scripts/plots/figure1_bands_models.py gp` | `writeup/figures/figure1_bands_gp.png` |
+| Main comparison figure | `python scripts/plots/figure1_bands_models.py gp` | `results/figures/figure1_bands_gp.png` |
 | Error directions | `python scripts/plots/figure2_models.py` | `results/analysis/direction_shares_models.csv` |
 | GPT-4o rank concordance | `python analysis/difficulty_concordance.py` | `results/analysis/difficulty_concordance.json` |
 | Cross-model rank concordance | `python analysis/difficulty_concordance_models.py` | `results/analysis/difficulty_concordance_models.csv` |
 | Temperature robustness | `python analysis/temperature_concordance.py` | `results/analysis/temperature_concordance.csv` |
 | Description interventions | `python scripts/plots/interventions_models.py` | `results/analysis/interventions_models.csv` |
 | eBay closing rules | `python scripts/plots/ebay_closing_rule_only.py` | `results/analysis/ebay_closing_rule_summary.csv` |
-| Repeated-auction appendix | `python scripts/plots/appendix1_learning.py` | `writeup/figures/smad_rounds.png` |
-| Original temperature appendix figure | `python scripts/plots/appendix2_temperature.py` | `writeup/figures/appendix2_temperature_comparison.png` |
+| Repeated-auction appendix | `python scripts/plots/appendix1_learning.py` | `results/figures/smad_rounds.png` |
+| Original temperature appendix figure | `python scripts/plots/appendix2_temperature.py` | `results/figures/appendix2_temperature_comparison.png` |
 
-The current manuscript uses `writeup/figures/` and `writeup/tables/`. The scorecard and human-band LaTeX tables are maintained summaries of the generated results. Analyses, data, and drafts not used by the current manuscript were removed in November 2026 and remain available in the Git history; the commands above are the supported reproduction path for the current revision.
+The current manuscript uses `results/figures/` and `results/tables/`. The scorecard and human-band LaTeX tables are maintained summaries of the generated results. Analyses, data, and drafts not used by the current manuscript were removed in November 2026 and remain available in the Git history; the commands above are the supported reproduction path for the current revision.
 
 ### 3. Interpreting the data
 
@@ -142,10 +142,10 @@ Human benchmarks are reconstructions from published summary statistics, **not in
 
 ### 4. Building the manuscript
 
-With a LaTeX installation that provides the packages in `writeup/main.tex`:
+With a LaTeX installation that provides the packages in `TEAC_submission/main.tex`:
 
 ```bash
-cd writeup
+cd TEAC_submission
 pdflatex -interaction=nonstopmode -halt-on-error main.tex
 bibtex main
 pdflatex -interaction=nonstopmode -halt-on-error main.tex

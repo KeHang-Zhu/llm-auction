@@ -5,14 +5,14 @@ WHAT THIS DOES
 --------------
 The paper benchmarks LLM bidding against moment-matched reconstructions of human
 bid distributions from published experiments.  The point anchors live in
-``plots/auction_human.csv`` and are quoted throughout the paper:
+``data/auction_human.csv`` and are quoted throughout the paper:
 
     FPSB IPV   24.76%   (Kagel-Levin 1993, n=5)
     SPSB IPV    5.65%   (Kagel-Levin 1993, n=5)
     TPSB IPV    7.66%   (Kagel-Levin 1993, n=5)
     SP-APV      9.31%   (Li 2017, 2P)
     AC          3.54%   (Li 2017, ascending clock)
-    AC-B        5.83%   (Breitmoser-Schweighofer-Kodritsch 2022, closed clock)
+    AC-B        5.46%   (Breitmoser-Schweighofer-Kodritsch 2022, closed clock)
 
 Section 4 (``sec:reconstruction``) commits to representing reconstruction
 uncertainty "by re-drawing the mixture parameters within the ranges the source
@@ -30,7 +30,7 @@ any perturbation is applied.  The reconstruction that defines each anchor is:
 
   * Clock / APV formats (SP-APV, AC, AC-B): the source papers report a Mean
     Absolute Deviation (MAD) from truthful bidding directly, and
-        Delta = 100 * MAD / E[v]        (E[v]=70 for Li, 65 for Breitmoser)
+        Delta = 100 * MAD / E[v]        (E[v]=70 for Li and for Breitmoser)
     with the published SE(MAD) giving the 95% CI already stored in
     auction_human.csv.  The central MAD is recovered from that CSV's SMAD and
     E[v]; the recomputed 95% CI matches the stored CI to rounding, which is the
@@ -85,17 +85,17 @@ B = 2000                       # bootstrap replications per anchor
 N_SAMPLES = 20000              # value/ratio draws per replication (for MC SMAD)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-HUMAN_CSV = PROJECT_ROOT / "plots" / "auction_human.csv"
+HUMAN_CSV = PROJECT_ROOT / "data" / "auction_human.csv"
 OUT_DIR = PROJECT_ROOT / "results" / "reconstruction_bands"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
 Z95 = 1.959963984540054         # matches ranking_forest.py convention
 
 # Expected value E[v] under each source's experimental value distribution
-# (see appendix_human.tex: E[v]=70 for Li 2017, E[v]=65 for Breitmoser 2022;
+# (E[v]=70 for Li 2017 and for Breitmoser 2022: group draw U[10,110] plus private adjustment U[0,20];
 #  Kagel-Levin 1993 uses x ~ U[0, 28.30] so E[x]=14.15).
 EV_LI = 70.0
-EV_BR = 65.0
+EV_BR = 70.0
 EV_KL = 28.30 / 2.0             # = 14.15
 
 
@@ -328,21 +328,21 @@ def bootstrap_kl(name, cfg, rng):
 CLOCK = {
     "SP-APV": dict(
         smad=9.31, ci=(6.91, 11.70), ev=EV_LI, s=1.0,
-        p_eq=0.50, p_over=0.40, p_under=0.10,      # Li 2017: ~50% dom, ~40% over
-        rate_gran=0.05,                             # "~50%"/"~40%" -> +-5 pp
+        p_eq=0.39, p_over=0.39, p_under=0.22,      # Li 2017 Fig. 2(a), SP: bins within / above / below $2
+        rate_gran=0.05,                             # read off a histogram -> +-5 pp
         src="Li 2017 SPSB (2P), APV",
         paper_ref="fig:smad-comparison, 05_validation, 06_ranking, 07_humans",
     ),
     "AC": dict(
         smad=3.54, ci=(2.00, 5.09), ev=EV_LI, s=1.0,
-        p_eq=0.67, p_over=0.18, p_under=0.15,       # Li 2017: ~67% dom, ~18% over
+        p_eq=0.70, p_over=0.19, p_under=0.11,       # Li 2017 Fig. 2(a), OSP: within / above / below $2
         rate_gran=0.05,
         src="Li 2017 Ascending Clock, APV",
         paper_ref="fig:smad-comparison, 06_ranking, 07_humans",
     ),
     "AC-B": dict(
-        smad=5.83, ci=(2.57, 9.09), ev=EV_BR, s=1.0,
-        p_eq=0.83, p_over=0.12, p_under=0.05,       # Breitmoser 2022 closed clock
+        smad=5.46, ci=(2.43, 8.49), ev=EV_BR, s=1.0,
+        p_eq=0.49, p_over=0.02, p_under=0.49,       # BSK WP App. Table 2, AC-B: |b-v|<=1 / b-v>1 / b-v<-1, round-weighted
         rate_gran=0.05,
         src="Breitmoser-Schweighofer-Kodritsch 2022 AC-B (closed clock)",
         paper_ref="fig:smad-comparison, 06_ranking, 07_humans",
@@ -586,7 +586,7 @@ def _write_summary(df, checks):
     A("")
     A("For the clock/APV anchors the reproduction test is the published 95% CI: "
       "the recomputed symmetric CI matches the CI stored in "
-      "`plots/auction_human.csv` to rounding:\n")
+      "`data/auction_human.csv` to rounding:\n")
     A("| Anchor | stored CI | recomputed CI | implied SE(MAD) |")
     A("|---|---|---|---:|")
     for _, r in df.iterrows():

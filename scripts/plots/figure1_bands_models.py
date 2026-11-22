@@ -19,8 +19,8 @@ Table 1 / the appendix figure.  Same row order, same whisker/star/hatch rules.
 
 Inputs :  results/analysis/model_smad_results.csv   (scripts/plots/model_comparison_main.py)
           results/reconstruction_bands/bands.csv
-Outputs:  writeup/figures/figure1_bands_models.png / .pdf   (two panels, all models)
-          writeup/figures/figure1_bands_gp.png / .pdf       (single panel, GP models)
+Outputs:  results/figures/figure1_bands_models.png / .pdf   (two panels, all models)
+          results/figures/figure1_bands_gp.png / .pdf       (single panel, GP models)
 
 Band-whisker logic and FORMAT_TO_ANCHOR are reused from scripts/plots/figure1_bands.py.
 
@@ -44,11 +44,12 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from figure1_bands import FORMAT_TO_ANCHOR  # noqa: E402  (same anchor mapping as Figure 1)
 from model_comparison_main import model_configs, FORMAT_ORDER, SMALL_N  # noqa: E402
+from model_comparison_main import cd  # noqa: E402  (clock design: legacy or one_llm)
 
-RESULTS_CSV = PROJECT_ROOT / "results" / "analysis" / "model_smad_results.csv"
+RESULTS_CSV = PROJECT_ROOT / "results" / "analysis" / cd.out_name("model_smad_results.csv")
 BANDS_CSV = PROJECT_ROOT / "results" / "reconstruction_bands" / "bands.csv"
-FIG_OUT = PROJECT_ROOT / "writeup" / "figures" / "figure1_bands_models.png"
-FIG_OUT_GP = PROJECT_ROOT / "writeup" / "figures" / "figure1_bands_gp.png"
+FIG_OUT = PROJECT_ROOT / "results" / "figures" / cd.out_name("figure1_bands_models.png")
+FIG_OUT_GP = PROJECT_ROOT / "results" / "figures" / cd.out_name("figure1_bands_gp.png")
 
 # figure1_bands.py applies the seaborn "talk" theme on import; reset to a
 # paper-sized theme so the two-panel figure is readable at \linewidth.

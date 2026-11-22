@@ -13,18 +13,18 @@ Every anchor is reproduced at its published (central) calibration before perturb
 | Anchor | Source | Paper point | Reproduced | 95% band | 68% band |
 |---|---|---:|---:|---|---|
 | FPSB IPV | Kagel-Levin 1993 FPSB n=5 | 24.7639 | 24.7639 | [22.30, 27.25] | [23.55, 25.97] |
-| SP-APV | Li 2017 SPSB (2P), APV | 9.3100 | 9.3100 | [6.78, 11.74] | [7.99, 10.56] |
+| SP-APV | Li 2017 SPSB (2P), APV | 9.3100 | 9.3100 | [6.82, 11.74] | [8.02, 10.55] |
 | SPSB IPV | Kagel-Levin 1993 SPSB n=5 | 5.6460 | 5.6460 | [4.46, 6.79] | [5.03, 6.23] |
 | TPSB IPV | Kagel-Levin 1993 TPSB n=5 | 7.6566 | 7.6566 | [6.15, 9.15] | [6.92, 8.39] |
-| AC-B | Breitmoser-Schweighofer-Kodritsch 2022 AC-B (closed clock) | 5.8300 | 5.8300 | [2.30, 10.11] | [3.77, 7.75] |
-| AC | Li 2017 Ascending Clock, APV | 3.5400 | 3.5400 | [2.00, 5.36] | [2.69, 4.37] |
+| AC-B | Breitmoser-Schweighofer-Kodritsch 2022 AC-B (closed clock) | 5.4600 | 5.4600 | [2.37, 8.72] | [3.88, 7.09] |
+| AC | Li 2017 Ascending Clock, APV | 3.5400 | 3.5400 | [2.00, 5.37] | [2.67, 4.38] |
 
-For the clock/APV anchors the reproduction test is the published 95% CI: the recomputed symmetric CI matches the CI stored in `plots/auction_human.csv` to rounding:
+For the clock/APV anchors the reproduction test is the published 95% CI: the recomputed symmetric CI matches the CI stored in `data/auction_human.csv` to rounding:
 
 | Anchor | stored CI | recomputed CI | implied SE(MAD) |
 |---|---|---|---:|
 | SP-APV | [6.91, 11.70] | [6.92, 11.71] | 0.855 |
-| AC-B | [2.57, 9.09] | [2.57, 9.09] | 1.081 |
+| AC-B | [2.43, 8.49] | [2.43, 8.49] | 1.082 |
 | AC | [2.00, 5.09] | [2.00, 5.08] | 0.552 |
 
 For the Kagel-Levin sealed-bid IPV anchors, which carry no published CI, the reconstruction is the three-component mixture `b = b*(v)*r` of `sec:reconstruction`. For a `b*(v)=s*v` format the value distribution cancels and `SMAD = 100*E|r-s|/s`, so the anchor is a closed function of the mixture parameters; we solve for the overbid scale `lambda` that reproduces the published SMAD at the central calibration, then perturb the primitives. The FPSB anchor (24.76%) is large because humans bid essentially at value (mean bid/value ratio ~= 1.0 from the KL93 regression) while the risk-neutral equilibrium is `b*=0.8v`; the SMAD is the shading gap `~|1-0.8|/0.8 = 25%`, not bid noise. The band is therefore dominated by uncertainty in the mean bid/value ratio (the regression slope), which we redraw within its reported SE.
@@ -51,7 +51,7 @@ For the Kagel-Levin sealed-bid IPV anchors, which carry no published CI, the rec
 | SP-APV | 9.31% | fig:smad-comparison, 05_validation, 06_ranking, 07_humans |
 | SPSB IPV | 5.65% | fig:smad-comparison, tab:validity-map, 05_validation, 07_humans |
 | TPSB IPV | 7.66% | 07_humans (cardinal), appendix_ablations |
-| AC-B | 5.83% | fig:smad-comparison, 06_ranking, 07_humans |
+| AC-B | 5.46% | fig:smad-comparison, 06_ranking, 07_humans |
 | AC | 3.54% | fig:smad-comparison, 06_ranking, 07_humans |
 
 ## Do the qualitative claims survive the bands?
@@ -60,7 +60,7 @@ Two orderings are load-bearing. We test each with a paired bootstrap (independen
 
 **1. Human FPSB >> SPSB (the 4.4x difficulty gap).** Holds in **100.0%** of draws. The SMAD ratio FPSB/SPSB has median 4.39 with 95% band [3.54, 5.65]. The ordering is robust: the band stays well above 1.
 
-**2. Human clock improvement (AC and AC-B below sealed SP-APV).** AC < SP-APV holds in **100.0%** of draws (SP-APV minus AC: median 5.76, 95% band [2.86, 8.85]). AC-B < SP-APV holds in **92.6%** of draws (SP-APV minus AC-B: median 3.68, 95% band [-1.62, 8.06]).
+**2. Human clock improvement (AC and AC-B below sealed SP-APV).** AC < SP-APV holds in **100.0%** of draws (SP-APV minus AC: median 5.75, 95% band [2.87, 8.83]). AC-B < SP-APV holds in **96.5%** of draws (SP-APV minus AC-B: median 3.84, 95% band [-0.31, 7.84]).
 
 ### Verdict
 

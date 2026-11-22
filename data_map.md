@@ -9,11 +9,11 @@ Last updated: 2026-09-28. This map describes the data used by the current manusc
 | `experiment_logs/V10/` | GPT-4o baseline auctions, clock auctions, common-value runs, and the released eBay closing-rule exports |
 | `robustness_logs/` | Cross-model baselines, GPT-4o temperature checks, and repeated-auction experiments |
 | `experiment_logs/paper_interventions/` | Four-model baseline export, original menu/clock-framing result JSONs, and archived configurations and rule texts |
-| `plots/auction_human.csv` | Human summary-statistic anchors and source-reported direction shares |
+| `data/auction_human.csv` | Human summary-statistic anchors and source-reported direction shares |
 | `results/v12_interventions/moment_matching/` | Synthetic bids reconstructed from published human statistics; used for the first-price direction comparison |
 | `results/reconstruction_bands/` | Recomputed human reconstruction uncertainty |
 | `results/analysis/` | Model deviations, direction shares, rank concordance, intervention effects, and closing-rule summaries |
-| `writeup/figures/`, `writeup/tables/` | Current manuscript figures and LaTeX tables |
+| `results/figures/`, `results/tables/` | Current manuscript figures and LaTeX tables |
 
 ## 1. Laboratory baselines
 
@@ -46,7 +46,7 @@ GPT-5-mini's clock runs produce no usable tick-by-tick bids; they are missing ob
 
 ## 2. Human benchmark reconstructions
 
-`plots/auction_human.csv` collects summary-statistic anchors from the experimental literature. The source reconstruction scripts are `analysis/moment_matching_*.py`; the current uncertainty calculation is `analysis/reconstruction_bands.py`.
+`data/auction_human.csv` collects summary-statistic anchors from the experimental literature. The source reconstruction scripts are `analysis/moment_matching_*.py`; the current uncertainty calculation is `analysis/reconstruction_bands.py`.
 
 These are **synthetic reconstructions, not observed individual human records**. The first-price direction comparison uses the Kagel–Levin reconstruction with five human bidders and the benchmark `0.8 * value`. The truthful formats use source-reported under/equal/over shares. Those human categories need not use the same tolerance as the LLM classification, which excludes bids within 2% of the theoretical benchmark.
 
@@ -91,6 +91,6 @@ The repeated-auction figure uses `robustness_logs/fpsb_ipv_15_rounds/` and `robu
 
 ## Reproduction and historical files
 
-Run `python scripts/reproduce_paper.py --check` from the root after installing `requirements-analysis.txt`. It regenerates the analyses from released inputs without network calls and compares the five principal CSV outputs with their saved versions. The current manuscript source is `writeup/main.tex`; older sources and notebooks were removed and remain available in the Git history.
+Run `python scripts/reproduce_paper.py --check` from the root after installing `requirements-analysis.txt`. It regenerates the analyses from released inputs without network calls and compares the five principal CSV outputs with their saved versions. The current manuscript source is `TEAC_submission/main.tex`; older sources and notebooks were removed and remain available in the Git history.
 
 Raw EDSL cache JSONL files are excluded from Git. Their absence does not prevent offline reproduction, which uses the exported CSVs and result JSONs described above. Generating new model responses requires the simulator dependencies and provider credentials and is distinct from reproducing the reported results.

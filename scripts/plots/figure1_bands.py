@@ -30,9 +30,9 @@ except ImportError:                    # venv has no seaborn -- replicate its lo
     _HAVE_SNS = False
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-PLOTS_DIR = PROJECT_ROOT / "plots"
+PLOTS_DIR = PROJECT_ROOT / "data"
 BANDS_CSV = PROJECT_ROOT / "results" / "reconstruction_bands" / "bands.csv"
-FIG_OUT = PROJECT_ROOT / "writeup" / "figures" / "figure1_bands.png"
+FIG_OUT = PROJECT_ROOT / "results" / "figures" / "figure1_bands.png"
 FIG_OUT_LOCAL = PLOTS_DIR / "figure1_bands.png"
 
 

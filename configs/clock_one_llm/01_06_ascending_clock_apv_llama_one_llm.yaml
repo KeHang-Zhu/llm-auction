@@ -1,0 +1,46 @@
+# Replacement model: meta-llama/Meta-Llama-3-8B-Instruct is no longer served by Expected Parrot (checked 2026-11-13); using meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo.
+# Generated from configs/clock/01_06_ascending_clock_apv_llama.yaml: one LLM bidder (Andy) and two programmed
+# opponents who stay while the next price does not exceed their value.
+experiment:
+  name: ascending_clock_apv_llama_one_llm
+  version: V10
+  description: Ascending Clock Auction with Affiliated Private Values (Llama 3-8B)
+    | one LLM bidder, two truthful programmed opponents
+auction:
+  number_agents: 3
+  rounds: 1
+rule:
+  seal_clock: clock
+  ascend_descend: ascend
+  price_order: second
+  private_value: affiliated
+  open_blind: open
+  closing: false
+  reserve_price: 0
+  special_name: affiliated_ac.txt
+  programmed_opponents: true
+  opponent_strategy: truthful
+  llm_bidder_index: 0
+  observe_after_win: true
+value:
+  common_range:
+  - 0
+  - 29
+  private_range: 20
+  increment: 0.5
+  seed_base: 1399
+llm:
+  model: meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo
+  service_name: deep_infra
+  temperature: 0.5
+prompt:
+  strategy_type: plan_reflection
+  prompt_dir: Prompt/
+  rule_template_dir: rule_template/V10/
+  include_payment_example: true
+execution:
+  repetitions: 50
+  parallel: true
+  max_workers: 5
+  output_dir: experiment_logs/clock_one_llm/ascending_clock_apv_llama_one_llm
+  survey_retries: 8

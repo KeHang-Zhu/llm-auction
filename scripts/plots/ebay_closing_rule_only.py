@@ -27,8 +27,8 @@ All three are computed and written to the summary CSV so the text can be
 matched to whichever definition it quotes.
 
 Outputs
-  writeup/figures/ebay_cdf_closing_only.png / .pdf
-  writeup/figures/ebay_hist_closing_only.png / .pdf   (two-panel histogram, T1 | T2)
+  results/figures/ebay_cdf_closing_only.png / .pdf
+  results/figures/ebay_hist_closing_only.png / .pdf   (two-panel histogram, T1 | T2)
   results/analysis/ebay_closing_rule_summary.csv
 """
 
@@ -48,7 +48,7 @@ import matplotlib.ticker
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE = os.path.join(REPO, "experiment_logs/V10")
-FIGDIR = os.path.join(REPO, "writeup/figures")
+FIGDIR = os.path.join(REPO, "results/figures")
 OUTDIR = os.path.join(REPO, "results/analysis")
 
 TREATMENTS = {

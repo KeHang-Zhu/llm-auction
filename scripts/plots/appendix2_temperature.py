@@ -15,8 +15,11 @@ plt.rcParams['font.size'] = 11
 
 # Base directory
 ROOT = Path(__file__).resolve().parents[2]
+import sys
+sys.path.insert(0, str(ROOT / "analysis"))
+import clock_data as cd  # noqa: E402  (legacy vs one-LLM clock design; CLOCK_DESIGN env var)
 base_dir = ROOT / "robustness_logs"
-OUT = ROOT / "writeup" / "figures"
+OUT = ROOT / "results" / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
 # Define auction types and their parameters
@@ -240,7 +243,7 @@ def load_human_data():
     Returns:
         DataFrame with columns: auction, smad, ci_lower, ci_upper, has_ci
     """
-    df = pd.read_csv(ROOT / 'plots/auction_human.csv')
+    df = pd.read_csv(ROOT / 'data/auction_human.csv')
 
     # Map human format names to standard names
     format_mapping = {
@@ -295,6 +298,9 @@ def load_model_data(auction_key, model_key):
     Returns:
         DataFrame or None if not found
     """
+    if cd.ONE_LLM and auction_configs[auction_key].get('is_clock', False):
+        return cd.load_one_llm(auction_key, "" if model_key == 'gpt4o' else model_key)
+
     # Construct directory name
     dir_name = f"{auction_key}_{model_key}"
     auction_dir = base_dir / dir_name
@@ -319,7 +325,7 @@ def load_gpt4o_base_data():
     Returns:
         DataFrame with columns: auction, model, smad, ci_lower, ci_upper, n
     """
-    df = pd.read_csv(ROOT / 'plots/theoretical_deviation_results_updated.csv')
+    df = pd.read_csv(ROOT / 'data/theoretical_deviation_results_updated.csv')
 
     gpt4o_data = []
     for _, row in df.iterrows():
@@ -360,6 +366,20 @@ def process_all_models():
     print("Loading GPT-4o (temp=0.5) Data from CSV")
     print('='*80)
     gpt4o_df = load_gpt4o_base_data()
+    if cd.ONE_LLM:  # replace the legacy GPT-4o clock rows by the one-LLM cells
+        for akey, acfg in auction_configs.items():
+            if not acfg.get('is_clock', False):
+                continue
+            d = load_model_data(akey, 'gpt4o')
+            if d is None or d.empty:
+                raise FileNotFoundError(f"no one-LLM GPT-4o data for {akey}")
+            st = calculate_deviation(cd.usable_clock_rows(d), acfg)
+            gpt4o_df = gpt4o_df[gpt4o_df['auction'] != acfg['name']]
+            gpt4o_df = pd.concat([gpt4o_df, pd.DataFrame([{
+                'auction': acfg['name'], 'model': 'GPT-4o (temp=0.5)', 'model_key': 'gpt4o',
+                'smad': st['smad'], 'se': st['se'], 'ci_lower': st['ci_lower'],
+                'ci_upper': st['ci_upper'], 'has_ci': True, 'n': st['n_observations']}])],
+                ignore_index=True)
     results.extend(gpt4o_df.to_dict('records'))
     print(f"Loaded {len(gpt4o_df)} GPT-4o (temp=0.5) auction results")
 
@@ -415,7 +435,7 @@ def process_all_models():
                 # For ascending clock auctions, filter to non-winners only
                 if auction_config.get('is_clock', False):
                     original_count = len(df)
-                    df = df[~df['is_winner']].copy()
+                    df = cd.usable_clock_rows(df)
                     filtered_count = len(df)
                     print(f"→ {filtered_count} non-winners", end=" ")
 
@@ -525,7 +545,7 @@ def create_comparison_plot(results_df):
     plt.tight_layout()
 
     # Save figure
-    output_path = OUT / 'appendix2_temperature_comparison.png'
+    output_path = OUT / cd.out_name('appendix2_temperature_comparison.png')
     plt.savefig(output_path, dpi=300, bbox_inches='tight')
     print(f"\n\nPlot saved to: {output_path}")
 
@@ -771,7 +791,7 @@ def main():
     results_df = process_all_models()
 
     # Save results to CSV
-    output_csv = OUT / 'appendix2_temperature_results.csv'
+    output_csv = OUT / cd.out_name('appendix2_temperature_results.csv')
     results_df.to_csv(output_csv, index=False)
     print(f"\n\nResults saved to: {output_csv}")
 

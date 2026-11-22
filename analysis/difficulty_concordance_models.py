@@ -13,7 +13,7 @@ human anchor ranking and the model's SMAD ranking over
     (ii) every format the model has with n >= MIN_N            ("all_usable").
 
 Human anchors (results/reconstruction_bands/bands.csv paper points):
-    FPSB IPV 24.7639, SPSB IPV 5.646, SP-APV 9.31, AC 3.54, AC-B 5.83.
+    FPSB IPV 24.7639, SPSB IPV 5.646, SP-APV 9.31, AC 3.54, AC-B 5.46.
 
 LLM cells:
     GPT-4o            experiment_logs/V10 (the published V10 cells; the
@@ -44,7 +44,7 @@ OUTPUTS
     results/analysis/difficulty_concordance_models.json
     results/analysis/difficulty_concordance_models.md
     results/analysis/difficulty_concordance_models.csv
-    writeup/tables/concordance.tex   (tabular-only booktabs fragment)
+    results/tables/concordance.tex   (tabular-only booktabs fragment)
 
 Run (from repo root):
     python3 analysis/difficulty_concordance_models.py
@@ -77,7 +77,7 @@ MIN_N = 30
 
 ROBUST = PROJECT_ROOT / "robustness_logs"
 OUT_DIR = PROJECT_ROOT / "results" / "analysis"
-TEX_DIR = PROJECT_ROOT / "writeup" / "tables"
+TEX_DIR = PROJECT_ROOT / "results" / "tables"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 TEX_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -101,14 +101,21 @@ IS_CLOCK = {fmt: dc.CELLS[fmt]["clock"] for fmt in FORMATS}
 MODELS = {
     "GPT-4o": dict(source="v10", tex="GPT-4o"),
     "Claude 3.5 Haiku": dict(source="robustness", suffix="claude_sonnet",
-                             model_id="claude-3-5-haiku-20241022", tex="Claude 3.5 Haiku"),
+                             model_id="claude-3-5-haiku-20241022", tex="Claude 3.5 Haiku",
+                             one_llm_clock_model_id="claude-haiku-5-5"),
     "Gemini 2.0 Flash": dict(source="robustness", suffix="gemini",
-                             model_id="gemini-2.0-flash", tex="Gemini 2.0 Flash"),
+                             model_id="gemini-2.0-flash", tex="Gemini 2.0 Flash",
+                             one_llm_clock_model_id="gemini-2.5-flash"),
     "GPT-5-mini": dict(source="robustness", suffix="gpt5mini",
                        model_id="gpt-5-mini", tex="GPT-5-mini"),
     "Llama-3-8B": dict(source="robustness", suffix="llama",
-                       model_id="meta-llama/Meta-Llama-3-8B-Instruct", tex="Llama-3-8B"),
+                       model_id="meta-llama/Meta-Llama-3-8B-Instruct", tex="Llama-3-8B",
+                       one_llm_clock_model_id="meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo"),
 }
+
+# one_llm_clock_model_id: the original model is no longer served by Expected
+# Parrot (checked 2026-11-13), so the one-LLM clock cells query this
+# replacement; sealed-bid cells keep the original model.
 
 # Hand-computed SMADs (verified once from the CSVs) used as a soft
 # consistency check for the robustness models; GPT-4o keeps the hard asserts
@@ -146,14 +153,21 @@ def load_robustness_deviations(spec: dict) -> tuple[dict, dict]:
     devs, notes = {}, {}
     for fmt in FORMATS:
         cell_dir = ROBUST / f"{FORMAT_KEY[fmt]}_{spec['suffix']}"
-        df = _read_cell_dir(cell_dir)
+        if IS_CLOCK[fmt] and dc.cd.ONE_LLM:
+            cell_dir = dc.cd.one_llm_dir(FORMAT_KEY[fmt], spec["suffix"])
+            df = dc.cd.load_one_llm(FORMAT_KEY[fmt], spec["suffix"])
+        else:
+            df = _read_cell_dir(cell_dir)
         if df is None:
             notes[fmt] = "no results CSV"
             continue
         models = set(df["model"].unique())
-        assert models == {spec["model_id"]}, f"{cell_dir}: model ids {models}"
+        expected = spec["model_id"]
+        if IS_CLOCK[fmt] and dc.cd.ONE_LLM:
+            expected = spec.get("one_llm_clock_model_id", expected)
+        assert models == {expected}, f"{cell_dir}: model ids {models}"
         if IS_CLOCK[fmt]:
-            df = df[~df["is_winner"].astype(bool)].copy()
+            df = dc.cd.usable_clock_rows(df)
         devs[fmt] = np.abs(df["bid"].to_numpy(float)
                            - BSTAR[fmt](df["player_value"].to_numpy(float)))
     return devs, notes
@@ -279,7 +293,7 @@ def main():
     hum_full = dc.human_redraw_matrix()
     # cross-check the human re-draws are the published ones
     assert float(np.mean(hum_full[:, 0] > hum_full[:, 1])) == 1.0
-    assert abs(float(np.mean(hum_full[:, 4] < hum_full[:, 2])) - 0.926) < 0.01
+    assert abs(float(np.mean(hum_full[:, 4] < hum_full[:, 2])) - 0.965) < 0.01
 
     results = {
         "statistic": "Kendall tau-b, human vs LLM SMAD ranking, per model",
@@ -304,6 +318,8 @@ def main():
 
         # soft verification against the hand-computed values
         for f, exp in EXPECTED_SMAD.get(name, {}).items():
+            if dc.cd.ONE_LLM and IS_CLOCK[f]:
+                continue  # hand-computed values refer to the legacy clock cells
             got = smads.get(f, np.nan)
             flag = "OK" if abs(got - exp) < 0.01 else "MISMATCH"
             verify_lines.append(f"  {name:17s} {f:8s} expected {exp:7.2f}  got {got:7.2f} (n={ns.get(f, 0):3d})  {flag}")
@@ -341,26 +357,29 @@ def main():
 
     # --- GPT-4o over all five formats must reproduce the single-model script
     g = results["models"]["GPT-4o"]["format_sets"]["all_usable"]
-    assert g["n_formats"] == 5
-    assert abs(g["tau_point"] - 0.6) < 1e-12
-    assert g["layer_a_llm_bootstrap"]["ci95"] == [0.6, 0.6], g["layer_a_llm_bootstrap"]["ci95"]
-    assert g["layer_c_joint"]["ci95"] == [0.4, 1.0], g["layer_c_joint"]["ci95"]
-    assert g["layer_c_joint"]["frac_tau_positive"] == 1.0
-    ref_path = OUT_DIR / "difficulty_concordance.json"
-    if ref_path.exists():
+    if not dc.cd.ONE_LLM:  # published legacy values; the one-LLM clock cells change them
+        assert g["n_formats"] == 5
+        assert abs(g["tau_point"] - 0.6) < 1e-12
+        assert g["layer_a_llm_bootstrap"]["ci95"] == [0.6, 0.6], g["layer_a_llm_bootstrap"]["ci95"]
+        assert g["layer_c_joint"]["ci95"] == [0.4, 1.0], g["layer_c_joint"]["ci95"]
+        assert g["layer_c_joint"]["frac_tau_positive"] == 1.0
+    ref_path = OUT_DIR / dc.cd.out_name("difficulty_concordance.json")
+    # Compare only when both use all five formats (a one-LLM clock cell can
+    # fall below MIN_N here, while difficulty_concordance.py keeps all five).
+    if ref_path.exists() and g["n_formats"] == 5:
         ref = json.loads(ref_path.read_text())
         assert ref["layer_a_llm_bootstrap"]["ci95"] == g["layer_a_llm_bootstrap"]["ci95"]
         assert ref["layer_c_joint"]["ci95"] == g["layer_c_joint"]["ci95"]
         results["crosscheck_vs_difficulty_concordance_json"] = "GPT-4o all-five layer CIs identical"
 
     # --- write JSON / CSV
-    (OUT_DIR / "difficulty_concordance_models.json").write_text(json.dumps(results, indent=2))
+    (OUT_DIR / dc.cd.out_name("difficulty_concordance_models.json")).write_text(json.dumps(results, indent=2))
     csv_cols = ["model", "format_set", "n_formats", "formats", "tau_point",
                 "ci_llm_lo", "ci_llm_hi", "ci_human_lo", "ci_human_hi",
                 "ci_joint_lo", "ci_joint_hi", "p_tau_pos_joint",
                 "fpsb_hardest_share", "fpsb_gt_spsb_share"]
     csv_df = pd.DataFrame(csv_rows, columns=csv_cols)
-    csv_df.to_csv(OUT_DIR / "difficulty_concordance_models.csv", index=False)
+    csv_df.to_csv(OUT_DIR / dc.cd.out_name("difficulty_concordance_models.csv"), index=False)
 
     # --- markdown
     def pct(x):
@@ -504,7 +523,7 @@ CIs are wider; clock cells with n = 2 or 8 (Claude AC-B, Gemini AC, Llama AC/AC-
 reported but excluded from every tau; with k <= 5 formats tau-b is a coarse statistic taking
 few values, and with k = 3 a single discordant pair moves it by 2/3.
 """
-    (OUT_DIR / "difficulty_concordance_models.md").write_text(md)
+    (OUT_DIR / dc.cd.out_name("difficulty_concordance_models.md")).write_text(md)
 
     # --- LaTeX tabular fragment (booktabs; no table env / caption / label)
     tex_lines = [
@@ -525,7 +544,7 @@ few values, and with k = 3 a single discordant pair moves it by 2/3.
             f"{fp_sign} ({au['fpsb_gt_spsb_share_llm']*100:.0f}\\%) \\\\"
         )
     tex_lines += [r"\bottomrule", r"\end{tabular}"]
-    (TEX_DIR / "concordance.tex").write_text("\n".join(tex_lines) + "\n")
+    (TEX_DIR / dc.cd.out_name("concordance.tex")).write_text("\n".join(tex_lines) + "\n")
 
     # --- console
     print("SMAD verification vs hand-computed values (robustness models):")

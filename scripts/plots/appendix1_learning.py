@@ -2,7 +2,7 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / "writeup" / "figures"
+OUT = ROOT / "results" / "figures"
 OUT.mkdir(parents=True, exist_ok=True)
 
 import pandas as pd

@@ -20,7 +20,7 @@ For each temperature it recomputes every cell from bid level and reports
     price, eps = winner's signal - common value; see
     scripts/plots/appendix2_temperature.py::calculate_cv_deviation_from_json);
   * Kendall tau-b vs the reconstructed-human ranking (FPSB IPV 24.7639, SPSB IPV
-    5.646, SP-APV 9.31, AC 3.54, AC-B 5.83) over (a) the three sealed private-
+    5.646, SP-APV 9.31, AC 3.54, AC-B 5.46) over (a) the three sealed private-
     value formats and (b) every private-value format with n >= 30 non-winning
     bids, with the three uncertainty layers of difficulty_concordance.py
     (LLM within-cell bid resampling; human reconstruction re-draws; joint;
@@ -35,7 +35,7 @@ For each temperature it recomputes every cell from bid level and reports
   * a reproduction of the paper's temperature table with the exact method of
     scripts/plots/appendix2_temperature.py (first CSV per cell, non-winners for
     clock cells, JSON winner-profit method for CV, T=0.5 from
-    plots/theoretical_deviation_results_updated.csv), flagging any mismatch.
+    data/theoretical_deviation_results_updated.csv), flagging any mismatch.
 
 Cells
 -----
@@ -55,7 +55,7 @@ OUTPUTS
     results/analysis/temperature_concordance.json
     results/analysis/temperature_concordance.csv     (one row per temperature x format)
     results/analysis/temperature_concordance.md
-    writeup/tables/temperature_robustness.tex    (tabular-only booktabs fragment)
+    results/tables/temperature_robustness.tex    (tabular-only booktabs fragment)
 
 Run (from repo root):
     python3 analysis/temperature_concordance.py
@@ -117,7 +117,7 @@ TEMPS = ["0.1", "0.5", "1.0"]
 SUFFIX = {"0.1": "gpt4o_temp01", "1.0": "gpt4o_temp10"}
 PAIRS = [("0.1", "0.5"), ("0.5", "1.0"), ("0.1", "1.0")]
 
-# writeup/main.tex, tab:temperature_comparison (T = 0.1, 0.5, 1.0)
+# TEAC_submission/main.tex, tab:temperature_comparison (T = 0.1, 0.5, 1.0)
 PAPER_TABLE = {
     "AC-B": (0.00, 0.47, 2.15), "AC": (0.00, 0.81, 1.00), "SPSB IPV": (14.77, 8.69, 12.89),
     "SP-APV": (12.87, 10.73, 12.75), "FP-CV": (39.00, 59.99, 42.92),
@@ -126,10 +126,10 @@ PAPER_TABLE = {
 
 V10 = PROJECT_ROOT / "experiment_logs" / "V10"
 ROBUST = PROJECT_ROOT / "robustness_logs"
-PUBLISHED_T05 = PROJECT_ROOT / "plots" / "theoretical_deviation_results_updated.csv"
-HUMAN_CSV = PROJECT_ROOT / "plots" / "auction_human.csv"
+PUBLISHED_T05 = PROJECT_ROOT / "data" / "theoretical_deviation_results_updated.csv"
+HUMAN_CSV = PROJECT_ROOT / "data" / "auction_human.csv"
 OUT_DIR = PROJECT_ROOT / "results" / "analysis"
-TEX_DIR = PROJECT_ROOT / "writeup" / "tables"
+TEX_DIR = PROJECT_ROOT / "results" / "tables"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 TEX_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -193,7 +193,17 @@ def _meta(df: pd.DataFrame) -> dict:
 
 def private_cell(fmt: str, T: str) -> tuple[pd.DataFrame | None, str, dict]:
     """Per-bid frame (value, bid, bstar, dev = bid - bstar), source note and meta for one cell."""
-    if T == "0.5":
+    if dcm.IS_CLOCK[fmt] and dc.cd.ONE_LLM:
+        suffix = "" if T == "0.5" else SUFFIX[T]
+        cell_dir = dc.cd.one_llm_dir(dcm.FORMAT_KEY[fmt], suffix)
+        df = dc.cd.load_one_llm(dcm.FORMAT_KEY[fmt], suffix)
+        if df is None or df.empty:
+            return None, f"no one-LLM data in {rel(cell_dir)}", {}
+        assert set(df["model"].unique()) == {"gpt-4o"}, f"{cell_dir}: model ids {set(df['model'])}"
+        assert np.allclose(df["temperature"].astype(float), float(T)), f"{cell_dir}: temperature column != {T}"
+        source = rel(cell_dir) + " (one-LLM design)"
+        meta = _meta(df)
+    elif T == "0.5":
         cfg = dc.CELLS[fmt]
         df = pd.read_csv(cfg["csv"])
         source = rel(cfg["csv"])
@@ -227,7 +237,7 @@ def private_cell(fmt: str, T: str) -> tuple[pd.DataFrame | None, str, dict]:
         warnings.warn(f"{fmt} T={T}: dropping {n_nan} NaN bids")
         df = df.dropna(subset=["bid"])
     if dcm.IS_CLOCK[fmt]:
-        df = df[~df["is_winner"].astype(bool)]
+        df = dc.cd.usable_clock_rows(df)
     out = pd.DataFrame({"value": df["player_value"].to_numpy(float), "bid": df["bid"].to_numpy(float)})
     out["bstar"] = dcm.BSTAR[fmt](out["value"].to_numpy())
     out["dev"] = out["bid"] - out["bstar"]
@@ -324,7 +334,7 @@ def human_direction() -> dict:
         row = h[h["Auction"] == label].iloc[0]
         u, e, o = float(row["Underbid"]), float(row["Equalbid"]), float(row["Overbid"])
         out[fmt] = {"under_share_dev": u / (u + o), "over_share_dev": o / (u + o),
-                    "within_share": e / (u + e + o), "source": f"plots/auction_human.csv: {label}"}
+                    "within_share": e / (u + e + o), "source": f"data/auction_human.csv: {label}"}
     cvh = {r["Auction"]: float(r["SMAD"]) for _, r in h.iterrows()
            if r["Auction"] in ("First-Price Common Value", "Second-Price Common Value")}
     out["human_cv_smad"] = {"FP-CV": cvh["First-Price Common Value"], "SP-CV": cvh["Second-Price Common Value"]}
@@ -367,7 +377,7 @@ def main():
 
     hum_full = dc.human_redraw_matrix()
     assert float(np.mean(hum_full[:, 0] > hum_full[:, 1])) == 1.0
-    assert abs(float(np.mean(hum_full[:, 4] < hum_full[:, 2])) - 0.926) < 0.01
+    assert abs(float(np.mean(hum_full[:, 4] < hum_full[:, 2])) - 0.965) < 0.01
 
     hdir = human_direction()
 
@@ -559,7 +569,7 @@ def main():
         "cell_provenance_seed_bases_dates": prov,
         "verdict_flags": verdict,
     }
-    (OUT_DIR / "temperature_concordance.json").write_text(json.dumps(results, indent=2, default=float))
+    (OUT_DIR / dc.cd.out_name("temperature_concordance.json")).write_text(json.dumps(results, indent=2, default=float))
 
     # --- CSV: one row per temperature x format
     rows = []
@@ -589,7 +599,7 @@ def main():
                 "spapv_gt_spsb": per_temp[T]["spapv_gt_spsb_point"],
                 "spapv_gt_spsb_boot_share": round(per_temp[T]["spapv_gt_spsb_share_boot"], 4),
             })
-    pd.DataFrame(rows).to_csv(OUT_DIR / "temperature_concordance.csv", index=False)
+    pd.DataFrame(rows).to_csv(OUT_DIR / dc.cd.out_name("temperature_concordance.csv"), index=False)
 
     # --- LaTeX fragment
     def tex_cell(T, fmt):
@@ -624,9 +634,10 @@ def main():
     L = [
         "% Auto-generated by analysis/temperature_concordance.py -- do not edit by hand.",
         "% GPT-4o at sampling temperature T. Private-value rows: SMAD = 100*mean|b - b*(v)|/25, b* = (2/3)v for FPSB (N=3) and v otherwise;",
-        "%   clock rows (AC, AC-B) non-winners only. CV rows: 100*mean|pi_winner - pi*|/20 per round (the paper's temperature-table method).",
+        ("%   clock rows (AC, AC-B): uncensored LLM exit prices (one-LLM design)." if dc.cd.ONE_LLM
+         else "%   clock rows (AC, AC-B) non-winners only.") + " CV rows: 100*mean|pi_winner - pi*|/20 per round (the paper's temperature-table method).",
         "%   (n) = bids (private) or rounds (CV). $^{\\dagger}$ = n < 30, excluded from every tau; --- = no runs exist.",
-        "% tau rows: point Kendall tau-b vs the reconstructed-human SMAD ranking (FPSB IPV 24.76, SPSB IPV 5.65, SP-APV 9.31, AC 3.54, AC-B 5.83);",
+        "% tau rows: point Kendall tau-b vs the reconstructed-human SMAD ranking (FPSB IPV 24.76, SPSB IPV 5.65, SP-APV 9.31, AC 3.54, AC-B 5.46);",
         "%   second line = joint 95% CI (LLM within-cell bid resampling x human reconstruction re-draws, B=2000, seed 1299), k = formats used.",
         f"%   P(tau_b > 0) in joint draws -- 3 sealed: {p_line('sealed3')}; all n>=30: {p_line('all_usable')}.",
         "% Sign rows: point sign, with the share of B=2000 within-cell bootstrap draws preserving it. Direction rows: share of bids",
@@ -652,7 +663,7 @@ def main():
     L.append(r"SPSB IPV: under-share of deviating bids & " + " & ".join(tex_dir(T, "SPSB IPV") for T in TEMPS) + r" \\")
     L.append(r"SP-APV: under-share of deviating bids & " + " & ".join(tex_dir(T, "SP-APV") for T in TEMPS) + r" \\")
     L += [r"\bottomrule", r"\end{tabular}"]
-    (TEX_DIR / "temperature_robustness.tex").write_text("\n".join(L) + "\n")
+    (TEX_DIR / dc.cd.out_name("temperature_robustness.tex")).write_text("\n".join(L) + "\n")
 
     # --- Markdown
     def f2(x):
@@ -837,7 +848,7 @@ b* = (N−1)/(N−2)·v per `build_auction_cells.rne_bstar`, "capped" = b* cappe
 
 Method of `scripts/plots/appendix2_temperature.py`: first results CSV per cell, non-winners for clock cells,
 scaling 25; CV from raw_data JSON (winner profit per round, scaling 20); T=0.5 read from
-`plots/theoretical_deviation_results_updated.csv`. "this script" = the concatenated/de-duplicated cells above.
+`data/theoretical_deviation_results_updated.csv`. "this script" = the concatenated/de-duplicated cells above.
 
 | Format | T | paper table | paper method | n | this script | n | status |
 |---|---|---:|---:|---:|---:|---:|---|
@@ -853,7 +864,7 @@ of the paper's table (0.00 / 0.47 / 2.15) compares nothing, n=114 and n=8.
 
 ## Kendall tau-b vs the reconstructed-human ranking, by temperature
 
-Human anchors: FPSB IPV 24.76, SPSB IPV 5.65, SP-APV 9.31, AC 3.54, AC-B 5.83. Layers as in
+Human anchors: FPSB IPV 24.76, SPSB IPV 5.65, SP-APV 9.31, AC 3.54, AC-B 5.46. Layers as in
 `difficulty_concordance.py`: (a) LLM within-cell bid resampling with the human ranking fixed; (b) human
 reconstruction re-draws with the LLM ranking fixed; (c) joint. Percentages are P(tau > 0) in that layer.
 With k formats and no ties tau-b takes k(k−1)/2+1 values (k=3: {{−1, −1/3, +1/3, +1}}).
@@ -934,7 +945,7 @@ profit-based with a different normalizer (20) than the private-value SMAD (25) a
 private-value formats here. Clock cells at T=0.1 (AC none, AC-B n={acb_t01['n']}) and AC-B at T=1.0
 (n={acb_t10['n']}) are too small to say anything.
 """
-    (OUT_DIR / "temperature_concordance.md").write_text(md)
+    (OUT_DIR / dc.cd.out_name("temperature_concordance.md")).write_text(md)
 
     # --- console
     print(json_note)

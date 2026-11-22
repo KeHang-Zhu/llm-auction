@@ -1,0 +1,22 @@
+% Human benchmark sources: one row per auction format.
+% Columns follow the data-source-tables skill: source and treatment -> unit -> reported statistic -> mapping -> benchmark.
+\begin{table}[tbp]
+  \centering\color{blue}% revised: new source table
+  \scriptsize
+  \caption{\textbf{Sources of the human benchmarks.} Each benchmark is computed from summary statistics printed in the original article; no individual human records are used. ``Reported statistic'' names the published quantities and where they appear; ``Mapping'' gives the formula that converts them into the scaled deviation $\Delta_m$ of Section~\ref{sec:method}. Citations identify the source of each statistic; the mappings and the resulting benchmark values are ours. Appendix~\ref{app:human_records} gives the numerical inputs and the reconstruction code for each row.}
+  \label{tab:human_sources}
+  \setlength{\tabcolsep}{3pt}
+  \begin{tabular}{@{}p{0.11\textwidth}p{0.22\textwidth}p{0.27\textwidth}p{0.24\textwidth}r@{}}
+    \toprule
+    Format & Source and treatment & Reported statistic (location) & Mapping to $\Delta_m$ & $\Delta_m$ \\
+    \midrule
+    FPSB IPV & \citet{kagel1993independent}; sealed first price, $N=5$, inexperienced and experienced series pooled & Bid regression $\hat\alpha,\hat\beta,R^2$; shares of bids below, at, and above value (Table~2) & Mean bid from the regression, weights from the shares; the two conflict, so shape parameters are set, not estimated (Sec.~\ref{sec:kl93_conflict}); $b^\star=\tfrac{4}{5}x$ & 24.76 \\
+    SPSB IPV & \citet{kagel1993independent}; sealed second price, $N=5$, pooled & Same statistics as FPSB (Table~2) & Same parameter setting; $b^\star=x$ & 5.65 \\
+    SP-APV & \citet{li2017obviously}; sealed second price, affiliated private values & Mean absolute difference between the second-highest bid and the second-highest value, with standard errors, for rounds 1--5 and 6--10 (Table~3, SP column); histogram of the same difference (Figure~2(a)) & $100\cdot\mathrm{MAD}/\mathbb{E}[v]$, MAD averaged over the two blocks, $\mathbb{E}[v]=70$ & 9.31 \\
+    AC & \citet{li2017obviously}; open ascending clock, affiliated private values & Same statistics (Table~3 and Figure~2(a), OSP) & Same mapping & 3.54 \\
+    AC-B & \citet{breitmoser2022obviousness}; ascending clock without dropout information (treatment AC-B) & Mean absolute deviation of bids from values by round block, and shares of bids more than \$1 above and below value (Appendix Table~2 of the working-paper version \citep{breitmoser2019obviousness}) & $100\cdot\mathrm{MAD}/\mathbb{E}[v]$, MAD averaged over rounds, $\mathbb{E}[v]=70$ & 5.46 \\
+    FP-CV & \citet{kagel1986winner}; sealed first price, common value, small/medium/large signal ranges pooled & Mean realized profit $\bar\pi$ and risk-neutral predicted profit $\bar\pi^\star$ by auction series (Table~2) & $100\cdot|\bar\pi-\bar\pi^\star|/\bar\pi^\star$ & 47.59 \\
+    SP-CV & \citet{levin1996revenue}; English (ascending) auction, common value, used as the second-price comparison & Mean realized profit and predicted profit by signal range and number of bidders (Table~2) & $100\cdot|\bar\pi-\bar\pi^\star|/\bar\pi^\star$ & 18.23 \\
+    \bottomrule
+  \end{tabular}
+\end{table}

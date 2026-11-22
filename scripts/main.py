@@ -149,7 +149,12 @@ class ExperimentOrchestrator:
             include_payment_example=include_payment_example,
             payment_example_key=payment_example_key,
             payment_examples_path=payment_examples_path,
-            templates_dir=rule_template_dir
+            templates_dir=rule_template_dir,
+            programmed_opponents=rule_config.get('programmed_opponents', False),
+            opponent_strategy=rule_config.get('opponent_strategy', 'truthful'),
+            llm_bidder_index=rule_config.get('llm_bidder_index', 0),
+            observe_after_win=rule_config.get('observe_after_win', True),
+            survey_retries=self.config.get('execution.survey_retries', 5)
         )
 
         return rule
@@ -181,6 +186,7 @@ class ExperimentOrchestrator:
         model = self.config.model_name
         temperature = self.config.temperature
         service_name = getattr(self.config, 'service_name', None)
+        model_params = getattr(self.config, 'model_params', {}) or {}
         num_agents = self.config.num_agents
 
         if strategy_type == 'ebay':
@@ -206,7 +212,8 @@ class ExperimentOrchestrator:
                 cache=cache,
                 model=model,
                 temperature=temperature,
-                service_name=service_name
+                service_name=service_name,
+                model_params=model_params
             )
             logger.debug(f"Created Auction_plan (run {run_id})")
 
@@ -221,7 +228,8 @@ class ExperimentOrchestrator:
                 cache=cache,
                 model=model,
                 temperature=temperature,
-                service_name=service_name
+                service_name=service_name,
+                model_params=model_params
             )
 
         return auction

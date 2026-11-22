@@ -14,12 +14,12 @@ Formats (5) and canonical SMAD anchors:
     SPSB IPV                      5.6460                   8.6859  (n=270)
     SP-APV  (sealed SPSB, APV)    9.3100                  10.7340  (n=291)
     AC      (open clock, APV)     3.5400                   0.8113  (n=106)
-    AC-B    (closed clock, APV)   5.8300                   0.4737  (n=114)
+    AC-B    (closed clock, APV)   5.4600                   0.4737  (n=114)
 
 Human anchors are the moment-matched reconstructions of sec:reconstruction
 (paper points in results/reconstruction_bands/bands.csv).  GPT-4o SMADs are
 recomputed here from bid level (experiment_logs/V10, the same cells behind
-plots/theoretical_deviation_results_updated.csv) and asserted against the
+data/theoretical_deviation_results_updated.csv) and asserted against the
 published values before anything else runs.
 
 UNCERTAINTY (two layers)
@@ -36,7 +36,7 @@ UNCERTAINTY (two layers)
     fragility_checks() in that script EXACTLY -- same seed (1299+7), same rng
     call order (FPSB, SPSB, SP-APV, AC, AC-B), same B=2000 -- so the re-draw
     vectors here are the same ones behind the published band facts
-    (FPSB>SPSB in 100.0% of draws, AC-B<SP-APV in 92.6%).  We recompute tau-b
+    (FPSB>SPSB in 100.0% of draws, AC-B<SP-APV in 96.5%).  We recompute tau-b
     of each human re-draw vector against the FIXED canonical GPT-4o ranking.
 
 (c) Joint.  Pair LLM-bootstrap draw b with human re-draw b (independent
@@ -69,6 +69,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "analysis"))
 # Reuse the published calibration configs + helpers from the bands script so
 # the human re-draws cannot drift from the ones the paper already reports.
 import reconstruction_bands as rb  # noqa: E402  (KL, CLOCK, kl_mean_ratio, Z95)
+import clock_data as cd  # noqa: E402  (legacy vs one-LLM clock design; CLOCK_DESIGN env var)
 
 SEED = 1299
 B = 2000
@@ -81,9 +82,9 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 FORMATS = ["FPSB IPV", "SPSB IPV", "SP-APV", "AC", "AC-B"]
 
 # Human paper points (results/reconstruction_bands/bands.csv, column paper_point).
-HUMAN_SMAD = np.array([24.7639, 5.646, 9.31, 3.54, 5.83])
+HUMAN_SMAD = np.array([24.7639, 5.646, 9.31, 3.54, 5.46])
 
-# Published GPT-4o SMADs (plots/theoretical_deviation_results_updated.csv);
+# Published GPT-4o SMADs (data/theoretical_deviation_results_updated.csv);
 # the bid-level recomputation below must reproduce these before we proceed.
 LLM_SMAD_PUBLISHED = np.array([27.551813, 8.685926, 10.734021, 0.811321, 0.473684])
 LLM_N_PUBLISHED = np.array([285, 270, 291, 106, 114])
@@ -110,6 +111,7 @@ CELLS = {
         csv=LOGS / "ascending_clock_apv_closed/ascending_clock_apv_closed_merged_results.csv",
         bstar=lambda v: v, clock=True),
 }
+CLOCK_KEY = {"AC": "ascending_clock_apv", "AC-B": "ascending_clock_apv_closed"}
 
 
 # ---------------------------------------------------------------------------
@@ -147,16 +149,22 @@ def load_llm_deviations():
     for fmt in FORMATS:
         cfg = CELLS[fmt]
         df = pd.read_csv(cfg["csv"])
+        if cfg["clock"] and cd.ONE_LLM:
+            df = cd.load_one_llm(CLOCK_KEY[fmt])
+            if df is None:
+                raise FileNotFoundError(f"{fmt}: no one-LLM data in {cd.one_llm_dir(CLOCK_KEY[fmt])}")
         assert set(df["model"].unique()) == {"gpt-4o"}, f"{fmt}: non-GPT-4o rows"
         if cfg["clock"]:
-            df = df[~df["is_winner"]].copy()
+            df = cd.usable_clock_rows(df)
         devs[fmt] = np.abs(df["bid"].to_numpy(float)
                            - cfg["bstar"](df["player_value"].to_numpy(float)))
     smads = np.array([100.0 * devs[f].mean() / SCALING for f in FORMATS])
     ns = np.array([len(devs[f]) for f in FORMATS])
-    assert np.allclose(smads, LLM_SMAD_PUBLISHED, atol=1e-4), \
+    sealed = np.array([not CELLS[f]["clock"] for f in FORMATS])
+    check = sealed if cd.ONE_LLM else np.ones(len(FORMATS), bool)  # clock cells change in one_llm mode
+    assert np.allclose(smads[check], LLM_SMAD_PUBLISHED[check], atol=1e-4), \
         f"bid-level SMADs {smads} != published {LLM_SMAD_PUBLISHED}"
-    assert (ns == LLM_N_PUBLISHED).all(), f"cell sizes {ns} != {LLM_N_PUBLISHED}"
+    assert (ns[check] == LLM_N_PUBLISHED[check]).all(), f"cell sizes {ns} != {LLM_N_PUBLISHED}"
     return devs, smads, ns
 
 
@@ -258,7 +266,7 @@ def main():
     # cross-check against the published band facts (bands_summary.md)
     frac_acb_lt_spapv = float(np.mean(hum[:, 4] < hum[:, 2]))
     assert frac_b_fpsb == 1.0, frac_b_fpsb
-    assert abs(frac_acb_lt_spapv - 0.926) < 0.01, frac_acb_lt_spapv
+    assert abs(frac_acb_lt_spapv - 0.965) < 0.01, frac_acb_lt_spapv
 
     # --- layer (c): joint (LLM bootstrap draw b x human re-draw b)
     taus_j = np.array([kendall_tau_b(hum[b], llm_boot[b]) for b in range(B)])
@@ -295,7 +303,7 @@ def main():
             "ci95": ci_b.tolist(),
             "frac_tau_positive": frac_b_pos,
             "frac_fpsb_gt_spsb_human": frac_b_fpsb,
-            "crosscheck_frac_acb_lt_spapv_published_0.926": frac_acb_lt_spapv,
+            "crosscheck_frac_acb_lt_spapv_published_0.965": frac_acb_lt_spapv,
             "tau_distribution": dist(taus_b),
         },
         "layer_c_joint": {
@@ -307,7 +315,7 @@ def main():
             "tau_distribution": dist(taus_j),
         },
     }
-    (OUT_DIR / "difficulty_concordance.json").write_text(json.dumps(results, indent=2))
+    (OUT_DIR / cd.out_name("difficulty_concordance.json")).write_text(json.dumps(results, indent=2))
 
     md = f"""# Difficulty-ordering concordance: reconstructed humans vs GPT-4o
 
@@ -331,7 +339,7 @@ ties): both discordances involve AC-B, whose human anchor (Breitmoser 2022) sits
 between SPSB IPV and SP-APV while GPT-4o puts both clock formats at the bottom.
 The human re-draws (layer b) replicate `reconstruction_bands.fragility_checks`
 exactly (same seed/call order), so the published band facts are reproduced here
-(FPSB>SPSB in {frac_b_fpsb*100:.1f}% of draws; AC-B<SP-APV in {frac_acb_lt_spapv*100:.1f}%, published 92.6%).
+(FPSB>SPSB in {frac_b_fpsb*100:.1f}% of draws; AC-B<SP-APV in {frac_acb_lt_spapv*100:.1f}%, published 96.5%).
 
 Note the layer-(a) percentile CI is degenerate at [{ci_a[0]:.2f}, {ci_a[1]:.2f}]: the GPT-4o
 ranking is stable under bid resampling ({dist(taus_a).get("0.6", 0)/B*100:.1f}% of draws leave tau at
@@ -351,14 +359,14 @@ parametric bootstrap of `analysis/reconstruction_bands.py`), not human sampling
 error; the LLM CI treats bids as i.i.d. within cells (no clustering by
 round/session); with n=5 formats tau-b is a coarse statistic taking few values.
 """
-    (OUT_DIR / "difficulty_concordance.md").write_text(md)
+    (OUT_DIR / cd.out_name("difficulty_concordance.md")).write_text(md)
 
     print(f"tau point = {tau_point:.4f} (scipy cross-check OK)")
     print(f"(a) LLM bootstrap  : 95% CI [{ci_a[0]:.3f}, {ci_a[1]:.3f}]  "
           f"tau>0 {frac_a_pos*100:.1f}%  FPSB>SPSB {frac_a_fpsb*100:.1f}%")
     print(f"(b) human re-draws : 95% CI [{ci_b[0]:.3f}, {ci_b[1]:.3f}]  "
           f"tau>0 {frac_b_pos*100:.1f}%  FPSB>SPSB {frac_b_fpsb*100:.1f}%  "
-          f"(AC-B<SP-APV {frac_acb_lt_spapv*100:.1f}%, published 92.6%)")
+          f"(AC-B<SP-APV {frac_acb_lt_spapv*100:.1f}%, published 96.5%)")
     print(f"(c) joint          : 95% CI [{ci_j[0]:.3f}, {ci_j[1]:.3f}]  "
           f"tau>0 {frac_j_pos*100:.1f}%  FPSB>SPSB both {frac_j_fpsb*100:.1f}%")
     print(f"Wrote {OUT_DIR/'difficulty_concordance.json'} and .md")

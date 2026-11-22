@@ -28,8 +28,8 @@ SMAD conventions (identical to appendix2_model.py):
 
 Outputs (all paths relative to the repo root):
   results/analysis/model_smad_results.csv
-  writeup/tables/model_comparison.tex     (tabular-only fragment, booktabs)
-  writeup/figures/model_comparison_smad.png / .pdf
+  results/tables/model_comparison.tex     (tabular-only fragment, booktabs)
+  results/figures/model_comparison_smad.png / .pdf
 
 Run (from anywhere):
     python3 scripts/plots/model_comparison_main.py
@@ -53,12 +53,15 @@ import seaborn as sns
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 V10_DIR = PROJECT_ROOT / "experiment_logs" / "V10"
 ROBUST_DIR = PROJECT_ROOT / "robustness_logs"
-HUMAN_CSV = PROJECT_ROOT / "plots" / "auction_human.csv"
+HUMAN_CSV = PROJECT_ROOT / "data" / "auction_human.csv"
 BANDS_CSV = PROJECT_ROOT / "results" / "reconstruction_bands" / "bands.csv"
 
-OUT_CSV = PROJECT_ROOT / "results" / "analysis" / "model_smad_results.csv"
-OUT_TEX = PROJECT_ROOT / "writeup" / "tables" / "model_comparison.tex"
-OUT_FIG = PROJECT_ROOT / "writeup" / "figures" / "model_comparison_smad.png"
+sys.path.insert(0, str(PROJECT_ROOT / "analysis"))
+import clock_data as cd  # noqa: E402  (legacy vs one-LLM clock design; CLOCK_DESIGN env var)
+
+OUT_CSV = PROJECT_ROOT / "results" / "analysis" / cd.out_name("model_smad_results.csv")
+OUT_TEX = PROJECT_ROOT / "results" / "tables" / cd.out_name("model_comparison.tex")
+OUT_FIG = PROJECT_ROOT / "results" / "figures" / cd.out_name("model_comparison_smad.png")
 
 # --------------------------------------------------------------------------- #
 # Style
@@ -175,7 +178,7 @@ model_configs = {
 }
 MODEL_ORDER = list(model_configs.keys())
 LLM_KEYS = [k for k in MODEL_ORDER if k != "human"]
-SMALL_N = 30  # cells with n < SMALL_N are flagged (dagger / hatch)
+SMALL_N = 0  # small-n flagging (dagger / hatch) disabled: the smallest cells have 29 of 30 planned rounds
 # GPT-5-mini's two ascending-clock cells (author's description, 2026-09-23): the model states the
 # dominant strategy outright and does not complete the tick-by-tick clock procedure in any run,
 # so no bids are recorded. Rendered as DS with a double dagger; excluded from every statistic;
@@ -361,6 +364,9 @@ def _concat_and_dedupe(files, label):
 def load_model_bids(auction_key, model_key):
     """Bid-level DataFrame for an IPV/APV cell, or None if the cell was not run."""
     cfg = model_configs[model_key]
+    if cd.ONE_LLM and auction_configs[auction_key].get("is_clock", False):
+        suffix = "" if cfg["source"] == "v10" else model_key
+        return cd.load_one_llm(auction_key, suffix)
     if cfg["source"] == "v10":
         auction_dir = V10_DIR / auction_key
         if auction_configs[auction_key].get("is_clock", False):
@@ -412,7 +418,7 @@ def compute_cell(auction_key, model_key):
     if df is None or df.empty:
         return None
     if acfg.get("is_clock", False):
-        df = df[~df["is_winner"].astype(bool)].copy()
+        df = cd.usable_clock_rows(df)
         if df.empty:
             return None
     return calculate_deviation(df, acfg)
@@ -428,7 +434,7 @@ def parse_ci_string(ci_str):
 
 
 def load_human_data():
-    """Human anchors from plots/auction_human.csv with 95% MC calibration
+    """Human anchors from data/auction_human.csv with 95% MC calibration
     bands from results/reconstruction_bands/bands.csv (NaN where no band)."""
     df = pd.read_csv(HUMAN_CSV)
     bands = pd.read_csv(BANDS_CSV).set_index("anchor")
@@ -504,11 +510,17 @@ def process_all_models():
 # --------------------------------------------------------------------------- #
 # Checks
 # --------------------------------------------------------------------------- #
+AUCTION_KEY_BY_NAME = {c["name"]: k for k, c in auction_configs.items()}
+
+
 def run_checks(res):
     print("\n" + "=" * 78)
     print("GPT-4o assertions (published SMADs, 2 dp)")
     g = res[res["model_key"] == "gpt4o"].set_index("auction")
     for fmt, exp in GPT4O_EXPECTED.items():
+        if cd.ONE_LLM and auction_configs.get(AUCTION_KEY_BY_NAME.get(fmt, ""), {}).get("is_clock", False):
+            print(f"  {fmt:<22s} skipped (one-LLM clock design; published value is legacy)")
+            continue
         got = g.loc[fmt, "smad"]
         ok = round(float(got), 2) == exp
         print(f"  {fmt:<22s} computed {got:8.4f}  expected {exp:6.2f}  {'OK' if ok else 'MISMATCH'}")
@@ -519,10 +531,14 @@ def run_checks(res):
     diffs = []
     idx = res.set_index(["model_key", "auction"])
     for (mk, fmt), exp in REFERENCE_EXPECTED.items():
+        if cd.ONE_LLM and auction_configs.get(AUCTION_KEY_BY_NAME.get(fmt, ""), {}).get("is_clock", False):
+            continue
         got = idx.loc[(mk, fmt), "smad"]
         if pd.isna(got) or abs(float(got) - exp) > 0.05:
             diffs.append((mk, fmt, got, exp))
     for (mk, fmt), n_exp in REFERENCE_N.items():
+        if cd.ONE_LLM and auction_configs.get(AUCTION_KEY_BY_NAME.get(fmt, ""), {}).get("is_clock", False):
+            continue
         n_got = int(idx.loc[(mk, fmt), "n"])
         if n_got != n_exp:
             diffs.append((mk, fmt, f"n={n_got}", f"n={n_exp}"))
@@ -554,6 +570,12 @@ def fmt_model_cell(row, mk=None, fmt=None):
     return s
 
 
+ONE_LLM_CLOCK_FORMATS = {"Ascending Clock APV", "AC-Closed (AC-B) APV"}
+# Original model no longer served (checked 2026-11-13): the one-LLM clock cells
+# use claude-haiku-5-5, gemini-2.5-flash, Meta-Llama-3.1-8B-Instruct-Turbo.
+ONE_LLM_REPLACED = {"claude_sonnet", "gemini", "llama"}
+
+
 def generate_latex_table(res):
     idx = res.set_index(["auction", "model_key"])
     header = ["Format", "Human"] + [model_configs[k]["display_name"] for k in LLM_KEYS]
@@ -565,7 +587,11 @@ def generate_latex_table(res):
     for fmt in FORMAT_ORDER:
         cells = [fmt, fmt_human_cell(idx.loc[(fmt, "human")])]
         for mk in LLM_KEYS:
-            cells.append(fmt_model_cell(idx.loc[(fmt, mk)], mk, fmt))
+            cell = fmt_model_cell(idx.loc[(fmt, mk)], mk, fmt)
+            # one-LLM clock cells of these models query a replacement model
+            if cd.ONE_LLM and fmt in ONE_LLM_CLOCK_FORMATS and mk in ONE_LLM_REPLACED:
+                cell += "$^{r}$"
+            cells.append(cell)
         lines.append(" & ".join(cells) + " \\\\")
     lines.append("\\bottomrule")
     lines.append("\\end{tabular}")

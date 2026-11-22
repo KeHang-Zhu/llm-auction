@@ -320,6 +320,11 @@ class ExperimentConfig:
         return self._config['llm'].get('service_name', None)
 
     @property
+    def model_params(self) -> dict:
+        """Extra keyword arguments for edsl.Model, e.g. {'thinking_budget': 0}."""
+        return dict(self._config['llm'].get('model_params', {}) or {})
+
+    @property
     def strategy_type(self) -> str:
         """Get prompt strategy type."""
         return self._config['prompt']['strategy_type']

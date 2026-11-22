@@ -30,15 +30,15 @@ Data (bid-level):
 
 Outputs (repo-relative):
   results/analysis/interventions_models.csv
-  writeup/tables/interventions_models.tex   (tabular-only fragment, menu+clock)
-  writeup/figures/fig_interventions_models.{png,pdf}
+  results/tables/interventions_models.tex   (tabular-only fragment, menu+clock)
+  results/figures/fig_interventions_models.{png,pdf}
   -- clock-framing-only variants (menu framing is not in the paper):
-  writeup/tables/clock_framing_models.tex      all four models
-  writeup/figures/fig_clock_framing_models.{png,pdf}
-  writeup/tables/clock_framing_main.tex        GPT-4o, Claude 3.5 Haiku, Gemini 2.0 Flash (main text)
-  writeup/figures/fig_clock_framing_main.{png,pdf}     1x3 panels
-  writeup/tables/clock_framing_gemma.tex       Gemma-3-27B only (appendix robustness note)
-  writeup/figures/fig_clock_framing_gemma.{png,pdf}    single panel
+  results/tables/clock_framing_models.tex      all four models
+  results/figures/fig_clock_framing_models.{png,pdf}
+  results/tables/clock_framing_main.tex        GPT-4o, Claude 3.5 Haiku, Gemini 2.0 Flash (main text)
+  results/figures/fig_clock_framing_main.{png,pdf}     1x3 panels
+  results/tables/clock_framing_gemma.tex       Gemma-3-27B only (appendix robustness note)
+  results/figures/fig_clock_framing_gemma.{png,pdf}    single panel
 
 Run: python3 scripts/plots/interventions_models.py              # all outputs
      python3 scripts/plots/interventions_models.py --clock-only # only the clock-framing files
@@ -64,14 +64,14 @@ DATA_DIR = ROOT / "experiment_logs" / "paper_interventions"
 
 CELLS_CSV = ROOT / "results" / "analysis" / "cell_crosschecks.csv"
 OUT_CSV = ROOT / "results" / "analysis" / "interventions_models.csv"
-OUT_TEX = ROOT / "writeup" / "tables" / "interventions_models.tex"
-OUT_FIG = ROOT / "writeup" / "figures" / "fig_interventions_models"  # .png/.pdf
-OUT_TEX_CLOCK = ROOT / "writeup" / "tables" / "clock_framing_models.tex"
-OUT_FIG_CLOCK = ROOT / "writeup" / "figures" / "fig_clock_framing_models"
-OUT_TEX_MAIN = ROOT / "writeup" / "tables" / "clock_framing_main.tex"
-OUT_FIG_MAIN = ROOT / "writeup" / "figures" / "fig_clock_framing_main"
-OUT_TEX_GEMMA = ROOT / "writeup" / "tables" / "clock_framing_gemma.tex"
-OUT_FIG_GEMMA = ROOT / "writeup" / "figures" / "fig_clock_framing_gemma"
+OUT_TEX = ROOT / "results" / "tables" / "interventions_models.tex"
+OUT_FIG = ROOT / "results" / "figures" / "fig_interventions_models"  # .png/.pdf
+OUT_TEX_CLOCK = ROOT / "results" / "tables" / "clock_framing_models.tex"
+OUT_FIG_CLOCK = ROOT / "results" / "figures" / "fig_clock_framing_models"
+OUT_TEX_MAIN = ROOT / "results" / "tables" / "clock_framing_main.tex"
+OUT_FIG_MAIN = ROOT / "results" / "figures" / "fig_clock_framing_main"
+OUT_TEX_GEMMA = ROOT / "results" / "tables" / "clock_framing_gemma.tex"
+OUT_FIG_GEMMA = ROOT / "results" / "figures" / "fig_clock_framing_gemma"
 
 NORM = 25.0            # paper convention (Sec. method): SMAD = 100*mean|b-v|/25
 NORM_CELLS = 24.5      # auction_cells.csv convention (E[b*] for Unif{0..49})
